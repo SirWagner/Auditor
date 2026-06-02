@@ -1,0 +1,310 @@
+﻿@model Auditor.Models.AuditSite
+@using Auditor.Models
+
+@{
+    ViewData["Title"] = "Create Audit Site";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="form-page-container">
+    <!-- Breadcrumb Navigation -->
+    <div class="form-page-breadcrumb">
+        <a asp-controller="Template" asp-action="Dashboard">Dashboard</a>
+        <span>›</span>
+        <a asp-controller="AuditSites" asp-action="Index">Audit Sites</a>
+        <span>›</span>
+        <span>Create New</span>
+    </div>
+
+    <!-- Page Title Section -->
+    <div class="form-page-title-section">
+        <div class="form-page-title-content">
+            <h1>Create New Audit Site</h1>
+            <p>Add a new audit site location for conducting security and compliance audits</p>
+        </div>
+        <div class="form-page-meta">
+            <span class="form-meta-badge">New Entry</span>
+        </div>
+    </div>
+
+
+    <!-- Form Layout with Sidebar -->
+    <div class="form-wrapper">
+        <!-- Main Form -->
+        <div class="form-main">
+            <!-- Form Header -->
+            <div class="form-main-header">
+                <h2>
+                    <i class="typcn typcn-location-outline"></i>
+                    Audit Site Details
+                </h2>
+            </div>
+
+            <!-- Form Content -->
+            <div class="form-main-content">
+                <form asp-action="Create" method="post" novalidate id="createAuditSiteForm">
+                    <!-- Validation Alert -->
+                    @if (!ViewData.ModelState.IsValid)
+                    {
+                        <div class="validation-alert">
+                            <h3>
+                                <i class="fas fa-times-circle"></i>
+                                Form Validation Errors
+                            </h3>
+                            <ul>
+                                @foreach (var modelState in ViewData.ModelState.Values)
+                                {
+                                    @foreach (var error in modelState.Errors)
+                                    {
+                                        <li>@error.ErrorMessage</li>
+                                    }
+                                }
+                            </ul>
+                        </div>
+                    }
+
+                    <!-- Location Section -->
+                    <div class="form-section">
+                        <h3 class="form-section-title">Location Information</h3>
+                        <p class="form-section-description">Specify the airport and department for this audit site.</p>
+                        
+                        <div class="form-grid">
+                            <!-- Airport Selection -->
+                            <div class="form-group">
+                                <label asp-for="AirportId">
+                                    Airport
+                                    <span class="required">*</span>
+                                </label>
+                                <select asp-for="AirportId"
+                                        class="form-control"
+                                        id="airportSelect"
+                                        required
+                                        asp-items="@(new SelectList(ViewBag.Airports, "Id", "Name"))">
+                                    <option value="">-- Select an Airport --</option>
+                                </select>
+                                <span asp-validation-for="AirportId" class="form-group-error"></span>
+                                <div class="form-group-hint">
+                                    Choose the airport where this audit site is located.
+                                </div>
+                            </div>
+
+                            <!-- Department Selection -->
+                            <div class="form-group">
+                                <label asp-for="DepartmentId">
+                                    Department
+                                    <span class="required">*</span>
+                                </label>
+                                <select asp-for="DepartmentId"
+                                        class="form-control"
+                                        id="departmentSelect"
+                                        required
+                                        asp-items="@(new SelectList(ViewBag.Departments, "Id", "Name"))">
+                                    <option value="">-- Select a Department --</option>
+                                </select>
+                                <span asp-validation-for="DepartmentId" class="form-group-error"></span>
+                                <div class="form-group-hint">
+                                    Select the department responsible for this audit site.
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+
+                    
+
+
+
+                    <!-- Basic Information Section -->
+                    <div class="form-section">
+                        <h3 class="form-section-title">Audit Site Information</h3>
+                        
+                        <div class="form-grid">
+                            <!-- Site Name -->
+                            <div class="form-group">
+                                <label asp-for="Name">
+                                    Site Name
+                                    <span class="required">*</span>
+                                </label>
+                                <input asp-for="Name"
+                                       type="text"
+                                       placeholder="e.g., Main Terminal Building"
+                                       required />
+                                <span asp-validation-for="Name" class="form-group-error"></span>
+                                <div class="form-group-hint">
+                                    Descriptive name for this audit site location.
+                                </div>
+                            </div>
+
+                            <!-- Status -->
+                            <div class="form-group">
+                                <label asp-for="Status">
+                                    Status
+                                    <span class="required">*</span>
+                                </label>
+                                <select asp-for="Status" class="form-control" required>
+                                    <option value="">-- Select Status --</option>
+                                    <option value="Active">Active</option>
+                                    <option value="Inactive">Inactive</option>
+                                    <option value="Under Review">Under Review</option>
+                                    <option value="Archived">Archived</option>
+                                    
+                                </select>
+                                <span asp-validation-for="Status" class="form-group-error"></span>
+                                <div class="form-group-hint">
+                                    Current operational status of the audit site.
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Location Details Section -->
+                    <div class="form-section">
+                        <h3 class="form-section-title">Additional Details</h3>
+                        <p class="form-section-description">Provide more information about the audit site location.</p>
+                        
+                        <div class="form-grid full">
+                            <!-- Location -->
+                            <div class="form-group">
+                                <label asp-for="Location">
+                                    Physical Location / Address
+                                    <span class="required">*</span>
+                                </label>
+                                <textarea asp-for="Location"
+                                          placeholder="Enter the specific location or address details..."
+                                          required></textarea>
+                                <span asp-validation-for="Location" class="form-group-error"></span>
+                                <div class="form-group-hint">
+                                    Detailed location information such as building, floor, or specific address.
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Form Footer with Actions -->
+            <div class="form-main-footer">
+                <a asp-action="Index" class="btn-cancel">
+                    <i class="fas fa-times"></i>
+                    Cancel
+                </a>
+                <button form="createAuditSiteForm" type="submit" class="btn-submit">
+                    <i class="fas fa-plus"></i>
+                    Create Audit Site
+                </button>
+            </div>
+        </div>
+
+        <!-- Sidebar -->
+        <div class="form-sidebar">
+            <!-- Information Card -->
+            <div class="form-sidebar-card">
+                <h3>
+                    <i class="fas fa-info-circle"></i>
+                    About Audit Sites
+                </h3>
+                <p>
+                    Audit sites represent specific physical locations within an airport where audits are conducted. Each site must be associated with an airport and department.
+                </p>
+            </div>
+
+            <!-- Status Information -->
+            <div class="form-sidebar-card">
+                <h3>
+                    <i class="fas fa-list"></i>
+                    Status Options
+                </h3>
+                <ul style="list-style: none; padding: 0; margin: 0; font-size: 12px;">
+                    <li style="margin-bottom: 8px;">
+                        <strong>Active</strong> - Site is currently in use
+                    </li>
+                    <li style="margin-bottom: 8px;">
+                        <strong>Inactive</strong> - Site is temporarily inactive
+                    </li>
+                    <li style="margin-bottom: 8px;">
+                        <strong>Under Review</strong> - Site is being evaluated
+                    </li>
+                    <li>
+                        <strong>Archived</strong> - Site is no longer in use
+                    </li>
+                </ul>
+            </div>
+
+            <!-- Help Card -->
+            <div class="form-sidebar-card form-sidebar-help">
+                <h3>
+                    <i class="fas fa-question-circle"></i>
+                    Need Help?
+                </h3>
+                <p>
+                    All fields marked with <span class="required">*</span> are required. Make sure to select the correct airport and department for accurate audit tracking.
+                </p>
+            </div>
+
+            <!-- Tips Card -->
+            <div class="form-sidebar-card">
+                <h3>
+                    <i class="fas fa-lightbulb"></i>
+                    Tips
+                </h3>
+                <p>
+                    Use clear and descriptive names for audit sites to make them easily identifiable. Include location details that help staff find the audit site quickly.
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const form = document.getElementById('createAuditSiteForm');
+            const airportSelect = document.getElementById('airportSelect');
+            const departmentSelect = document.getElementById('departmentSelect');
+            
+            // Filter departments based on selected airport
+            airportSelect?.addEventListener('change', function() {
+                const selectedAirportId = this.value;
+                
+                // Reset department selection
+                departmentSelect.value = '';
+                
+                // Get all department options
+                const options = departmentSelect.querySelectorAll('option');
+                
+                options.forEach(option => {
+                    if (option.value === '') {
+                        option.style.display = 'block';
+                    } else {
+                        // Note: This assumes department option value includes airport info
+                        // You may need to adjust based on your actual data structure
+                        option.style.display = 'block';
+                    }
+                });
+            });
+            
+            // Add error class to fields with validation errors
+            const inputs = form.querySelectorAll('input, textarea, select');
+            inputs.forEach(input => {
+                const errorSpan = input.parentElement.querySelector('.form-group-error');
+                if (errorSpan && errorSpan.textContent.trim()) {
+                    input.closest('.form-group').classList.add('has-error');
+                }
+            });
+
+            // Clear error on input
+            inputs.forEach(input => {
+                input.addEventListener('input', function() {
+                    this.closest('.form-group').classList.remove('has-error');
+                });
+                input.addEventListener('change', function() {
+                    this.closest('.form-group').classList.remove('has-error');
+                });
+            });
+        });
+    </script>
+}

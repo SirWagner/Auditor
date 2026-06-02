@@ -1,0 +1,188 @@
+﻿@model IEnumerable<Auditor.Models.AuditExecution>
+
+@{
+    ViewData["Title"] = "Audit Executions";
+    Layout = "~/Views/Shared/_LayoutExec.cshtml";
+    // Layout = null;
+    ViewData["HideHeader"] = true;
+}
+<style>
+.list-controls {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+</style>
+
+<div class="list-container">
+    <div class="list-header">
+        <div class="list-header-content">
+            <h1>⚙️ Audit Executions</h1>
+            <p class="list-header-subtitle">Perform and track live audit sessions</p>
+        </div>
+    </div>
+
+    <div class="list-controls">
+        <input type="text"
+               id="executionSearch"
+               class="form-control"
+               placeholder="Search by template, site, or status..." />
+
+        <select id="executionSort" class="form-control">
+            <option value="">Order by</option>
+            <option value="template-asc">Template (A–Z)</option>
+            <option value="template-desc">Template (Z–A)</option>
+            <option value="date-asc">Date (Oldest)</option>
+            <option value="date-desc">Date (Newest)</option>
+            <option value="status-asc">Status</option>
+        </select>
+    </div>
+
+    @if (Model.Any())
+    {
+        <div class="list-table-wrapper">
+            <table class="list-table table execution-table">
+                <thead>
+                    <tr>
+                        <th style="width: 25%;">Audit Template</th>
+                        <th style="width: 20%;">Site</th>
+                        <th style="width: 20%;">Scheduled Date</th>
+                        <th style="width: 15%;">Status</th>
+                        <th style="width: 20%;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="executionTableBody">
+                    @foreach (var item in Model)
+                    {
+                        <tr>
+                            <td>
+                                <div class="cell-name">
+                                    @item.Schedule.Template.Name
+                                </div>
+                            </td>
+                            <td>
+                                <div class="cell-secondary">
+                                    <span class="cell-code">@item.Schedule.Site.Name</span>
+                                </div>
+                            </td>
+                            <td>
+                                <div class="cell-secondary">
+                                    @item.Schedule.ScheduledDate.ToString("MMM dd, yyyy")
+                                    <br />
+                                    <small class="text-muted">@item.Schedule.ScheduledDate.ToString("t")</small>
+                                </div>
+                            </td>
+                            <td>
+                                @{
+                                    var statusClass = item.Status?.ToString().ToLower() == "completed"
+                                        ? "status-active"
+                                        : "status-inactive";
+                                }
+                                <span class="status-badge @statusClass">@item.Status</span>
+                            </td>
+                            <td>
+                                <div class="list-actions">
+                                    <a asp-controller="AuditExecutions"
+                                           asp-action="Execute"
+                                           asp-route-executionId="@item.Id"
+                                           class="action-btn btn-edit"
+                                           style="background-color: #28a745; color: white; border-color: #28a745;">
+                                        Continue
+                                    </a>
+
+                                    <a asp-action="Details"
+                                           asp-route-id="@item.Id"
+                                           class="action-btn btn-view">
+                                        Details
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Pagination -->
+        <nav class="mt-3">
+            <ul class="pagination justify-content-center" id="pagination"></ul>
+        </nav>
+    }
+    else
+    {
+        <div class="list-table-wrapper">
+            <div class="list-empty-state">
+                <div class="empty-state-icon">🚀</div>
+                <h2 class="empty-state-title">No Active Executions</h2>
+                <p class="empty-state-text">There are no audits currently being executed.</p>
+            </div>
+        </div>
+    }
+</div>
+
+@section Scripts {
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+
+            const tableBody = document.getElementById("executionTableBody");
+            const rows = Array.from(tableBody.querySelectorAll("tr"));
+
+            const searchInput = document.getElementById("executionSearch");
+            const sortSelect = document.getElementById("executionSort");
+
+            let filteredRows = [...rows];
+
+            function applySearchAndSort() {
+                const searchText = searchInput.value.toLowerCase();
+
+                // ✅ FILTER
+                filteredRows = rows.filter(row => {
+                    return row.innerText.toLowerCase().includes(searchText);
+                });
+
+                // ✅ SORT
+                const sortValue = sortSelect.value;
+
+                if (sortValue) {
+                    filteredRows.sort((a, b) => {
+                        switch (sortValue) {
+                            case "template-asc":
+                                return a.cells[0].innerText.localeCompare(b.cells[0].innerText);
+                            case "template-desc":
+                                return b.cells[0].innerText.localeCompare(a.cells[0].innerText);
+                            case "date-asc":
+                                return new Date(a.cells[2].innerText) - new Date(b.cells[2].innerText);
+                            case "date-desc":
+                                return new Date(b.cells[2].innerText) - new Date(a.cells[2].innerText);
+                            case "status-asc":
+                                return a.cells[3].innerText.localeCompare(b.cells[3].innerText);
+                            default:
+                                return 0;
+                        }
+                    });
+                }
+
+                // ✅ RE-RENDER TABLE
+                tableBody.innerHTML = "";
+                filteredRows.forEach(r => tableBody.appendChild(r));
+
+                // ✅ RE-INIT PAGINATION
+                Paginator.init({
+                    tableBodyId: "executionTableBody",
+                    paginationId: "executionPagination",
+                    rowsPerPage: 5
+                });
+            }
+
+            searchInput.addEventListener("input", applySearchAndSort);
+            sortSelect.addEventListener("change", applySearchAndSort);
+
+            // Initial pagination
+            Paginator.init({
+                tableBodyId: "executionTableBody",
+                paginationId: "executionPagination",
+                rowsPerPage: 5
+            });
+        });
+    </script>
+}

@@ -1,0 +1,40 @@
+@model Auditor.ViewModels.AuditTemplate.AuditTemplateCreateViewModel
+
+<div class="card shadow-sm mb-4">
+    <div class="card-header bg-light">
+        <strong>Template Information</strong>
+    </div>
+
+    <div class="card-body row g-3">
+
+        <div class="col-md-6">
+            <label class="form-label">Name</label>
+            <input asp-for="Name" class="form-control" />
+            <span asp-validation-for="Name" class="text-danger"></span>
+        </div>
+
+        <div class="col-md-6">
+            <label class="form-label">Version</label>
+            <input asp-for="Version" class="form-control" />
+        </div>
+
+        <div class="col-md-12">
+            <label class="form-label">Description</label>
+            <textarea asp-for="Description" class="form-control"></textarea>
+        </div>
+
+        <div class="col-md-6 form-check mt-3">
+            <input asp-for="IsActive" class="form-check-input" />
+            <label class="form-check-label">Active</label>
+        </div>
+
+        <div class="col-md-6">
+            <label class="form-label">Created By</label>
+            <select asp-for="CreatedBy"
+                    class="form-select"
+                    asp-items="Model.Users">
+            </select>
+        </div>
+
+    </div>
+</div>

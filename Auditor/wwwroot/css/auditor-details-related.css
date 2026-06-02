@@ -1,0 +1,119 @@
+/* ============================================
+   RELATED ENTITIES CARDS (Extension to auditor-details.css)
+   ============================================ */
+
+.details-related-card {
+    background: var(--details-bg-primary);
+    border: 1px solid var(--details-border-light);
+    border-radius: 8px;
+    overflow: hidden;
+    margin-bottom: 24px;
+}
+
+.details-related-header {
+    padding: 16px 24px;
+    background: var(--details-bg-secondary);
+    border-bottom: 1px solid var(--details-border-light);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.details-related-header h3 {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--details-text-primary);
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.details-related-header i {
+    color: #5b47fb;
+    font-size: 15px;
+}
+
+.details-related-link {
+    font-size: 12px;
+    font-weight: 600;
+    color: #5b47fb;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    transition: color 0.2s ease;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+}
+
+.details-related-link:hover {
+    color: #4a38d4;
+    text-decoration: none;
+}
+
+.details-related-body {
+    padding: 16px 24px;
+}
+
+.details-related-info {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+}
+
+.details-related-item {
+    display: flex;
+    flex-direction: column;
+}
+
+.details-related-label {
+    font-size: 11px;
+    font-weight: 700;
+    color: #64748b;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    margin-bottom: 4px;
+}
+
+.details-related-value {
+    font-size: 13px;
+    color: #475569;
+}
+
+.details-related-value strong {
+    color: #0f172a;
+    font-weight: 600;
+}
+
+@media (max-width: 1024px) {
+    .details-related-info {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .details-related-header {
+        flex-direction: column;
+        gap: 12px;
+        align-items: flex-start;
+    }
+
+    .details-related-link {
+        align-self: flex-start;
+    }
+}
+
+@media (max-width: 768px) {
+    .details-related-info {
+        grid-template-columns: 1fr;
+    }
+
+    .details-related-label {
+        font-size: 10px;
+    }
+
+    .details-related-value {
+        font-size: 12px;
+    }
+}

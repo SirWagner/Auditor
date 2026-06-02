@@ -1,0 +1,456 @@
+﻿/* Auditor App - Header Styling */
+/* This file contains only header-specific styles to avoid conflicts with page content */
+/* Place in: wwwroot/css/auditor-header.css */
+
+:root {
+    --auditor-primary: #5b47fb;
+    --auditor-primary-dark: #4a38d4;
+    --auditor-text-primary: #1a1a1a;
+    --auditor-text-secondary: #666666;
+    --auditor-border: #e5e5e5;
+}
+
+/* ============================================
+   HEADER WRAPPER - Isolate header styles
+   ============================================ */
+
+.auditor-header-wrapper {
+    position: relative;
+    z-index: 1000;
+    background: white;
+    border-bottom: 1px solid var(--auditor-border);
+}
+
+    /* Override Azia header to prevent conflicts */
+    .auditor-header-wrapper .az-header {
+        background: white;
+        padding: 0;
+        margin: 0;
+    }
+
+        .auditor-header-wrapper .az-header .container-fluid {
+            padding-left: 0;
+            padding-right: 0;
+            display: flex;
+            align-items: center;
+            gap: 0;
+        }
+
+    /* ============================================
+   HEADER LEFT SECTION
+   ============================================ */
+
+    .auditor-header-wrapper .az-header-left {
+        display: flex;
+        align-items: center;
+        gap: 20px;
+        padding: 16px 24px;
+        flex-shrink: 0;
+    }
+
+    .auditor-header-wrapper .az-logo {
+        color: var(--auditor-primary);
+        font-weight: 700;
+        font-size: 18px;
+        text-decoration: none;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        transition: color 0.2s ease;
+    }
+
+        .auditor-header-wrapper .az-logo:hover {
+            color: var(--auditor-primary-dark);
+            text-decoration: none;
+        }
+
+        .auditor-header-wrapper .az-logo i {
+            font-size: 22px;
+        }
+
+    .auditor-header-wrapper .az-header-menu-icon {
+        display: none;
+        color: var(--auditor-primary);
+        font-size: 24px;
+        cursor: pointer;
+    }
+
+    /* ============================================
+   HEADER MENU - Navigation
+   ============================================ */
+
+    .auditor-header-wrapper .az-header-menu {
+        flex: 1;
+        display: flex;
+        align-items: center;
+        padding: 0;
+        margin: 0;
+        background: transparent;
+        position: static;
+        height: auto;
+    }
+
+        .auditor-header-wrapper .az-header-menu .nav {
+            display: flex;
+            gap: 0;
+            margin: 0;
+            padding: 0;
+            list-style: none;
+            width: 100%;
+        }
+
+        .auditor-header-wrapper .az-header-menu .nav-item {
+            position: relative;
+        }
+
+        .auditor-header-wrapper .az-header-menu .nav-link {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 24px 16px;
+            color: var(--auditor-text-secondary);
+            font-size: 14px;
+            font-weight: 500;
+            text-decoration: none;
+            transition: color 0.2s ease, background-color 0.2s ease;
+            border: none;
+            position: relative;
+            white-space: nowrap;
+        }
+
+            .auditor-header-wrapper .az-header-menu .nav-link:hover {
+                color: var(--auditor-primary);
+                background-color: transparent;
+            }
+
+            .auditor-header-wrapper .az-header-menu .nav-link::after {
+                content: '';
+                position: absolute;
+                bottom: 0;
+                left: 0;
+                right: 0;
+                height: 3px;
+                background-color: var(--auditor-primary);
+                transform: scaleX(0);
+                transform-origin: right;
+                transition: transform 0.2s ease;
+            }
+
+            .auditor-header-wrapper .az-header-menu .nav-link:hover::after {
+                transform: scaleX(1);
+                transform-origin: left;
+            }
+
+            .auditor-header-wrapper .az-header-menu .nav-link i {
+                font-size: 18px;
+            }
+
+    /* Submenu styling */
+    .auditor-header-wrapper .az-menu-sub {
+        position: absolute;
+        top: 100%;
+        left: 0;
+        background: white;
+        border: 1px solid var(--auditor-border);
+        border-radius: 8px;
+        min-width: 220px;
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+        opacity: 0;
+        visibility: hidden;
+        transform: translateY(-10px);
+        transition: all 0.2s ease;
+        padding: 8px 0;
+        margin-top: 0;
+        z-index: 1001;
+    }
+
+    .auditor-header-wrapper .nav-item:hover .az-menu-sub {
+        opacity: 1;
+        visibility: visible;
+        transform: translateY(0);
+    }
+
+    .auditor-header-wrapper .az-menu-sub .nav-link {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 12px 16px;
+        color: var(--auditor-text-secondary);
+        font-size: 13px;
+        width: 100%;
+        border-radius: 0;
+        position: relative;
+    }
+
+        .auditor-header-wrapper .az-menu-sub .nav-link:hover {
+            background-color: #f5f5f5;
+            color: var(--auditor-primary);
+            padding-left: 20px;
+        }
+
+        .auditor-header-wrapper .az-menu-sub .nav-link::after {
+            display: none;
+        }
+
+    /* ============================================
+   HEADER RIGHT SECTION
+   ============================================ */
+
+    .auditor-header-wrapper .az-header-right {
+        display: flex;
+        align-items: center;
+        gap: 24px;
+        padding: 16px 24px;
+        flex-shrink: 0;
+    }
+
+    .auditor-header-wrapper .az-header-search-link,
+    .auditor-header-wrapper .az-header-message a,
+    .auditor-header-wrapper .az-header-notification a,
+    .auditor-header-wrapper .az-profile-menu > a {
+        color: var(--auditor-text-secondary);
+        font-size: 20px;
+        text-decoration: none;
+        transition: color 0.2s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+        .auditor-header-wrapper .az-header-search-link:hover,
+        .auditor-header-wrapper .az-header-message a:hover,
+        .auditor-header-wrapper .az-header-notification a:hover,
+        .auditor-header-wrapper .az-profile-menu > a:hover {
+            color: var(--auditor-primary);
+            text-decoration: none;
+        }
+
+    /* Profile image */
+    .auditor-header-wrapper .az-img-user {
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        overflow: hidden;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background-color: #f0f0f0;
+    }
+
+        .auditor-header-wrapper .az-img-user img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+    /* ============================================
+   DROPDOWN MENUS
+   ============================================ */
+
+    .auditor-header-wrapper .dropdown-menu {
+        background: white;
+        border: 1px solid var(--auditor-border);
+        border-radius: 8px;
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+        padding: 0;
+        min-width: 200px;
+        animation: dropdownSlideIn 0.2s ease;
+    }
+
+@keyframes dropdownSlideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-8px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.auditor-header-wrapper .dropdown-item {
+    padding: 12px 16px;
+    color: var(--auditor-text-secondary);
+    font-size: 13px;
+    border: none;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+    .auditor-header-wrapper .dropdown-item:hover {
+        background-color: #f9f7ff;
+        color: var(--auditor-primary);
+    }
+
+    .auditor-header-wrapper .dropdown-item i {
+        font-size: 16px;
+        width: 16px;
+    }
+
+    .auditor-header-wrapper .dropdown-item:first-child {
+        border-radius: 8px 8px 0 0;
+    }
+
+    .auditor-header-wrapper .dropdown-item hr {
+        margin: 4px 0;
+        background-color: var(--auditor-border);
+    }
+
+/* ============================================
+   RESPONSIVE DESIGN
+   ============================================ */
+
+@media (max-width: 1024px) {
+    .auditor-header-wrapper .az-header-menu .nav-link {
+        padding: 24px 12px;
+        font-size: 13px;
+    }
+
+    .auditor-header-wrapper .az-header-right {
+        gap: 16px;
+        padding: 16px 12px;
+    }
+
+    .auditor-header-wrapper .az-header-left {
+        padding: 16px 12px;
+    }
+
+    .auditor-header-wrapper .az-header-menu .nav-link i {
+        font-size: 16px;
+    }
+}
+
+@media (max-width: 768px) {
+    /* Mobile menu - hide desktop menu */
+    .auditor-header-wrapper .az-header-menu-icon {
+        display: block;
+    }
+
+    .auditor-header-wrapper .az-header-menu {
+        position: fixed;
+        top: 60px;
+        left: -100%;
+        width: 100%;
+        height: calc(100vh - 60px);
+        background: white;
+        flex-direction: column;
+        overflow-y: auto;
+        transition: left 0.3s ease;
+        z-index: 999;
+    }
+
+        .auditor-header-wrapper .az-header-menu.show {
+            left: 0;
+        }
+
+        .auditor-header-wrapper .az-header-menu .nav {
+            flex-direction: column;
+            width: 100%;
+        }
+
+        .auditor-header-wrapper .az-header-menu .nav-link {
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--auditor-border);
+            width: 100%;
+        }
+
+            .auditor-header-wrapper .az-header-menu .nav-link::after {
+                display: none;
+            }
+
+    .auditor-header-wrapper .az-menu-sub {
+        position: static;
+        opacity: 1;
+        visibility: visible;
+        transform: none;
+        background: #f9f7ff;
+        border: none;
+        box-shadow: none;
+        padding: 0;
+        max-height: 0;
+        overflow: hidden;
+        transition: max-height 0.3s ease;
+    }
+
+    .auditor-header-wrapper .nav-item.active .az-menu-sub,
+    .auditor-header-wrapper .nav-item:hover .az-menu-sub {
+        max-height: 500px;
+    }
+
+    .auditor-header-wrapper .az-menu-sub .nav-link {
+        padding-left: 40px;
+        font-size: 12px;
+    }
+
+    .auditor-header-wrapper .az-header .container-fluid {
+        flex-wrap: wrap;
+    }
+
+    .auditor-header-wrapper .az-header-left {
+        width: 100%;
+        padding: 12px 16px;
+        order: 1;
+    }
+
+    .auditor-header-wrapper .az-header-menu {
+        order: 3;
+        width: 100%;
+        height: auto;
+        position: static;
+        left: 0;
+        top: auto;
+        max-height: 0;
+        overflow: hidden;
+    }
+
+        .auditor-header-wrapper .az-header-menu.show {
+            max-height: 100vh;
+            left: 0;
+        }
+
+    .auditor-header-wrapper .az-header-right {
+        order: 2;
+        width: 100%;
+        padding: 12px 16px;
+    }
+
+    .auditor-header-wrapper .az-logo {
+        font-size: 16px;
+    }
+
+    .auditor-header-wrapper .az-header-search-link,
+    .auditor-header-wrapper .az-header-message a,
+    .auditor-header-wrapper .az-header-notification a {
+        font-size: 18px;
+    }
+}
+
+/* ============================================
+   HIDE MOBILE MENU HEADER (not needed in mobile)
+   ============================================ */
+
+.auditor-header-wrapper .az-header-menu-header {
+    display: none;
+}
+
+/* ============================================
+   CONTENT WRAPPER - Ensure no layout shift
+   ============================================ */
+
+body {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+.auditor-content-wrapper {
+    flex: 1;
+    background-color: #fafbff;
+}
+
+    .auditor-content-wrapper main {
+        min-height: calc(100vh - 60px);
+    }

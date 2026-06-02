@@ -1,0 +1,91 @@
+﻿@model IEnumerable<Auditor.ViewModels.AuditTemplate.AuditTemplateListViewModel>
+
+@{
+    ViewData["Title"] = "Audit Templates";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="list-container">
+    <div class="list-header">
+        <div class="list-header-content">
+            <h1>📝 Audit Templates</h1>
+            <p class="list-header-subtitle">Build and manage standardized audit questionnaires</p>
+        </div>
+        <a asp-action="Create" class="btn-list-primary">
+            <span>+</span> Create New Template
+        </a>
+    </div>
+
+    @if (Model.Any())
+    {
+        <div class="list-table-wrapper">
+            <table class="list-table table template-table">
+                <thead>
+                    <tr>
+                        <th style="width: 25%;">Name</th>
+                        <th style="width: 10%;">Version</th>
+                        <th style="width: 10%;">Status</th>
+                        <th style="width: 10%;">Questions</th>
+                        <th style="width: 15%;">Created By</th>
+                        <th style="width: 15%;">Created Date</th>
+                        <th style="width: 15%;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in Model)
+                    {
+                        <tr>
+                            <td>
+                                <div class="cell-name">@item.Name</div>
+                            </td>
+                            <td>
+                                <span class="cell-code">v@(item.Version)</span>
+                            </td>
+                            <td>
+                                @if (item.IsActive)
+                                {
+                                    <span class="status-badge status-active">Active</span>
+                                }
+                                else
+                                {
+                                    <span class="status-badge status-inactive">Inactive</span>
+                                }
+                            </td>
+                            <td>
+                                <div class="cell-secondary">
+                                    <strong>@item.QuestionCount</strong> questions
+                                </div>
+                            </td>
+                            <td>
+                                <div class="cell-secondary">@item.CreatedByName</div>
+                            </td>
+                            <td>
+                                <div class="cell-secondary">@item.CreatedDate.ToString("MMM dd, yyyy")</div>
+                            </td>
+                            <td>
+                                <div class="list-actions">
+                                    <a asp-action="Edit" asp-route-id="@item.Id" class="action-btn btn-edit">Edit</a>
+                                    <a asp-action="Details" asp-route-id="@item.Id" class="action-btn btn-view">View</a>
+                                    <a asp-action="Delete" asp-route-id="@item.Id" class="action-btn btn-delete">Delete</a>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+    else
+    {
+        <div class="list-table-wrapper">
+            <div class="list-empty-state">
+                <div class="empty-state-icon">📄</div>
+                <h2 class="empty-state-title">No Templates Found</h2>
+                <p class="empty-state-text">Create your first audit template to start conducting inspections.</p>
+                <a asp-action="Create" class="btn-list-primary">
+                    <span>+</span> Create First Template
+                </a>
+            </div>
+        </div>
+    }
+</div>

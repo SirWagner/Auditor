@@ -1,0 +1,89 @@
+﻿@model IEnumerable<Auditor.Models.AuditSchedule>
+
+@{
+    ViewData["Title"] = "Scheduled Audits";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="list-container">
+    <div class="list-header">
+        <div class="list-header-content">
+            <h1>📅 Scheduled Audits</h1>
+            <p class="list-header-subtitle">Track and manage upcoming audit executions</p>
+        </div>
+        <a asp-action="Create" class="btn-list-primary">
+            <span>+</span> Create New Execution
+        </a>
+    </div>
+
+    @if (Model.Any())
+    {
+        <div class="list-table-wrapper">
+            <table class="list-table table schedule-table">
+                <thead>
+                    <tr>
+                        <th style="width: 30%;">Audit Template</th>
+                        <th style="width: 25%;">Site / Location</th>
+                        <th style="width: 25%;">Scheduled Date</th>
+                        <th style="width: 20%;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in Model)
+                    {
+                        <tr>
+                            <td>
+                                <div class="cell-name">
+                                    @Html.DisplayFor(modelItem => item.Template.Name)
+                                </div>
+                            </td>
+                            <td>
+                                <div class="cell-secondary">
+                                    <span class="cell-code">@item.Site.Name</span>
+                                </div>
+                            </td>
+                            <td>
+                                <div class="cell-name">
+                                    @item.ScheduledDate.ToString("MMM dd, yyyy")
+                                </div>
+                                <small class="text-muted">@item.ScheduledDate.ToString("t")</small>
+                            </td>
+                            <td>
+                                <div class="list-actions">
+                                    <a asp-action="Details" asp-route-id="@item.Id" class="action-btn btn-view">View Details</a>
+                                    @* Adding Edit/Delete for consistency with your previous base views *@
+                                    <a asp-action="Edit" asp-route-id="@item.Id" class="action-btn btn-edit">Edit</a>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+    else
+    {
+        <div class="list-table-wrapper">
+            <div class="list-empty-state">
+                <div class="empty-state-icon">📅</div>
+                <h2 class="empty-state-title">No Audits Scheduled</h2>
+                <p class="empty-state-text">Everything is clear! Start by scheduling a new audit execution.</p>
+                <a asp-action="Create" class="btn-list-primary">
+                    <span>+</span> Schedule Now
+                </a>
+            </div>
+        </div>
+    }
+
+    <div class="mt-4">
+        <a asp-controller="Home" asp-action="Index" class="text-decoration-none">
+            ← Back to Dashboard
+        </a>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

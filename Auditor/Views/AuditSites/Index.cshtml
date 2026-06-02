@@ -1,0 +1,86 @@
+﻿@model IEnumerable<Auditor.Models.AuditSite>
+
+@{
+    ViewData["Title"] = "Audit Sites";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="list-container">
+    <div class="list-header">
+        <div class="list-header-content">
+            <h1>📋 Audit Sites</h1>
+            <p class="list-header-subtitle">Manage and monitor your specific audit locations</p>
+        </div>
+        <a asp-action="Create" class="btn-list-primary">
+            <span>+</span> Create New Site
+        </a>
+    </div>
+
+    @if (Model.Any())
+    {
+        <div class="list-table-wrapper">
+            <table class="list-table table site-table">
+                <thead>
+                    <tr>
+                        <th style="width: 20%;">@Html.DisplayNameFor(model => model.FirstOrDefault().Name)</th>
+                        <th style="width: 15%;">@Html.DisplayNameFor(model => model.FirstOrDefault().Airport)</th>
+                        <th style="width: 15%;">@Html.DisplayNameFor(model => model.FirstOrDefault().Department)</th>
+                        <th style="width: 15%;">@Html.DisplayNameFor(model => model.FirstOrDefault().Status)</th>
+                        <th style="width: 15%;">@Html.DisplayNameFor(model => model.FirstOrDefault().CreatedDate)</th>
+                        <th style="width: 20%;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in Model)
+                    {
+                        <tr>
+                            <td>
+                                <div class="cell-name">
+                                    @Html.DisplayFor(modelItem => item.Name)
+                                </div>
+                                <small class="text-muted">@Html.DisplayFor(modelItem => item.Location)</small>
+                            </td>
+                            <td>
+                                <span class="cell-code">@Html.DisplayFor(modelItem => item.Airport.Name)</span>
+                            </td>
+                            <td>
+                                <div class="cell-secondary">
+                                    @Html.DisplayFor(modelItem => item.Department.Name)
+                                </div>
+                            </td>
+                            <td>
+                                @* Assuming Status might be a string like 'Active' or 'Pending' *@
+                                <span class="status-badge">@Html.DisplayFor(modelItem => item.Status)</span>
+                            </td>
+                            <td>
+                                <div class="cell-secondary">
+                                    @item.CreatedDate.ToString("MMM dd, yyyy")
+                                </div>
+                            </td>
+                            <td>
+                                <div class="list-actions">
+                                    <a asp-action="Edit" asp-route-id="@item.Id" class="action-btn btn-edit">Edit</a>
+                                    <a asp-action="Details" asp-route-id="@item.Id" class="action-btn btn-view">View</a>
+                                    <a asp-action="Delete" asp-route-id="@item.Id" class="action-btn btn-delete">Delete</a>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+    else
+    {
+        <div class="list-table-wrapper">
+            <div class="list-empty-state">
+                <div class="empty-state-icon">🔎</div>
+                <h2 class="empty-state-title">No Audit Sites Found</h2>
+                <p class="empty-state-text">There are currently no audit sites registered in the system.</p>
+                <a asp-action="Create" class="btn-list-primary">
+                    <span>+</span> Create First Site
+                </a>
+            </div>
+        </div>
+    }
+</div>

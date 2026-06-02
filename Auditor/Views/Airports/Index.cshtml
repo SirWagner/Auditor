@@ -1,0 +1,74 @@
+﻿@model IEnumerable<Auditor.Models.Airport>
+
+@{
+    ViewData["Title"] = "Airports";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="list-container">
+    <div class="list-header">
+        <div class="list-header-content">
+            <h1>✈️ Airports</h1>
+            <p class="list-header-subtitle">Manage your airport locations and information</p>
+        </div>
+        <a asp-action="Create" class="btn-list-primary">
+            <span>+</span> Create New Airport
+        </a>
+    </div>
+
+    @if (Model.Any())
+    {
+        <div class="list-table-wrapper">
+            <table class="list-table table airport-table">
+                <thead>
+                    <tr >
+                        <th style="width: 30%;">@Html.DisplayNameFor(model => model.FirstOrDefault().Name)</th>
+                        <th style="width: 15%;">@Html.DisplayNameFor(model => model.FirstOrDefault().Code)</th>
+                        <th style="width: 35%;">@Html.DisplayNameFor(model => model.FirstOrDefault().Location)</th>
+                        <th style="width: 20%;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in Model)
+                    {
+                        <tr>
+                            <td>
+                                <div class="cell-name">
+                                    @Html.DisplayFor(modelItem => item.Name)
+                                </div>
+                            </td>
+                            <td>
+                                <span class="cell-code">@Html.DisplayFor(modelItem => item.Code)</span>
+                            </td>
+                            <td>
+                                <div class="cell-secondary">
+                                    @Html.DisplayFor(modelItem => item.Location)
+                                </div>
+                            </td>
+                            <td>
+                                <div class="list-actions">
+                                    <a asp-action="Edit" asp-route-id="@item.Id" class="action-btn btn-edit">Edit</a>
+                                    <a asp-action="Details" asp-route-id="@item.Id" class="action-btn btn-view">View</a>
+                                    <a asp-action="Delete" asp-route-id="@item.Id" class="action-btn btn-delete">Delete</a>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+    else
+    {
+        <div class="list-table-wrapper">
+            <div class="list-empty-state">
+                <div class="empty-state-icon">📭</div>
+                <h2 class="empty-state-title">No Airports Yet</h2>
+                <p class="empty-state-text">Get started by creating your first airport</p>
+                <a asp-action="Create" class="btn-list-primary">
+                    <span>+</span> Create First Airport
+                </a>
+            </div>
+        </div>
+    }
+</div>

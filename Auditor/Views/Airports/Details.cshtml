@@ -1,0 +1,165 @@
+﻿@model Auditor.Models.Airport
+@using Auditor.Models
+
+@{
+    ViewData["Title"] = "Airport Details";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="details-page-container">
+    <!-- Breadcrumb -->
+    <div class="details-breadcrumb">
+        <a asp-controller="Template" asp-action="Dashboard">Dashboard</a>
+        <span>›</span>
+        <a asp-controller="Airports" asp-action="Index">Airports</a>
+        <span>›</span>
+        <span>@Model.Name</span>
+    </div>
+
+    <!-- Page Header -->
+    <div class="details-header">
+        <h1>
+            <i class="typcn typcn-plane"></i>
+            @Model.Name
+        </h1>
+        <div class="details-header-actions">
+            <a asp-action="Edit" asp-route-id="@Model.Id" class="btn-details-primary">
+                <i class="fas fa-edit"></i>
+                Edit
+            </a>
+            <a asp-action="Index" class="btn-details-secondary">
+                <i class="fas fa-arrow-left"></i>
+                Back
+            </a>
+        </div>
+    </div>
+
+    <!-- Airport Information Card (Single, Compact) -->
+    <div class="details-info-card">
+        <div class="details-info-card-header">
+            <i class="typcn typcn-document-text"></i>
+            <h2>Airport Information</h2>
+        </div>
+        <div class="details-info-card-body">
+            <div class="details-info-grid">
+                <div class="details-info-field">
+                    <div class="details-info-label">Airport Name</div>
+                    <div class="details-info-value"><strong>@Model.Name</strong></div>
+                </div>
+                <div class="details-info-field">
+                    <div class="details-info-label">Code</div>
+                    <div class="details-info-value">
+                        <span class="details-code">@Model.Code</span>
+                    </div>
+                </div>
+                <div class="details-info-field">
+                    <div class="details-info-label">Location</div>
+                    <div class="details-info-value"><strong>@Model.Location</strong></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Audit Sites Section -->
+    <div class="details-section">
+        <h2 class="details-section-title">
+            <i class="typcn typcn-location-outline"></i>
+            Audit Sites @(@Model.AuditSites?.Count ?? 0)
+        </h2>
+
+        @if (Model.AuditSites?.Count > 0)
+        {
+            <div class="details-table-wrapper">
+                <table class="details-table">
+                    <thead>
+                        <tr>
+                            <th style="width: 25%;">Site Name</th>
+                            <th style="width: 15%;">Department</th>
+                            <th style="width: 20%;">Location</th>
+                            <th style="width: 12%;">Status</th>
+                            <th style="width: 12%;">Created By</th>
+                            <th style="width: 12%;">Created Date</th>
+                            <th style="width: 16%;">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var site in Model.AuditSites.OrderByDescending(s => s.CreatedDate))
+                        {
+                            <tr>
+                                <td>
+                                    <strong>@site.Name</strong>
+                                </td>
+                                <td>
+                                    @site.Department?.Name
+                                </td>
+                                <td>
+                                    @site.Location
+                                </td>
+                                <td>
+                                    @{
+                                        var statusClass = site.Status switch
+                                        {
+                                            "Active" => "active",
+                                            "Inactive" => "inactive",
+                                            "Under Review" => "warning",
+                                            "Archived" => "inactive",
+                                            _ => "inactive"
+                                        };
+                                    }
+                                    <span class="details-status-badge @statusClass">
+                                        @if (site.Status == "Active")
+                                        {
+                                            <i class="fas fa-check-circle"></i>
+                                        }
+                                        else if (site.Status == "Under Review")
+                                        {
+                                            <i class="fas fa-hourglass-half"></i>
+                                        }
+                                        else
+                                        {
+                                            <i class="fas fa-times-circle"></i>
+                                        }
+                                        @site.Status
+                                    </span>
+                                </td>
+                                <td>
+                                    @site.CreatedByNavigation?.DisplayName ?? "Unknown"
+                                </td>
+                                <td>
+                                    @site.CreatedDate.ToString("MMM dd, yyyy")
+                                </td>
+                                <td>
+                                    <div class="details-table-actions">
+                                        <a asp-controller="AuditSites"
+                                               asp-action="Details"
+                                               asp-route-id="@site.Id"
+                                               class="details-action-btn btn-view">
+                                            <i class="fas fa-eye"></i>
+                                            View
+                                        </a>
+                                        <a asp-controller="AuditSites"
+                                               asp-action="Edit"
+                                               asp-route-id="@site.Id"
+                                               class="details-action-btn btn-edit">
+                                            <i class="fas fa-edit"></i>
+                                            Edit
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+        else
+        {
+            <div class="details-table-wrapper">
+                <div class="details-empty-state">
+                    <div class="details-empty-state-icon">📭</div>
+                    <h3 class="details-empty-state-title">No Audit Sites</h3>
+                    <p class="details-empty-state-text">No audit sites have been registered for this airport</p>
+                </div>
+            </div>
+        }
+    </div>

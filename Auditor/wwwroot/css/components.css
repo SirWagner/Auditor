@@ -1,0 +1,62 @@
+﻿.page-container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 48px 24px;
+}
+.page-header {
+    border-bottom: 2px solid var(--border-subtle);
+    padding-bottom: 24px;
+    margin-bottom: 32px;
+}
+
+.page-title {
+    font-size: 28px;
+    font-weight: 700;
+}
+
+.page-subtitle {
+    color: var(--text-secondary);
+    font-size: 14px;
+}
+.btn-primary {
+    background: linear-gradient(135deg, var(--primary), var(--primary-light));
+    border: none;
+    box-shadow: 0 4px 12px rgba(91, 71, 251, 0.25);
+}
+
+    .btn-primary:hover {
+        background: var(--primary-dark);
+    }
+.custom-card {
+    background: white;
+    border-radius: 12px;
+    border: 1px solid var(--border);
+    overflow: hidden;
+}
+.custom-card {
+    background: white;
+    border-radius: 12px;
+    border: 1px solid var(--border);
+    overflow: hidden;
+}
+.action-btn {
+    border-radius: 6px;
+    font-size: 12px;
+    padding: 6px 10px;
+}
+
+.btn-edit {
+    background-color: var(--primary);
+    color: white;
+}
+
+.btn-delete {
+    background-color: #fee2e2;
+    color: var(--danger);
+}
+
+.empty-state {
+    text-align: center;
+    padding: 60px 24px;
+}
+

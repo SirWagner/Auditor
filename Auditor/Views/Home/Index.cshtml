@@ -1,0 +1,302 @@
+﻿@{
+    ViewData["Title"] = "Home Page";
+}
+
+<img src="https://cdn.jsdelivr.net/gh/homarr-labs/dashboard-icons/svg/check.svg" alt="Compliant" />
+
+<link href="~/css/sitetem1.css" rel="stylesheet" />
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <title>Albatross Technologies – Compliance Dashboard</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="stylesheet" href="styles.css" />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+
+<body>
+    <div class="app">
+
+        <!-- SIDEBAR -->
+        <aside class="sidebar">
+            <div class="logo">
+                <div class="logo-mark">A</div>
+                <div class="logo-text">
+                    <span>ALBATROSS</span>
+                    <span>TECHNOLOGIES</span>
+                </div>
+            </div>
+
+            <nav class="nav">
+                <a class="nav-item active">
+                    <!-- Heroicon: Home -->
+                    <svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-width="1.5" d="M3 9.75L12 3l9 6.75v9A2.25 2.25 0 0118.75 21h-13.5A2.25 2.25 0 013 18.75v-9z" />
+                    </svg>
+                    Dashboard
+                </a>
+
+                <a class="nav-item">
+                    <!-- Heroicon: Chart Bar -->
+                    <svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-width="1.5" d="M3 3v18h18M7.5 16.5V12m4.5 4.5V9m4.5 7.5V6" />
+                    </svg>
+                    Reports
+                </a>
+
+                <a class="nav-item">
+                    <!-- Heroicon: Exclamation Triangle -->
+                    <svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-width="1.5" d="M12 9v3m0 3h.01M10.29 3.86L1.82 18a1.5 1.5 0 001.29 2.25h17.78A1.5 1.5 0 0022.18 18L13.71 3.86a1.5 1.5 0 00-2.42 0z" />
+                    </svg>
+                    Incidents
+                </a>
+
+                <a class="nav-item">
+                    <!-- Heroicon: Clipboard Check -->
+                    <svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-width="1.5" d="M9 12l2 2 4-4m-4-7h2a2 2 0 012 2v1h3a2 2 0 012 2v11a2 2 0 01-2 2H7a2 2 0 01-2-2V8a2 2 0 012-2h3V5a2 2 0 012-2z" />
+                    </svg>
+                    Audits
+                </a>
+
+                <a class="nav-item">
+                    <!-- Heroicon: Document Text -->
+                    <svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-width="1.5" d="M12 4.5H6A1.5 1.5 0 004.5 6v12A1.5 1.5 0 006 19.5h12a1.5 1.5 0 001.5-1.5V10.5L12 4.5z" />
+                    </svg>
+                    Documents
+                </a>
+
+                <a class="nav-item">
+                    <!-- Heroicon: Cog -->
+                    <svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-width="1.5" d="M10.5 6h3m-3 12h3m-7.5-6h12" />
+                    </svg>
+                    Settings
+                </a>
+            </nav>
+        </aside>
+
+        <!-- MAIN CONTENT -->
+        <main class="main">
+
+            <!-- TOPBAR -->
+            <header class="topbar">
+                <div>
+                    <h1>Compliance Dashboard</h1>
+                    <p class="subtitle">Overview of SHEQ compliance, documents, and incidents</p>
+                </div>
+
+                <div class="topbar-right">
+                    <input class="search" placeholder="Search..." />
+                    <div class="avatar">BC</div>
+                </div>
+            </header>
+
+            <!-- METRIC CARDS -->
+            <section class="cards-row">
+                <div class="card card-success">
+                    <div class="card-title">Compliant</div>
+                    <div class="card-value">18</div>
+                </div>
+
+                <div class="card card-warning">
+                    <div class="card-title">Near Expiry</div>
+                    <div class="card-value">2</div>
+                </div>
+
+                <div class="card card-info">
+                    <div class="card-title">Audits</div>
+                    <div class="card-value">5</div>
+                </div>
+
+                <div class="card card-danger">
+                    <div class="card-title">Issues</div>
+                    <div class="card-value">1</div>
+                </div>
+            </section>
+
+            <!-- SHEQ + DOCUMENTS -->
+            <section class="grid-2">
+                <div class="panel">
+                    <h2>SHEQ Compliance</h2>
+                    <div class="sheq-grid">
+                        <canvas id="radarChart"></canvas>
+                        <canvas id="barChart"></canvas>
+                    </div>
+                </div>
+
+                <div class="panel">
+                    <h2>Document Tracking</h2>
+                    <ul class="doc-list">
+                        <li class="doc-row">
+                            <span>Quality Policy</span>
+                            <span class="pill pill-success">Compliant</span>
+                        </li>
+
+                        <li class="doc-row">
+                            <span>Safety Procedures</span>
+                            <span class="pill pill-warning">Update Required</span>
+                        </li>
+
+                        <li class="doc-row">
+                            <span>Inspection Checklist</span>
+                            <span class="pill pill-success">Compliant</span>
+                        </li>
+                    </ul>
+                </div>
+            </section>
+
+            <!-- INCIDENTS -->
+            <section class="panel">
+                <h2>Recent Incidents</h2>
+                <ul class="incident-list">
+
+                    <li class="incident-row">
+                        <div class="incident-title">Equipment malfunction</div>
+                        <div class="incident-meta">Incident • Feb 18 • Production</div>
+                    </li>
+
+                    <li class="incident-row">
+                        <div class="incident-title">Chemical spill</div>
+                        <div class="incident-meta">Incident • Feb 12 • Warehouse</div>
+                    </li>
+
+                    <li class="incident-row">
+                        <div class="incident-title">Electrical hazard</div>
+                        <div class="incident-meta">Incident • Feb 8 • Maintenance</div>
+                    </li>
+
+                </ul>
+            </section>
+
+        </main>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
+
+<script>
+    /* -------------------------------------------------------
+    ALBATROSS TECHNOLOGIES — DASHBOARD JS (PART 3)
+    Chart.js Radar + Bar Charts
+    ------------------------------------------------------- */
+
+    document.addEventListener("DOMContentLoaded", () => {
+
+        /* ---------------------------------------------
+           THEME COLORS (MATCH EXACT HEX VALUES)
+           --------------------------------------------- */
+        const colors = {
+            accent: "#00C2A8",
+            danger: "#D7263D",
+            warning: "#FFB400",
+            info: "#3B82F6",
+            text: "#F5F7FB",
+            muted: "#8A96A3",
+            border: "#1B2236",
+            bg: "#050816",
+            bgElevated: "#0B1020"
+        };
+
+        /* ---------------------------------------------
+           RADAR CHART — SHEQ COMPLIANCE
+           --------------------------------------------- */
+        const radarCtx = document.getElementById("radarChart").getContext("2d");
+
+        new Chart(radarCtx, {
+            type: "radar",
+            data: {
+                labels: ["Health", "Safety", "Environment", "Quality"],
+                datasets: [
+                    {
+                        label: "Compliance Score",
+                        data: [85, 92, 78, 88],
+                        backgroundColor: "rgba(0, 194, 168, 0.25)",
+                        borderColor: colors.accent,
+                        borderWidth: 2,
+                        pointBackgroundColor: colors.accent,
+                        pointBorderColor: colors.text,
+                        pointRadius: 4
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    r: {
+                        angleLines: { color: colors.border },
+                        grid: { color: colors.border },
+                        pointLabels: {
+                            color: colors.text,
+                            font: { size: 13 }
+                        },
+                        suggestedMin: 0,
+                        suggestedMax: 100,
+                        ticks: {
+                            display: false
+                        }
+                    }
+                },
+                plugins: {
+                    legend: { display: false }
+                }
+            }
+        });
+
+        /* ---------------------------------------------
+           BAR CHART — PASSED VS FAILED
+           --------------------------------------------- */
+        const barCtx = document.getElementById("barChart").getContext("2d");
+
+        new Chart(barCtx, {
+            type: "bar",
+            data: {
+                labels: ["Passed", "Failed"],
+                datasets: [
+                    {
+                        label: "Documents",
+                        data: [14, 3],
+                        backgroundColor: [colors.accent, colors.danger],
+                        borderColor: [colors.accent, colors.danger],
+                        borderWidth: 1.5,
+                        borderRadius: 6,
+                        barThickness: 40
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    x: {
+                        ticks: {
+                            color: colors.text,
+                            font: { size: 13 }
+                        },
+                        grid: { display: false }
+                    },
+                    y: {
+                        ticks: {
+                            color: colors.muted,
+                            font: { size: 12 }
+                        },
+                        grid: {
+                            color: colors.border
+                        },
+                        beginAtZero: true
+                    }
+                },
+                plugins: {
+                    legend: { display: false }
+                }
+            }
+        });
+
+    });
+
+</script>

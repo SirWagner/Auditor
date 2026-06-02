@@ -1,0 +1,39 @@
+﻿@{
+    ViewData["Title"] = "Scheduled";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>Audit</th>
+            <th>Site</th>
+            <th>Date</th>
+            <th>Status</th>
+            <th></th>
+        </tr>
+    </thead>
+
+    <tbody>
+
+        @foreach (var audit in Model)
+        {
+            <tr>
+                <td>@audit.Schedule.Template.Name</td>
+                <td>@audit.Schedule.Site.Name</td>
+                <td>@audit.Schedule.ScheduledDate</td>
+                <td>@audit.Status</td>
+
+                <td>
+                    <a asp-action="Execute"
+                       asp-route-id="@audit.Id"
+                       class="btn btn-primary">
+                        Execute Audit
+                    </a>
+                </td>
+
+            </tr>
+        }
+
+    </tbody>
+</table>

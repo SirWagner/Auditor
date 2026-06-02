@@ -1,0 +1,89 @@
+@{
+    ViewData["Title"] = "Login";
+    Layout = null;
+}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Login — Auditor</title>
+    <link rel="stylesheet" href="~/claudedesign/appusers.css" />
+</head>
+<body>
+
+<div class="login-wrapper">
+
+    <!-- LEFT PANEL -->
+    <div class="login-left">
+        <div class="brand">
+            <div class="brand-icon">🛡️</div>
+            <span class="brand-name">AUDITOR</span>
+        </div>
+        <div class="left-content">
+            <div class="left-tag">Airport Audit Platform</div>
+            <h1 class="left-title">Airport<br /><span>Audit</span><br />Management</h1>
+            <p class="left-desc">
+                Centralized platform for planning, executing and tracking
+                quality and compliance audits.
+            </p>
+            <div class="feature-list">
+                <div class="feature-item"><span class="feature-dot"></span>Audit scheduling and execution</div>
+                <div class="feature-item"><span class="feature-dot"></span>Role-based access control</div>
+                <div class="feature-item"><span class="feature-dot"></span>Real-time reports and metrics</div>
+                <div class="feature-item"><span class="feature-dot"></span>Template and question bank management</div>
+            </div>
+        </div>
+        <div class="grid-decoration"></div>
+    </div>
+
+    <!-- RIGHT PANEL -->
+    <div class="login-right">
+        <div class="login-box">
+            <h2 class="login-box-title">Welcome back</h2>
+            <p class="login-box-sub">Sign in to continue</p>
+
+            <div class="form-card">
+                <form asp-action="Login" asp-controller="Auth" method="post">
+                    @if (!string.IsNullOrEmpty(ViewBag.Error as string))
+                    {
+                        <div class="error-alert">@ViewBag.Error</div>
+                    }
+
+                    <div class="form-group">
+                        <label class="form-label">Email</label>
+                        <input type="email" name="email" class="form-control" placeholder="your@email.com" required autofocus />
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Password</label>
+                        <div class="password-wrapper">
+                            <input type="password" name="password" id="passwordInput" class="form-control" placeholder="••••••••" required />
+                            <button type="button" class="password-toggle" onclick="togglePassword()">👁</button>
+                        </div>
+                    </div>
+
+                    <div class="form-footer">
+                        <label class="remember-me">
+                            <input type="checkbox" name="rememberMe" /> Remember me
+                        </label>
+                        <a href="#" class="forgot-link">Forgot password?</a>
+                    </div>
+
+                    <button type="submit" class="btn-submit">Sign In →</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<script>
+    function togglePassword() {
+        const input = document.getElementById('passwordInput');
+        input.type = input.type === 'password' ? 'text' : 'password';
+    }
+</script>
+</body>
+</html>

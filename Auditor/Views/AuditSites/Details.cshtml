@@ -1,0 +1,354 @@
+﻿@model Auditor.Models.AuditSite
+@using Auditor.Models
+@using System.Globalization
+
+@{
+    ViewData["Title"] = "Audit Site Details";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="details-page-container">
+    <!-- Breadcrumb -->
+    <div class="details-breadcrumb">
+        <a asp-controller="Template" asp-action="Dashboard">Dashboard</a>
+        <span>›</span>
+        <a asp-controller="AuditSites" asp-action="Index">Audit Sites</a>
+        <span>›</span>
+        <span>@Model.Name</span>
+    </div>
+
+    <!-- Page Header -->
+    <div class="details-header">
+        <h1>
+            <i class="typcn typcn-location-outline"></i>
+            @Model.Name
+        </h1>
+        <div class="details-header-actions">
+            <a asp-action="Edit" asp-route-id="@Model.Id" class="btn-details-primary">
+                <i class="fas fa-edit"></i>
+                Edit
+            </a>
+            <a asp-action="Index" class="btn-details-secondary">
+                <i class="fas fa-arrow-left"></i>
+                Back
+            </a>
+        </div>
+    </div>
+
+    <!-- Main Information Card -->
+    <div class="details-info-card">
+        <div class="details-info-card-header">
+            <i class="typcn typcn-document-text"></i>
+            <h2>Audit Site Information</h2>
+        </div>
+        <div class="details-info-card-body">
+            <div class="details-info-grid">
+                <div class="details-info-field">
+                    <div class="details-info-label">Site Name</div>
+                    <div class="details-info-value"><strong>@Model.Name</strong></div>
+                </div>
+                <div class="details-info-field">
+                    <div class="details-info-label">Status</div>
+                    <div class="details-info-value">
+                        @{
+                            var statusClass = Model.Status switch
+                            {
+                                "Active" => "active",
+                                "Inactive" => "inactive",
+                                "Under Review" => "warning",
+                                "Archived" => "inactive",
+                                _ => "inactive"
+                            };
+                        }
+                        <span class="details-status-badge @statusClass">
+                            @if (Model.Status == "Active")
+                            {
+                                <i class="fas fa-check-circle"></i>
+                            }
+                            else if (Model.Status == "Under Review")
+                            {
+                                <i class="fas fa-hourglass-half"></i>
+                            }
+                            else
+                            {
+                                <i class="fas fa-times-circle"></i>
+                            }
+                            @Model.Status
+                        </span>
+                    </div>
+                </div>
+                <div class="details-info-field">
+                    <div class="details-info-label">Location</div>
+                    <div class="details-info-value"><strong>@Model.Location</strong></div>
+                </div>
+                <div class="details-info-field">
+                    <div class="details-info-label">Created Date</div>
+                    <div class="details-info-value">@Model.CreatedDate.ToString("MMM dd, yyyy HH:mm")</div>
+                </div>
+                <div class="details-info-field">
+                    <div class="details-info-label">Created By</div>
+                    <div class="details-info-value"><strong>@(@Model.CreatedByNavigation?.DisplayName ?? Model.CreatedByNavigation?.Email ?? "Unknown")</strong></div>
+                </div>
+                <div class="details-info-field">
+                    <div class="details-info-label">Associated Templates</div>
+                    <div class="details-info-value"><strong>@(Model.Templates?.Count ?? 0)</strong></div>
+                </div>
+                <div class="details-info-field">
+                    <div class="details-info-label">Associated Schedules</div>
+                    <div class="details-info-value"><strong>@(Model.AuditSchedules?.Count ?? 0)</strong></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Related Entities Section -->
+    <div class="details-section">
+        <h2 class="details-section-title">
+            <i class="fas fa-link"></i>
+            Related Information
+        </h2>
+    </div>
+
+    <!-- Airport Details (Compact) -->
+    <div class="details-related-card">
+        <div class="details-related-header">
+            <h3>
+                <i class="typcn typcn-plane"></i>
+                Airport
+            </h3>
+            <a asp-controller="Airports" asp-action="Details" asp-route-id="@Model.AirportId" class="details-related-link">
+                View Airport <i class="fas fa-arrow-right"></i>
+            </a>
+        </div>
+        <div class="details-related-body">
+            @if (Model.Airport != null)
+            {
+                <div class="details-related-info">
+                    <div class="details-related-item">
+                        <div class="details-related-label">Name</div>
+                        <div class="details-related-value"><strong>@Model.Airport.Name</strong></div>
+                    </div>
+                    <div class="details-related-item">
+                        <div class="details-related-label">Code</div>
+                        <div class="details-related-value">
+                            <span class="details-code">@Model.Airport.Code</span>
+                        </div>
+                    </div>
+                    <div class="details-related-item">
+                        <div class="details-related-label">Location</div>
+                        <div class="details-related-value">@Model.Airport.Location</div>
+                    </div>
+                </div>
+            }
+            else
+            {
+                <div class="details-empty-state">
+                    <span>Airport information unavailable</span>
+                </div>
+            }
+        </div>
+    </div>
+
+    <!-- Department Details (Compact) -->
+    <div class="details-related-card">
+        <div class="details-related-header">
+            <h3>
+                <i class="typcn typcn-building"></i>
+                Department
+            </h3>
+            <a asp-controller="Departments" asp-action="Details" asp-route-id="@Model.DepartmentId" class="details-related-link">
+                View Department <i class="fas fa-arrow-right"></i>
+            </a>
+        </div>
+        <div class="details-related-body">
+            @if (Model.Department != null)
+            {
+                <div class="details-related-info">
+                    <div class="details-related-item">
+                        <div class="details-related-label">Name</div>
+                        <div class="details-related-value"><strong>@Model.Department.Name</strong></div>
+                    </div>
+                    <div class="details-related-item">
+                        <div class="details-related-label">Airport</div>
+                        <div class="details-related-value">@Model.Airport?.Name</div>
+                    </div>
+                    @if (!string.IsNullOrEmpty(Model.Department.Description))
+                    {
+                        <div class="details-related-item">
+                            <div class="details-related-label">Description</div>
+                            <div class="details-related-value">@Model.Department.Description</div>
+                        </div>
+                    }
+                </div>
+            }
+            else
+            {
+                <div class="details-empty-state">
+                    <span>Department information unavailable</span>
+                </div>
+            }
+        </div>
+    </div>
+
+    <!-- Creator Details (Compact) -->
+    <div class="details-related-card">
+        <div class="details-related-header">
+            <h3>
+                <i class="typcn typcn-user"></i>
+                Created By
+            </h3>
+        </div>
+        <div class="details-related-body">
+            @if (Model.CreatedByNavigation != null)
+            {
+                <div class="details-related-info">
+                    <div class="details-related-item">
+                        <div class="details-related-label">Name</div>
+                        <div class="details-related-value"><strong>@(Model.CreatedByNavigation.DisplayName ?? Model.CreatedByNavigation.Email)</strong></div>
+                    </div>
+                    <div class="details-related-item">
+                        <div class="details-related-label">Email</div>
+                        <div class="details-related-value">@Model.CreatedByNavigation.Email</div>
+                    </div>
+                    <div class="details-related-item">
+                        <div class="details-related-label">Status</div>
+                        <div class="details-related-value">
+                            @if (Model.CreatedByNavigation.IsActive)
+                            {
+                                <span class="details-status-badge active">
+                                    <i class="fas fa-check-circle"></i>
+                                    Active
+                                </span>
+                            }
+                            else
+                            {
+                                <span class="details-status-badge inactive">
+                                    <i class="fas fa-times-circle"></i>
+                                    Inactive
+                                </span>
+                            }
+                        </div>
+                    </div>
+                </div>
+            }
+            else
+            {
+                <div class="details-empty-state">
+                    <span>User information unavailable</span>
+                </div>
+            }
+        </div>
+    </div>
+
+    <!-- Audit Templates Section -->
+    @if (Model.Templates?.Count > 0)
+    {
+        <div class="details-section">
+            <h2 class="details-section-title">
+                <i class="typcn typcn-clipboard"></i>
+                Audit Templates (@Model.Templates.Count)
+            </h2>
+        </div>
+
+        <div class="details-table-wrapper">
+            <table class="details-table">
+                <thead>
+                    <tr>
+                        <th style="width: 40%;">Template Name</th>
+                        <th style="width: 20%;">Created By</th>
+                        <th style="width: 20%;">Created Date</th>
+                        <th style="width: 20%;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var template in Model.Templates.OrderByDescending(t => t.CreatedDate))
+                    {
+                        <tr>
+                            <td><strong>@template.Name</strong></td>
+                            <td>@(@template.CreatedByNavigation?.DisplayName ?? template.CreatedByNavigation?.Email ?? "Unknown")</td>
+                            <td>@template.CreatedDate.ToString("MMM dd, yyyy")</td>
+                            <td>
+                                <div class="details-table-actions">
+                                    <a asp-controller="AuditTemplates"
+                                           asp-action="Details"
+                                           asp-route-id="@template.Id"
+                                           class="details-action-btn btn-view">
+                                        <i class="fas fa-eye"></i>
+                                        View
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+
+    <!-- Audit Schedules Section -->
+    @if (Model.AuditSchedules?.Count > 0)
+    {
+        <div class="details-section">
+            <h2 class="details-section-title">
+                <i class="typcn typcn-calendar-outline"></i>
+                Audit Schedules (@Model.AuditSchedules.Count)
+            </h2>
+        </div>
+
+        <div class="details-table-wrapper">
+            <table class="details-table">
+                <thead>
+                    <tr>
+                        <th style="width: 30%;">Schedule Name</th>
+                        <th style="width: 20%;">Status</th>
+                        <th style="width: 20%;">Scheduled Date</th>
+                        <th style="width: 20%;">Created By</th>
+                        <th style="width: 10%;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var schedule in Model.AuditSchedules.OrderByDescending(s => s.ScheduledDate))
+                    {
+                        <tr>
+                            <td><strong>@schedule.Scheduler.DisplayName</strong></td>
+                            <td>
+                                @{
+                                    var scheduleStatusClass = schedule.Status switch
+                                    {
+                                        "Scheduled" => "warning",
+                                        "Completed" => "active",
+                                        "Cancelled" => "inactive",
+                                        _ => "inactive"
+                                    };
+                                }
+                                <span class="details-status-badge @scheduleStatusClass">
+                                    @schedule.Status
+                                </span>
+                            </td>
+                            <td>@schedule.ScheduledDate.ToString("MMM dd, yyyy")</td>
+                            <td>
+                                <div class="details-table-actions">
+                                    <a asp-controller="AuditSchedules"
+                                           asp-action="Details"
+                                           asp-route-id="@schedule.Id"
+                                           class="details-action-btn btn-view">
+                                        <i class="fas fa-eye"></i>
+                                        View
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+</div>
+
+@section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Any page-specific scripts can go here
+        });
+    </script>
+}

@@ -1,0 +1,88 @@
+@model Auditor.Models.AppUser
+
+@{
+    ViewData["Title"] = "Create User";
+}
+
+<link rel="stylesheet" href="~/claudedesign/appusers.css" />
+
+<div class="page-wrapper">
+    <div class="card-container">
+        <div class="card-header-label">Access Management</div>
+        <h1 class="card-title">Create <span>User</span></h1>
+
+        <div class="form-card">
+            <form asp-action="Create" method="post">
+                <div asp-validation-summary="ModelOnly" class="text-danger" style="margin-bottom:1rem;"></div>
+
+                <div class="form-group">
+                    <label class="form-label">Full Name</label>
+                    <input asp-for="DisplayName" class="form-control" placeholder="e.g. John Smith" />
+                    <span asp-validation-for="DisplayName" class="text-danger"></span>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Email</label>
+                    <input asp-for="Email" class="form-control" type="email" placeholder="john@company.com" />
+                    <span asp-validation-for="Email" class="text-danger"></span>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Password</label>
+                    <div class="password-wrapper">
+                        <input type="password" name="password" id="passwordInput" class="form-control" placeholder="Minimum 8 characters" />
+                        <button type="button" class="password-toggle" onclick="togglePassword()">👁</button>
+                    </div>
+                </div>
+
+                
+
+                <div class="divider"></div>
+
+                <div class="form-group">
+                    <label class="form-label">Access Role</label>
+                    <div class="role-grid">
+                        <div class="role-option">
+                            <input type="radio" name="role" id="roleAdmin" value="Admin" />
+                            <label for="roleAdmin"><span class="role-icon">🛡️</span>Admin</label>
+                        </div>
+                        <div class="role-option">
+                            <input type="radio" name="role" id="roleAuditor" value="Auditor" checked />
+                            <label for="roleAuditor"><span class="role-icon">🔍</span>Auditor</label>
+                        </div>
+                        <div class="role-option">
+                            <input type="radio" name="role" id="roleViewer" value="Viewer" />
+                            <label for="roleViewer"><span class="role-icon">👁️</span>Viewer</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="divider"></div>
+
+                <div class="form-group">
+                    <div class="active-toggle">
+                        <label class="toggle-switch">
+                            <input asp-for="IsActive" type="checkbox" checked />
+                            <span class="toggle-slider"></span>
+                        </label>
+                        <span class="toggle-label">Active user</span>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn-submit">Create User →</button>
+            </form>
+
+            <a href="@Url.Action("Index", "AppUsers")" class="btn-cancel">← Back to list</a>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    <script>
+        function togglePassword() {
+            const input = document.getElementById('passwordInput');
+            input.type = input.type === 'password' ? 'text' : 'password';
+        }
+    </script>
+}

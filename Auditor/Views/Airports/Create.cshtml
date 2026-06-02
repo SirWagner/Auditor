@@ -1,0 +1,261 @@
+﻿@model Auditor.Models.Airport
+
+@{
+    ViewData["Title"] = "Create Airport";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="form-page-container">
+    <!-- Breadcrumb Navigation -->
+    <div class="form-page-breadcrumb">
+        <a asp-controller="Template" asp-action="Dashboard">Dashboard</a>
+        <span>›</span>
+        <a asp-controller="Airports" asp-action="Index">Airports</a>
+        <span>›</span>
+        <span>Create New</span>
+    </div>
+
+    <!-- Page Title Section -->
+    <div class="form-page-title-section">
+        <div class="form-page-title-content">
+            <h1>Create New Airport</h1>
+            <p>Add a new airport location to your audit management system</p>
+        </div>
+        <div class="form-page-meta">
+            <span class="form-meta-badge">New Entry</span>
+        </div>
+    </div>
+
+    <!-- Form Layout with Sidebar -->
+    <div class="form-wrapper">
+        <!-- Main Form -->
+        <div class="form-main">
+            <!-- Form Header -->
+            <div class="form-main-header">
+                <h2>
+                    <i class="typcn typcn-plane-outline"></i>
+                    Airport Information
+                </h2>
+            </div>
+
+            <!-- Form Content -->
+            <div class="form-main-content">
+                <form asp-action="Create" method="post" novalidate id="createAirportForm">
+                    <!-- Validation Alert -->
+                    @if (!ViewData.ModelState.IsValid)
+                    {
+                        <div class="validation-alert">
+                            <h3>
+                                <i class="fas fa-times-circle"></i>
+                                Form Validation Errors
+                            </h3>
+                            <ul>
+                                @foreach (var modelState in ViewData.ModelState.Values)
+                                {
+                                    @foreach (var error in modelState.Errors)
+                                    {
+                                        <li>@error.ErrorMessage</li>
+                                    }
+                                }
+                            </ul>
+                        </div>
+                    }
+
+                    <!-- Basic Information Section -->
+                    <div class="form-section">
+                        <h3 class="form-section-title">Basic Information</h3>
+                        
+                        <div class="form-grid">
+                            <!-- Airport Name -->
+                            <div class="form-group">
+                                <label asp-for="Name">
+                                    Airport Name
+                                    <span class="required">*</span>
+                                </label>
+                                <input asp-for="Name"
+                                       type="text"
+                                       placeholder="e.g., Maputo Mavalane International Airport"
+                                       required />
+                                <span asp-validation-for="Name" class="form-group-error"></span>
+                                <div class="form-group-hint">
+                                    The full official name of the airport as recognized in international records.
+                                </div>
+                            </div>
+
+                            <!-- Airport Code -->
+                            <div class="form-group">
+                                <label asp-for="Code">
+                                    Airport Code
+                                    <span class="required">*</span>
+                                </label>
+                                <input asp-for="Code"
+                                       type="text"
+                                       placeholder="e.g., MPM or FQMA"
+                                       maxlength="10"
+                                       required />
+                                <span asp-validation-for="Code" class="form-group-error"></span>
+                                <div class="form-group-hint">
+                                    IATA (3 letters) or ICAO (4 letters) code. Example: JFK or KJFK.
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Location Information Section -->
+                    <div class="form-section">
+                        <h3 class="form-section-title">Location</h3>
+                        <p class="form-section-description">Specify the geographic location of the airport.</p>
+                        
+                        <div class="form-grid full">
+                            <!-- Location -->
+                            <div class="form-group">
+                                <label asp-for="Location">
+                                    City / Region
+                                    <span class="required">*</span>
+                                </label>
+                                <input asp-for="Location"
+                                       type="text"
+                                       placeholder="e.g., Maputo, Mozambique"
+                                       required />
+                                <span asp-validation-for="Location" class="form-group-error"></span>
+                                <div class="form-group-hint">
+                                    The city and country where the airport is located.
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- AirSide -->
+                    <div class="form-group">
+                        <label asp-for="AirSide">
+                            Air Side
+                            <span class="required">*</span>
+                        </label>
+                        <select asp-for="AirSide" required>
+                            <option value="">-- Select Air Side --</option>
+                            <option value="Runway">Runway</option>
+                            <option value="Apron">Apron</option>
+                            <option value="Taxiway">Taxiway</option>
+                        </select>
+                        <span asp-validation-for="AirSide" class="form-group-error"></span>
+                        <div class="form-group-hint">
+                            The airside area of the airport restricted to aircraft operations.
+                        </div>
+                    </div>
+
+                    <!-- Commercial Area -->
+                    <div class="form-group">
+                        <label asp-for="ComercialArea">
+                            Commercial Area
+                            <span class="required">*</span>
+                        </label>
+                        <select asp-for="ComercialArea" required>
+                            <option value="">-- Select Commercial Area --</option>
+                            <option value="Shops">Shops</option>
+                            <option value="Restaurants">Restaurants</option>
+                            <option value="Lounges">Lounges</option>
+                        </select>
+                        <span asp-validation-for="ComercialArea" class="form-group-error"></span>
+                        <div class="form-group-hint">
+                            The commercial zones accessible to passengers within the terminal.
+                        </div>
+                    </div>
+
+                    <!-- Terminal Section -->
+                    <div class="form-group">
+                        <label asp-for="TerminalSection">
+                            Terminal Section
+                            <span class="required">*</span>
+                        </label>
+                        <select asp-for="TerminalSection" required>
+                            <option value="">-- Select Terminal Section --</option>
+                            <option value="Departures">Departures</option>
+                            <option value="Arrivals">Arrivals</option>
+                            <option value="Gate B">Gate B</option>
+                        </select>
+                        <span asp-validation-for="TerminalSection" class="form-group-error"></span>
+                        <div class="form-group-hint">
+                            The specific section or zone within the airport terminal building.
+                        </div>
+                    </div>
+
+                </form>
+            </div>
+
+            <!-- Form Footer with Actions -->
+            <div class="form-main-footer">
+                <a asp-action="Index" class="btn-cancel">
+                    <i class="fas fa-times"></i>
+                    Cancel
+                </a>
+                <button form="createAirportForm" type="submit" class="btn-submit">
+                    <i class="fas fa-plus"></i>
+                    Create Airport
+                </button>
+            </div>
+        </div>
+
+        <!-- Sidebar -->
+        <div class="form-sidebar">
+            <!-- Information Card -->
+            <div class="form-sidebar-card">
+                <h3>
+                    <i class="fas fa-info-circle"></i>
+                    Information
+                </h3>
+                <p>
+                    Airport codes are international standards used to identify airports. Ensure you use the correct codes to avoid confusion.
+                </p>
+            </div>
+
+            <!-- Help Card -->
+            <div class="form-sidebar-card form-sidebar-help">
+                <h3>
+                    <i class="fas fa-question-circle"></i>
+                    Need Help?
+                </h3>
+                <p>
+                    Fields marked with <span class="required">*</span> are required. Make sure all information is accurate and complete.
+                </p>
+            </div>
+
+            <!-- Tips Card -->
+            <div class="form-sidebar-card">
+                <h3>
+                    <i class="fas fa-lightbulb"></i>
+                    Tips
+                </h3>
+                <p>
+                    Use official IATA or ICAO codes. You can search online airport databases if unsure about the correct code.
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const form = document.getElementById('createAirportForm');
+            
+            // Add error class to fields with validation errors
+            const inputs = form.querySelectorAll('input, textarea, select');
+            inputs.forEach(input => {
+                const errorSpan = input.parentElement.querySelector('.form-group-error');
+                if (errorSpan && errorSpan.textContent.trim()) {
+                    input.closest('.form-group').classList.add('has-error');
+                }
+            });
+
+            // Clear error on input
+            inputs.forEach(input => {
+                input.addEventListener('input', function() {
+                    this.closest('.form-group').classList.remove('has-error');
+                });
+            });
+        });
+    </script>
+}

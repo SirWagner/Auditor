@@ -1,0 +1,49 @@
+﻿@model Auditor.Models.AuditSchedule
+
+@{
+    ViewData["Title"] = "Audit Details";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<h2>Audit Details</h2>
+
+<dl class="row">
+
+    <dt class="col-sm-3">Audit Template</dt>
+    <dd class="col-sm-9">@Model.Template.Name</dd>
+
+    <dt class="col-sm-3">Site</dt>
+    <dd class="col-sm-9">@Model.Site.Name</dd>
+
+    <dt class="col-sm-3">Scheduled Date</dt>
+    <dd class="col-sm-9">@Model.ScheduledDate</dd>
+
+    <dt class="col-sm-3">Due Date</dt>
+    <dd class="col-sm-9">@Model.DueDate</dd>
+
+</dl>
+
+<div>
+
+    <a asp-controller="AuditExecutions"
+       asp-action="Start"
+       asp-route-scheduleId="@Model.Id"
+       class="btn btn-primary">
+
+        Start Audit
+
+    </a>
+
+</div>
+
+<br />
+
+<div>
+    <a asp-action="Index">Back to List</a>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

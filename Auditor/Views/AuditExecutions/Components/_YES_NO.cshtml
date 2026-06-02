@@ -1,0 +1,52 @@
+﻿@model Auditor.ViewModels.AuditExecution.QuestionViewModel
+
+<div class="question-container" data-question="@Model.TemplateItemId">
+
+    @foreach (var option in Model.Options)
+    {
+        <div class="form-check">
+
+            <label class="form-check-label">
+
+                <input type="radio"
+                       name="q_@Model.TemplateItemId"
+                       value="@option.Id"
+                       class="form-check-input"
+                       data-requires-reason="@option.RequiresReason.ToString().ToLower()" />
+
+                @option.OptionText
+
+            </label>
+
+        </div>
+    }
+
+    @if (Model.RequiresReason)
+    {
+        <div class="reason-block mt-3" style="display:none" data-question="@Model.TemplateItemId">
+
+            <label><strong>Select Reasons</strong></label>
+
+            @foreach (var reason in Model.ReasonOptions)
+            {
+                <div class="form-check">
+                    <input type="checkbox"
+                           name="reason_@Model.TemplateItemId"
+                           value="@reason.Id"
+                           class="form-check-input" />
+
+                    <label class="form-check-label">
+                        @reason.ReasonText
+                    </label>
+                </div>
+            }
+
+            <textarea class="form-control mt-2"
+                  name="custom_reason_@Model.TemplateItemId"
+                  placeholder="Other reason (optional)">
+        </textarea>
+
+        </div>
+    }
+
+</div>

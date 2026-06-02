@@ -1,0 +1,10 @@
+﻿@model Auditor.ViewModels.AuditExecution.QuestionViewModel
+
+<select class="form-control">
+    <option value="">Select rating</option>
+
+    @for (int i = 1; i <= 5; i++)
+    {
+        <option value="@i">@i</option>
+    }
+</select>

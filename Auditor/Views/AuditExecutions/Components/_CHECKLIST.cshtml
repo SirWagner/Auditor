@@ -1,0 +1,14 @@
+﻿@model Auditor.ViewModels.AuditExecution.QuestionViewModel
+
+@foreach (var option in Model.Options)
+{
+    <div class="form-check">
+        <input type="checkbox"
+               value="@option.Id"
+               class="form-check-input" />
+
+        <label class="form-check-label">
+            @option.OptionText
+        </label>
+    </div>
+}

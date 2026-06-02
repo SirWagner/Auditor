@@ -1,0 +1,285 @@
+﻿@model Auditor.ViewModels.AuditTemplate.AuditTemplateCreateViewModel
+
+@{
+    ViewData["Title"] = "Create Audit Template";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="container mt-4">
+
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2>Create Audit Template</h2>
+        <a asp-action="Index" class="btn btn-outline-secondary">Back to List</a>
+    </div>
+
+    <form asp-action="Create" method="post" id="auditTemplateForm">
+
+        <!-- ================= TEMPLATE INFO SECTION ================= -->
+        <partial name="_TemplateInfoSection" model="Model" />
+
+        <!-- ================= QUESTIONS SECTION ================= -->
+        <partial name="_QuestionsSection" model="Model" />
+
+        <!-- ================= SUBMIT SECTION ================= -->
+        <div class="mt-4 text-end">
+            <button type="submit" class="btn btn-success btn-lg">
+                Save Template
+            </button>
+        </div>
+
+    </form>
+</div>
+
+<!-- ================= MODALS ================= -->
+<partial name="_QuestionBankModal" model="Model" />
+
+@section Scripts {
+
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+
+    <!-- ================= QUESTION MANAGER STATE ================= -->
+    <script>
+        window.QuestionManager = {
+            state: {
+                questionIndex: 0,
+                addedQuestions: new Set(),
+                questions: @Html.Raw(Json.Serialize(Model.QuestionBank))
+            },
+
+            init() {
+                this.cacheElements();
+                this.bindEvents();
+                console.log("Bound events");
+                this.renderQuestionBankList();  // Render on init
+            },
+
+            cacheElements() {
+                this.els = {
+                    container: document.getElementById("questionContainer"),
+                    modal: document.getElementById("questionBankModal"),
+                    searchInput: document.getElementById("questionSearch"),
+                    questionBankList: document.getElementById("questionBankList"),
+                    addButton: document.querySelector('[data-bs-target="#questionBankModal"]'),
+                    form: document.getElementById("auditTemplateForm")
+                };
+            },
+
+            bindEvents() {
+                // Modal shown event - render and reset search
+                this.els.modal.addEventListener("shown.bs.modal", () => {
+                    this.els.searchInput.value = "";
+                    this.renderQuestionBankList();
+                });
+
+                // Search functionality
+                this.els.searchInput?.addEventListener("input", (e) => {
+                    this.filterQuestions(e.target.value);
+                });
+
+                // Question bank button clicks - event delegation
+        this.els.questionBankList?.addEventListener("click", (e) => {
+            const button = e.target.closest("button[data-question-id]");
+            if (button) {
+                e.preventDefault();
+                const id = button.getAttribute("data-question-id");
+                const text = button.getAttribute("data-question-text");
+                const type = button.getAttribute("data-question-type");
+                this.addQuestion(id, text, type);
+            }
+        });
+
+                // Form submission - validate
+                this.els.form?.addEventListener("submit", (e) => {
+                    if (this.state.questionIndex === 0) {
+                        e.preventDefault();
+                        alert("Please add at least one question");
+                        return false;
+                    }
+                });
+
+                // Delegate delete events
+                this.els.container?.addEventListener("click", (e) => {
+                    if (e.target.closest("[data-action='deleteQuestion']")) {
+                        e.preventDefault();
+                        this.deleteQuestion(e.target.closest("[data-action='deleteQuestion']"));
+                    }
+                });
+            },
+
+            filterQuestions(searchTerm) {
+                const filtered = this.state.questions.filter(q =>
+                    q.text.toLowerCase().includes(searchTerm.toLowerCase())
+                );
+                this.renderQuestionBankList(filtered);
+            },
+
+        renderQuestionBankList(questions = null) {
+            const list = questions || this.state.questions;
+            this.els.questionBankList.innerHTML = list
+                .map(q => `
+                    <button type="button"
+                            class="list-group-item list-group-item-action text-start"
+                            data-question-id="${q.id}"
+                            data-question-text="${this.escapeHtml(q.text)}"
+                            data-question-type="${this.escapeHtml(q.questionType)}">
+                        <div>
+                            <strong>${this.escapeHtml(q.text)}</strong>
+                            <br>
+                            <small class="text-muted">${this.escapeHtml(q.questionType)}</small>
+                        </div>
+                    </button>
+                `)
+                .join("");
+        },
+
+                    addQuestion(id, text, questionType) {
+            if (this.state.addedQuestions.has(id)) {
+                this.showNotification("Question already added", "warning");
+                return false;
+            }
+    
+            this.state.addedQuestions.add(id);
+            this.renderQuestionCard(id, text, questionType);
+            this.state.questionIndex++;
+            this.closeModal();
+            return false;
+        },
+
+        renderQuestionCard(id, text, questionType) {
+            const index = this.state.questionIndex;
+            const card = document.createElement("div");
+            card.className = "card mb-3 shadow-sm";
+            card.setAttribute("data-question-id", id);
+            card.innerHTML = `
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <div>
+                            <strong>${text}</strong>
+                            <br>
+                            <small class="text-muted">${questionType}</small>
+                        </div>
+                        <button type="button"
+                                class="btn btn-sm btn-danger"
+                                data-action="deleteQuestion">
+                            <span class="bi bi-trash"></span> Delete
+                        </button>
+                    </div>
+
+                    <input type="hidden"
+                           name="Items[${index}].QuestionBankId"
+                           value="${id}" />
+                    <input type="hidden"
+                           name="Items[${index}].QuestionType"
+                           value="${questionType}" />
+
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <div class="form-check">
+                                <input type="checkbox"
+                                       id="mandatory_${index}"
+                                       name="Items[${index}].Mandatory"
+                                       class="form-check-input" />
+                                <label class="form-check-label" for="mandatory_${index}">
+                                    Mandatory
+                                </label>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="sequence_${index}" class="form-label form-label-sm">
+                                Sequence
+                            </label>
+                            <input type="number"
+                                   id="sequence_${index}"
+                                   name="Items[${index}].Sequence"
+                                   class="form-control form-control-sm"
+                                   value="${index + 1}"
+                                   min="1" />
+                        </div>
+                    </div>
+                </div>
+            `;
+    
+            this.els.container.appendChild(card);
+        },
+
+            deleteQuestion(button) {
+                const card = button.closest(".card");
+                const id = card.getAttribute("data-question-id");
+
+                if (confirm("Are you sure you want to remove this question?")) {
+                    this.state.addedQuestions.delete(id);
+                    card.remove();
+                    this.reindexQuestions();
+                }
+            },
+
+            reindexQuestions() {
+                const cards = this.els.container.querySelectorAll(".card");
+                cards.forEach((card, index) => {
+                    const hiddenInput = card.querySelector("input[type='hidden']");
+                    const mandatoryCheckbox = card.querySelector("input[type='checkbox']");
+                    const sequenceInput = card.querySelector("input[type='number']");
+
+                    if (hiddenInput) {
+                        hiddenInput.name = `Items[${index}].QuestionBankId`;
+                    }
+                    if (mandatoryCheckbox) {
+                        mandatoryCheckbox.name = `Items[${index}].Mandatory`;
+                        mandatoryCheckbox.id = `mandatory_${index}`;
+                    }
+                    if (sequenceInput) {
+                        sequenceInput.name = `Items[${index}].Sequence`;
+                        sequenceInput.id = `sequence_${index}`;
+                        sequenceInput.value = index + 1;
+                    }
+                });
+                this.state.questionIndex = cards.length;
+            },
+
+            closeModal() {
+                   try {
+                        const modal = bootstrap.Modal.getOrCreateInstance(this.els.modal);
+                        modal.hide();
+                    } catch (error) {
+                        console.error("Error closing modal:", error);
+                    }
+            },
+
+            showNotification(message, type = "info") {
+                const alertClass = `alert alert-${type}`;
+                const alert = document.createElement("div");
+                alert.className = `${alertClass} alert-dismissible fade show`;
+                alert.role = "alert";
+                alert.innerHTML = `
+                    ${message}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                `;
+                this.els.container.insertAdjacentElement("beforebegin", alert);
+
+                setTimeout(() => alert.remove(), 3000);
+            },
+
+            escapeHtml(text) {
+                const div = document.createElement("div");
+                div.textContent = text;
+                return div.innerHTML;
+            },
+
+            renderQuestions() {
+                // Called on init if there are pre-existing questions
+                // Useful for edit scenarios
+            }
+        };
+
+        // Initialize on DOM ready
+        if (document.readyState === "loading") {
+            document.addEventListener("DOMContentLoaded", () => {
+                window.QuestionManager.init();
+            });
+        } else {
+            window.QuestionManager.init();
+        }
+    </script>
+}
