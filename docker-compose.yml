@@ -1,0 +1,40 @@
+version: "3.9"
+
+services:
+
+  db:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: auditor-db
+    restart: always
+    environment:
+      ACCEPT_EULA: "Y"
+      SA_PASSWORD: "YourStrong!Passw0rd"
+      MSSQL_PID: "Express"
+    ports:
+      - "1433:1433"
+    volumes:
+      - sqldata:/var/opt/mssql
+    networks:
+      - auditor-net
+
+  app:
+    image: sirwagner/auditor:latest
+    container_name: auditor-app
+    restart: always
+    depends_on:
+      - db
+    environment:
+      ConnectionStrings__AudConnection: "Server=db,1433;Database=Auditor2;User Id=sa;Password=YourStrong!Passw0rd;MultipleActiveResultSets=True;TrustServerCertificate=True"
+      ASPNETCORE_ENVIRONMENT: "Production"
+      ASPNETCORE_URLS: "http://+:80"
+    ports:
+      - "8080:80"
+    networks:
+      - auditor-net
+
+volumes:
+  sqldata:
+
+networks:
+  auditor-net:
+    driver: bridge

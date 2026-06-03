@@ -71,8 +71,11 @@ app.UseAuthorization();
 
 app.MapControllerRoute(
     name: "default",
-//pattern: "{controller=Template}/{action=Dashboard}");
-pattern: "{controller=AuditExecutions}/{action=Index}");
+pattern: "{controller=Template}/{action=Dashboard}");
+//pattern: "{controller=AuditExecutions}/{action=Index}");
 app.MapRazorPages();
+
+using (var scope = app.Services.CreateScope())
+    await scope.ServiceProvider.GetRequiredService<AuditorContext>().Database.MigrateAsync();
 
 app.Run();
