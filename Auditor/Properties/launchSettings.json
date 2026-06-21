@@ -16,12 +16,11 @@
         "ASPNETCORE_ENVIRONMENT": "Development"
       }
     },
-
     "Mapie_Config": {
       "commandName": "IISExpress",
       "launchBrowser": true,
       "environmentVariables": {
-        "ASPNETCORE_ENVIRONMENT": "Mapie"
+        "ASPNETCORE_ENVIRONMENT": "Local"
       }
     },
     "Container (Dockerfile)": {

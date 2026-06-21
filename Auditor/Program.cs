@@ -71,7 +71,7 @@ app.UseAuthorization();
 
 app.MapControllerRoute(
     name: "default",
-pattern: "{controller=Template}/{action=Dashboard}");
+pattern: "{controller=Auth}/{action=login}");
 //pattern: "{controller=AuditExecutions}/{action=Index}");
 app.MapRazorPages();
 
