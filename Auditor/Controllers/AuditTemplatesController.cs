@@ -30,6 +30,11 @@ namespace Auditor.Controllers
             var vm = await _service.GetCreateViewModelAsync();
             return View(vm);
         }
+        public async Task<IActionResult> Details(long id)
+        {
+            var template = await _service.GetById(id);
+            return View(template);
+        }
 
         [HttpPost]
         [ValidateAntiForgeryToken]

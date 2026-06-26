@@ -1,0 +1,195 @@
+﻿
+/* =========================
+   SHELL
+========================= */
+
+.azia-details-shell {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    font-family: inherit;
+}
+
+/* =========================
+   HERO (REUSABLE HEADER + OVERVIEW)
+========================= */
+
+.azia-hero-card {
+    background: #fff;
+    border: 1px solid #e5e7eb;
+    border-radius: 14px;
+    padding: 16px 18px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.04);
+}
+
+.azia-hero-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.azia-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 10px;
+    background: #f3f4f6;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.azia-title {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 700;
+}
+
+.azia-subtitle {
+    font-size: 12px;
+    color: #6b7280;
+}
+
+/* RIGHT SIDE */
+.azia-hero-right {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+/* =========================
+   BADGES (REUSABLE)
+========================= */
+
+.azia-badge {
+    padding: 4px 10px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+    .azia-badge.success {
+        background: #ecfdf5;
+        color: #047857;
+    }
+
+    .azia-badge.danger {
+        background: #fef2f2;
+        color: #b91c1c;
+    }
+
+    .azia-badge.muted {
+        background: #f3f4f6;
+        color: #6b7280;
+    }
+
+/* =========================
+   LAYOUT (2 COLUMN ONLY)
+========================= */
+
+.azia-layout {
+    display: grid;
+    grid-template-columns: 200px 1fr;
+    gap: 14px;
+}
+
+/* =========================
+   TABS
+========================= */
+
+.azia-vtabs {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.azia-tab {
+    padding: 10px 12px;
+    border-radius: 10px;
+    border: 1px solid #e5e7eb;
+    background: #fff;
+    cursor: pointer;
+    text-align: left;
+    font-weight: 600;
+    transition: 0.2s;
+}
+
+    .azia-tab:hover {
+        background: #f9fafb;
+    }
+
+    .azia-tab.active {
+        background: #eef2ff;
+        border-color: #6366f1;
+        color: #3730a3;
+    }
+
+/* =========================
+   CONTENT
+========================= */
+
+.azia-content {
+    min-height: 500px;
+}
+
+.azia-panel {
+    display: none;
+}
+
+    .azia-panel.active {
+        display: block;
+    }
+
+/* =========================
+   CARDS
+========================= */
+
+.azia-card {
+    background: #fff;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    padding: 14px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.04);
+}
+
+    .azia-card.hover:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 16px rgba(0,0,0,0.06);
+    }
+
+/* GRID */
+.azia-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 12px;
+}
+
+/* CARD PARTS */
+.azia-card-header {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 8px;
+}
+
+.azia-card-body {
+    margin-bottom: 8px;
+    font-size: 14px;
+}
+
+.azia-card-footer {
+    font-size: 12px;
+    color: #9ca3af;
+}
+
+.azia-card-title {
+    font-weight: 700;
+    margin-bottom: 10px;
+}
+
+.azia-info-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+}

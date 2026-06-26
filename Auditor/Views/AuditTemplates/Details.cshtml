@@ -1,55 +1,174 @@
-﻿@model Auditor.Models.AuditTemplate
+﻿@model Auditor.ViewModels.AuditTemplate.AuditTemplateDetailsViewModel
 
 @{
-    ViewData["Title"] = "Details";
+    ViewData["Title"] = "Audit Template Details";
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
-<h1>Details</h1>
+<div class="details-page-container">
 
-<div>
-    <h4>AuditTemplate</h4>
-    <hr />
-    <dl class="row">
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Name)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Name)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Description)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Description)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Version)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Version)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.IsActive)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.IsActive)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.CreatedDate)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.CreatedDate)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.CreatedByNavigation)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.CreatedByNavigation.Id)
-        </dd>
-    </dl>
+    <!-- =========================
+         HERO (HEADER + OVERVIEW FUSED)
+    ========================== -->
+    <div class="azia-hero-card">
+
+        <div class="azia-hero-left">
+
+            <div class="azia-icon">
+                <i class="fas fa-clipboard-list"></i>
+            </div>
+
+            <div>
+                <h2 class="azia-title">@Model.Name</h2>
+
+                <div class="azia-subtitle">
+                    Version <strong>@Model.Version</strong>
+                    · ID @Model.Id
+                    · Created by <strong>@Model.CreatedBy</strong>
+                </div>
+
+            </div>
+
+        </div>
+
+        <div class="azia-hero-right">
+
+            <span class="azia-badge @(Model.IsActive ? "success" : "danger")">
+                @(Model.IsActive ? "Active" : "Inactive")
+            </span>
+
+            <span class="azia-stat">
+                <i class="fas fa-list"></i>
+                @Model.Items.Count Questions
+            </span>
+
+        </div>
+
+    </div>
+
+    <!-- =========================
+         MAIN LAYOUT
+    ========================== -->
+    <div class="azia-layout">
+
+        <!-- LEFT NAV -->
+        <div class="azia-vtabs">
+
+            <button class="azia-tab active" data-tab="questions">
+                <i class="fas fa-list"></i>
+                Questions
+            </button>
+
+            <button class="azia-tab" data-tab="config">
+                <i class="fas fa-cogs"></i>
+                Configuration
+            </button>
+
+            <button class="azia-tab" data-tab="meta">
+                <i class="fas fa-database"></i>
+                Metadata
+            </button>
+
+        </div>
+
+        <!-- RIGHT CONTENT -->
+        <div class="azia-content">
+
+            <!-- QUESTIONS -->
+            <div class="azia-panel active" id="questions">
+
+                <div class="azia-grid">
+
+                    @foreach (var item in Model.Items.OrderBy(x => x.Sequence))
+                    {
+                        <div class="azia-card hover">
+
+                            <div class="azia-card-header">
+                                <strong>#@item.Sequence</strong>
+
+                                <span class="azia-badge @(item.Mandatory ? "success" : "muted")">
+                                    @(item.Mandatory ? "Mandatory" : "Optional")
+                                </span>
+                            </div>
+
+                            <div class="azia-card-body">
+                                @item.QuestionText
+                            </div>
+
+                            <div class="azia-card-footer">
+                                Bank ID: @item.QuestionBankId
+                            </div>
+
+                        </div>
+                    }
+
+                </div>
+
+            </div>
+
+            <!-- CONFIG -->
+            <div class="azia-panel" id="config">
+
+                <div class="azia-card">
+
+                    <div class="azia-card-title">
+                        Configuration
+                    </div>
+
+                    <div class="azia-info-grid">
+                        <div>Users: <strong>@(Model.Users?.Count ?? 0)</strong></div>
+                        <div>Question Bank: <strong>@(Model.QuestionBank?.Count ?? 0)</strong></div>
+                    </div>
+
+                </div>
+
+            </div>
+
+            <!-- META -->
+            <div class="azia-panel" id="meta">
+
+                <div class="azia-card">
+
+                    <div class="azia-card-title">
+                        System Metadata
+                    </div>
+
+                    <div class="azia-info-grid">
+                        <div>ID: <strong>@Model.Id</strong></div>
+                        <div>Created By: <strong>@Model.CreatedBy</strong></div>
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
 </div>
-<div>
-    <a asp-action="Edit" asp-route-id="@Model?.Id">Edit</a> |
-    <a asp-action="Index">Back to List</a>
-</div>
+
+<!-- =========================
+     SCRIPT (REUSABLE)
+========================= -->
+@section Scripts {
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+
+            const tabs = document.querySelectorAll(".azia-tab");
+            const panels = document.querySelectorAll(".azia-panel");
+
+            tabs.forEach(tab => {
+                tab.addEventListener("click", () => {
+
+                    tabs.forEach(t => t.classList.remove("active"));
+                    panels.forEach(p => p.classList.remove("active"));
+
+                    tab.classList.add("active");
+                    document.getElementById(tab.dataset.tab).classList.add("active");
+
+                });
+            });
+
+        });
+    </script>
+}
