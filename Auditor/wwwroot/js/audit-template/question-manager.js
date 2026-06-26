@@ -1,247 +1,133 @@
-﻿class QuestionManager {
+﻿import QuestionStore from "./QuestionStore.js";
+import QuestionView from "./QuestionView.js";
+import QuestionService from "./QuestionService.js";
+
+export default class QuestionManager {
     constructor({ questionBank }) {
-        this.state = {
-            nextQuestionIndex: 0,
-            addedQuestionIds: new Set(),
-            availableQuestions: questionBank || []
-        };
+        this.store = new QuestionStore(questionBank);
+        this.view = new QuestionView();
+        this.service = new QuestionService(this.store);
 
-        this.dom = this.initializeDomReferences();
-
-        this.initializeEventListeners();
-        this.renderQuestionBankList();
-        this.updateUiState();
+        this.initialize();
     }
 
     /* -----------------------------
-     * DOM REFERENCES
+     * INITIALIZATION
      * ----------------------------- */
 
-    initializeDomReferences() {
-        return {
-            questionContainer: document.getElementById("questionContainer"),
-            questionBankModal: document.getElementById("questionBankModal"),
-            questionSearchInput: document.getElementById("questionSearch"),
-            questionBankListContainer: document.getElementById("questionBankList"),
-            auditTemplateForm: document.getElementById("auditTemplateForm"),
-            questionCounterLabel: document.getElementById("questionCount")
-        };
+    initialize() {
+        this.bindEvents();
+        this.renderInitialState();
+    }
+
+    renderInitialState() {
+        this.view.renderQuestionBankList(
+            this.store.getAvailableQuestions(),
+            (id) => this.store.hasQuestion(id)
+        );
+
+        this.view.updateCounter(this.store.getQuestionCount());
+        this.view.toggleContainerState(this.store.getQuestionCount() > 0);
     }
 
     /* -----------------------------
      * EVENTS
      * ----------------------------- */
 
-    initializeEventListeners() {
-        this.initializeModalEvents();
-        this.initializeSearchEvents();
-        this.initializeQuestionBankEvents();
-        this.initializeContainerEvents();
-        this.initializeFormEvents();
+    bindEvents() {
+        this.bindSearchEvent();
+        this.bindAddQuestionEvent();
+        this.bindDeleteQuestionEvent();
+        this.bindModalEvent();
+        this.bindFormValidation();
     }
 
-    initializeModalEvents() {
-        const modal = this.dom.questionBankModal;
-        if (!modal) return;
+    /* -----------------------------
+     * SEARCH
+     * ----------------------------- */
 
-        modal.addEventListener("shown.bs.modal", () => {
-            this.clearSearchInput();
-            this.renderQuestionBankList();
-        });
-    }
+    bindSearchEvent() {
+        this.view.dom.questionSearchInput?.addEventListener("input", (event) => {
+            const filtered = this.service.filterQuestions(event.target.value);
 
-    initializeSearchEvents() {
-        this.dom.questionSearchInput?.addEventListener("input", (event) => {
-            this.filterQuestions(event.target.value);
-        });
-    }
-
-    initializeQuestionBankEvents() {
-        this.dom.questionBankListContainer?.addEventListener("click", (event) => {
-            const questionElement = event.target.closest("[data-question-id]");
-            if (!questionElement) return;
-
-            this.addQuestionFromBank(questionElement);
-        });
-    }
-
-    initializeContainerEvents() {
-        this.dom.questionContainer?.addEventListener("click", (event) => {
-            const deleteButton = event.target.closest("[data-action='deleteQuestion']");
-            if (!deleteButton) return;
-
-            const questionCard = deleteButton.closest(".card");
-            this.removeQuestion(questionCard);
-        });
-    }
-
-    initializeFormEvents() {
-        this.dom.auditTemplateForm?.addEventListener("submit", (event) => {
-            if (!this.hasAnyQuestions()) {
-                event.preventDefault();
-                alert("Please add at least one question");
-            }
+            this.view.renderQuestionBankList(
+                filtered,
+                (id) => this.store.hasQuestion(id)
+            );
         });
     }
 
     /* -----------------------------
-     * QUESTION BANK LOGIC
+     * ADD QUESTION FLOW
      * ----------------------------- */
 
-    filterQuestions(searchTerm) {
-        const normalizedTerm = searchTerm.toLowerCase();
+    bindAddQuestionEvent() {
+        this.view.dom.questionBankListContainer?.addEventListener("click", (event) => {
+            const element = event.target.closest("[data-question-id]");
+            if (!element) return;
 
-        const filteredQuestions = this.state.availableQuestions.filter(question =>
-            question.text.toLowerCase().includes(normalizedTerm)
-        );
+            const { questionId, questionText, questionType } = element.dataset;
 
-        this.renderQuestionBankList(filteredQuestions);
+            if (!this.service.canAddQuestion(questionId)) return;
+
+            this.handleAddQuestion(questionId, questionText, questionType);
+        });
     }
 
-    renderQuestionBankList(questions = this.state.availableQuestions) {
-        const container = this.dom.questionBankListContainer;
-        if (!container) return;
+    handleAddQuestion(questionId, questionText, questionType) {
+        const index = this.store.getNextQuestionIndex();
 
-        container.innerHTML = questions
-            .map(question => this.renderQuestionBankItem(question))
-            .join("");
-    }
+        this.store.addQuestion(questionId);
 
-    renderQuestionBankItem(question) {
-        const isAlreadyAdded = this.state.addedQuestionIds.has(question.id);
-
-        return `
-            <div class="question-bank-item ${isAlreadyAdded ? "disabled" : ""}"
-                 data-question-id="${question.id}"
-                 data-question-text="${this.escapeHtml(question.text)}"
-                 data-question-type="${this.escapeHtml(question.questionType)}">
-
-                <div class="fw-semibold">
-                    ${this.escapeHtml(question.text)}
-                </div>
-
-                <div class="text-muted small">
-                    ${this.escapeHtml(question.questionType)}
-                </div>
-            </div>
-        `;
-    }
-
-    /* -----------------------------
-     * ADD / REMOVE QUESTIONS
-     * ----------------------------- */
-
-    addQuestionFromBank(questionElement) {
-        const { questionId, questionText, questionType } = questionElement.dataset;
-
-        if (this.state.addedQuestionIds.has(questionId)) {
-            this.showNotification("Question already added", "warning");
-            return;
-        }
-
-        this.state.addedQuestionIds.add(questionId);
-
-        this.renderQuestionCard(questionId, questionText, questionType);
-
-        this.incrementQuestionIndex();
-        this.updateUiState();
-        this.closeModal();
-    }
-
-    removeQuestion(questionCard) {
-        if (!questionCard || !confirm("Remove this question?")) return;
-
-        const questionId = questionCard.dataset.questionId;
-        this.state.addedQuestionIds.delete(questionId);
-
-        questionCard.remove();
-
-        this.recalculateQuestionIndexes();
-        this.updateUiState();
-    }
-
-    /* -----------------------------
-     * QUESTION CARD RENDERING
-     * ----------------------------- */
-
-    renderQuestionCard(questionId, questionText, questionType) {
-        const index = this.state.nextQuestionIndex;
-
-        const cardElement = document.createElement("div");
-        cardElement.className = "card mb-3 shadow-sm";
-        cardElement.dataset.questionId = questionId;
-
-        cardElement.innerHTML = this.buildQuestionCardHtml({
+        this.view.renderQuestionCard(
             questionId,
             questionText,
             questionType,
             index
-        });
+        );
 
-        this.dom.questionContainer?.appendChild(cardElement);
-    }
-
-    buildQuestionCardHtml({ questionId, questionText, questionType, index }) {
-        return `
-            <div class="card-body">
-
-                <div class="d-flex justify-content-between">
-                    <div>
-                        <div class="fw-semibold">
-                            ${this.escapeHtml(questionText)}
-                        </div>
-
-                        <span class="badge bg-light text-primary">
-                            ${this.escapeHtml(questionType)}
-                        </span>
-                    </div>
-
-                    <button class="btn btn-sm btn-outline-danger"
-                            data-action="deleteQuestion">
-                        <i class="fas fa-trash"></i>
-                    </button>
-                </div>
-
-                <input type="hidden"
-                       name="Items[${index}].QuestionBankId"
-                       value="${questionId}" />
-
-                <input type="hidden"
-                       name="Items[${index}].QuestionType"
-                       value="${questionType}" />
-
-                <div class="row mt-3">
-
-                    <div class="col-md-6">
-                        <input type="checkbox"
-                               name="Items[${index}].Mandatory" />
-                        <label>Mandatory</label>
-                    </div>
-
-                    <div class="col-md-6">
-                        <input type="number"
-                               name="Items[${index}].Sequence"
-                               value="${index + 1}" />
-                    </div>
-
-                </div>
-
-            </div>
-        `;
+        this.syncUi();
+        this.view.closeModal();
     }
 
     /* -----------------------------
-     * INDEX MANAGEMENT
+     * DELETE QUESTION FLOW
      * ----------------------------- */
 
-    incrementQuestionIndex() {
-        this.state.nextQuestionIndex++;
+    bindDeleteQuestionEvent() {
+        this.view.dom.questionContainer?.addEventListener("click", (event) => {
+            const deleteButton = event.target.closest("[data-action='deleteQuestion']");
+            if (!deleteButton) return;
+
+            const card = deleteButton.closest(".card");
+            this.handleRemoveQuestion(card);
+        });
     }
 
-    recalculateQuestionIndexes() {
-        const questionCards = this.dom.questionContainer?.querySelectorAll(".card") || [];
+    handleRemoveQuestion(cardElement) {
+        if (!cardElement || !confirm("Remove this question?")) return;
 
-        questionCards.forEach((card, index) => {
+        const questionId = cardElement.dataset.questionId;
+
+        this.store.removeQuestion(questionId);
+
+        this.view.removeQuestionCard(cardElement);
+
+        this.rebuildIndexes();
+
+        this.syncUi();
+    }
+
+    /* -----------------------------
+     * INDEX REBUILD (SAFE SYNC)
+     * ----------------------------- */
+
+    rebuildIndexes() {
+        const cards = this.view.dom.questionContainer?.querySelectorAll(".card") || [];
+
+        this.store.resetIndex(cards.length);
+
+        cards.forEach((card, index) => {
             card.querySelectorAll("input").forEach(input => {
                 if (input.name.includes("QuestionBankId")) {
                     input.name = `Items[${index}].QuestionBankId`;
@@ -257,59 +143,46 @@
                 }
             });
         });
-
-        this.state.nextQuestionIndex = questionCards.length;
     }
 
     /* -----------------------------
-     * UI STATE
+     * MODAL
      * ----------------------------- */
 
-    updateUiState() {
-        const totalQuestions = this.state.addedQuestionIds.size;
-
-        if (this.dom.questionCounterLabel) {
-            this.dom.questionCounterLabel.textContent = totalQuestions;
-        }
-
-        this.dom.questionContainer?.classList.toggle(
-            "has-items",
-            totalQuestions > 0
-        );
+    bindModalEvent() {
+        this.view.dom.questionBankModal?.addEventListener("shown.bs.modal", () => {
+            this.view.clearSearch();
+        });
     }
 
     /* -----------------------------
-     * HELPERS
+     * FORM VALIDATION
      * ----------------------------- */
 
-    hasAnyQuestions() {
-        return this.state.nextQuestionIndex > 0;
+    bindFormValidation() {
+        const form = this.view.dom.auditTemplateForm;
+
+        form?.addEventListener("submit", (event) => {
+            if (this.store.getQuestionCount() === 0) {
+                event.preventDefault();
+                alert("Please add at least one question");
+            }
+        });
     }
 
-    clearSearchInput() {
-        if (this.dom.questionSearchInput) {
-            this.dom.questionSearchInput.value = "";
-        }
+    /* -----------------------------
+     * UI SYNC (ONLY ONE SOURCE OF TRUTH)
+     * ----------------------------- */
+
+    syncUi() {
+        const count = this.store.getQuestionCount();
+
+        this.view.updateCounter(count);
+        this.view.toggleContainerState(count > 0);
     }
 
-    closeModal() {
-        try {
-            bootstrap.Modal
-                .getOrCreateInstance(this.dom.questionBankModal)
-                ?.hide();
-        } catch {
-            // intentionally ignored
-        }
-    }
-
-    showNotification(message, type = "info") {
-        console.log(`[${type}] ${message}`);
-    }
-
-    escapeHtml(text) {
-        const element = document.createElement("div");
-        element.textContent = text;
-        return element.innerHTML;
+    getQuestionCount() {
+        return this.store.getQuestionCount();
     }
 }
 

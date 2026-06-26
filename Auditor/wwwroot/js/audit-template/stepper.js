@@ -1,4 +1,4 @@
-﻿class Stepper {
+﻿export default class Stepper {
     constructor(questionManager) {
         this.questionManager = questionManager;
 
@@ -11,10 +11,6 @@
         this.initializeEventListeners();
     }
 
-    /* -----------------------------
-     * DOM REFERENCES
-     * ----------------------------- */
-
     initializeDomReferences() {
         return {
             nextButtons: document.querySelectorAll(".next-step"),
@@ -26,10 +22,6 @@
             summaryContainer: document.getElementById("review-summary")
         };
     }
-
-    /* -----------------------------
-     * EVENTS
-     * ----------------------------- */
 
     initializeEventListeners() {
         this.bindNextStepEvents();
@@ -47,10 +39,6 @@
             button.addEventListener("click", () => this.goToPreviousStep());
         });
     }
-
-    /* -----------------------------
-     * NAVIGATION
-     * ----------------------------- */
 
     goToNextStep() {
         if (!this.validateCurrentStep()) return;
@@ -76,46 +64,28 @@
         this.activateStepIndicator(this.state.currentStep);
     }
 
-    /* -----------------------------
-     * STEP VISIBILITY
-     * ----------------------------- */
-
     showStep(stepNumber) {
-        document
-            .getElementById(`step-${stepNumber}`)
-            ?.classList.remove("d-none");
+        document.getElementById(`step-${stepNumber}`)?.classList.remove("d-none");
     }
 
     hideStep(stepNumber) {
-        document
-            .getElementById(`step-${stepNumber}`)
-            ?.classList.add("d-none");
+        document.getElementById(`step-${stepNumber}`)?.classList.add("d-none");
     }
 
     activateStepIndicator(stepNumber) {
-        document
-            .getElementById(`step-${stepNumber}-indicator`)
-            ?.classList.add("active");
+        document.getElementById(`step-${stepNumber}-indicator`)?.classList.add("active");
     }
 
     deactivateStepIndicator(stepNumber) {
-        document
-            .getElementById(`step-${stepNumber}-indicator`)
-            ?.classList.remove("active");
+        document.getElementById(`step-${stepNumber}-indicator`)?.classList.remove("active");
     }
 
-    /* -----------------------------
-     * VALIDATION (SRP: separate logic)
-     * ----------------------------- */
-
     validateCurrentStep() {
-        const step = this.state.currentStep;
-
-        if (step === 1) {
+        if (this.state.currentStep === 1) {
             return this.validateTemplateDetails();
         }
 
-        if (step === 2) {
+        if (this.state.currentStep === 2) {
             return this.validateQuestions();
         }
 
@@ -123,9 +93,9 @@
     }
 
     validateTemplateDetails() {
-        const templateName = this.dom.templateNameInput?.value;
+        const name = this.dom.templateNameInput?.value;
 
-        if (!templateName) {
+        if (!name) {
             alert("Template name is required");
             return false;
         }
@@ -134,10 +104,9 @@
     }
 
     validateQuestions() {
-        const hasQuestions =
-            this.questionManager?.state?.addedQuestionIds?.size > 0;
+        const count = this.questionManager.getQuestionCount();
 
-        if (!hasQuestions) {
+        if (count === 0) {
             alert("Please add at least one question");
             return false;
         }
@@ -145,26 +114,22 @@
         return true;
     }
 
-    /* -----------------------------
-     * SUMMARY (PURE UI RENDERING)
-     * ----------------------------- */
-
     buildSummary() {
         if (!this.dom.summaryContainer) return;
 
-        const templateName = this.dom.templateNameInput?.value;
-        const templateVersion = this.dom.templateVersionInput?.value;
-        const questionCount = this.getQuestionCount();
+        const name = this.dom.templateNameInput?.value;
+        const version = this.dom.templateVersionInput?.value;
+        const questionCount = this.questionManager.getQuestionCount();
 
         this.dom.summaryContainer.innerHTML = `
             <div class="col-md-6">
                 <strong>Name:</strong>
-                <p>${templateName}</p>
+                <p>${name}</p>
             </div>
 
             <div class="col-md-6">
                 <strong>Version:</strong>
-                <p>v${templateVersion}</p>
+                <p>v${version}</p>
             </div>
 
             <div class="col-md-12">
@@ -173,16 +138,8 @@
         `;
     }
 
-    /* -----------------------------
-     * HELPERS
-     * ----------------------------- */
-
     isQuestionStep() {
         return this.state.currentStep === 2;
-    }
-
-    getQuestionCount() {
-        return this.questionManager?.state?.addedQuestionIds?.size || 0;
     }
 }
 
