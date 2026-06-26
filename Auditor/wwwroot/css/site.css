@@ -30,3 +30,70 @@ body {
     box-shadow: 0 0 0 2px #dc3545;
     padding: 10px;
 }
+.question-bank-list {
+    max-height: 400px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Item */
+.question-bank-item {
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--border-subtle);
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+    .question-bank-item:hover {
+        background: #f9f7ff;
+        border-left: 4px solid var(--primary);
+        padding-left: 12px;
+    }
+
+    .question-bank-item.disabled {
+        opacity: 0.5;
+        pointer-events: none;
+        background: #f5f5f5;
+    }
+/* Question Cards */
+.questions-container {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    min-height: 120px;
+}
+
+    /* Hide empty state when items exist */
+    .questions-container.has-items #emptyState {
+        display: none;
+    }
+
+/* Question Card */
+.question-card {
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    transition: all 0.2s ease;
+    background: white;
+}
+
+    .question-card:hover {
+        box-shadow: 0 4px 14px rgba(0,0,0,0.08);
+        transform: translateY(-1px);
+    }
+
+/* Badge style */
+.question-type {
+    background: rgba(91, 71, 251, 0.1);
+    color: var(--primary);
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+/* Actions */
+.question-actions {
+    display: flex;
+    gap: 8px;
+}

@@ -1,324 +1,324 @@
-﻿ console.log("🚀 Audit Render Script Loaded");
+﻿console.log("🚀 Audit Render Script Loaded");
 
 let isValid = true;
 
 document.querySelectorAll("input[data-requires-reason]")
-   .forEach(input => {
+    .forEach(input => {
 
-       input.addEventListener("change", function() {
+        input.addEventListener("change", function () {
 
-           const container =
-               this.closest(".question-container")
-                   .querySelector(".reason-block");
+            const container =
+                this.closest(".question-container")
+                    .querySelector(".reason-block");
 
-           if (!container) return;
+            if (!container) return;
 
-           if (this.dataset.requiresReason === "true")
-               container.style.display = "block";
-           else
-               container.style.display = "none";
+            if (this.dataset.requiresReason === "true")
+                container.style.display = "block";
+            else
+                container.style.display = "none";
 
-       });
+        });
 
-   });
-   document.querySelectorAll(".reason-block").forEach(block => {
+    });
+document.querySelectorAll(".reason-block").forEach(block => {
 
-       const questionId = block.dataset.question;
+    const questionId = block.dataset.question;
 
-       const reasonCheckboxes =
-           block.querySelectorAll("input[type='checkbox']");
+    const reasonCheckboxes =
+        block.querySelectorAll("input[type='checkbox']");
 
-       const customText =
-           block.querySelector("textarea");
+    const customText =
+        block.querySelector("textarea");
 
-       let anyChecked = false;
+    let anyChecked = false;
 
-       reasonCheckboxes.forEach(c => {
-           if (c.checked) anyChecked = true;
-       });
+    reasonCheckboxes.forEach(c => {
+        if (c.checked) anyChecked = true;
+    });
 
-       if (!anyChecked && customText.value.trim() === "") {
+    if (!anyChecked && customText.value.trim() === "") {
 
-           isValid = false;
+        isValid = false;
 
-           block.classList.add("field-error");
+        block.classList.add("field-error");
 
-           console.log("Reason required for question:", questionId);
-       }
-
-   });
-  
-
-    /* =====================================================
-       MAIN SUBMIT ENTRY
-    ===================================================== */
-
-    function submitAudit(executionId) {
-
-        console.log("====================================");
-        console.log("START AUDIT SUBMISSION");
-        console.log("Execution ID:", executionId);
-        console.log("====================================");
-
-        isValid = true;
-
-        clearErrors();
-
-        validateAllQuestions();
-
-        if (!isValid) {
-
-            console.log("❌ VALIDATION FAILED");
-
-            Swal.fire({
-                icon: 'error',
-                title: 'Validation Error',
-                html: 'Please fix the highlighted fields and try again.'
-            });
-
-            return;
-        }
-
-        console.log("✅ VALIDATION PASSED");
-        console.log("Preparing payload...");
-
-        const payload = buildPayload(executionId);
-
-        console.log("📦 Payload:", payload);
-
-        sendToBackend(payload);
+        console.log("Reason required for question:", questionId);
     }
 
-    /* =====================================================
-       CLEAR ERRORS
-    ===================================================== */
+});
 
-    function clearErrors() {
 
-        console.log("Clearing previous validation errors...");
+/* =====================================================
+   MAIN SUBMIT ENTRY
+===================================================== */
 
-        document.querySelectorAll(".field-error")
-            .forEach(el => el.classList.remove("field-error"));
+function submitAudit(executionId) {
 
-        document.querySelectorAll(".question-error")
-            .forEach(el => el.classList.remove("question-error"));
+    console.log("====================================");
+    console.log("START AUDIT SUBMISSION");
+    console.log("Execution ID:", executionId);
+    console.log("====================================");
+
+    isValid = true;
+
+    clearErrors();
+
+    validateAllQuestions();
+
+    if (!isValid) {
+
+        console.log("❌ VALIDATION FAILED");
+
+        Swal.fire({
+            icon: 'error',
+            title: 'Validation Error',
+            html: 'Please fix the highlighted fields and try again.'
+        });
+
+        return;
     }
 
-    /* =====================================================
-       VALIDATION ENGINE
-    ===================================================== */
+    console.log("✅ VALIDATION PASSED");
+    console.log("Preparing payload...");
 
-    function validateAllQuestions() {
+    const payload = buildPayload(executionId);
 
-        console.log("Running full validation...");
+    console.log("📦 Payload:", payload);
 
-        const cards = document.querySelectorAll(".card");
+    sendToBackend(payload);
+}
 
-        cards.forEach((card, index) => {
+/* =====================================================
+   CLEAR ERRORS
+===================================================== */
 
-            console.log("Checking question:", index + 1);
+function clearErrors() {
 
-            let questionValid = true;
+    console.log("Clearing previous validation errors...");
 
-            const inputs = card.querySelectorAll("input, textarea, select");
+    document.querySelectorAll(".field-error")
+        .forEach(el => el.classList.remove("field-error"));
 
-            inputs.forEach(input => {
+    document.querySelectorAll(".question-error")
+        .forEach(el => el.classList.remove("question-error"));
+}
 
-                if (input.type === "radio") {
+/* =====================================================
+   VALIDATION ENGINE
+===================================================== */
 
-                    const group = card.querySelectorAll(
-                        `input[name='${input.name}']`
-                    );
+function validateAllQuestions() {
 
-                    let checked = false;
+    console.log("Running full validation...");
 
-                    group.forEach(r => {
-                        if (r.checked) checked = true;
-                    });
+    const cards = document.querySelectorAll(".card");
 
-                    if (!checked) {
-                        questionValid = false;
-                        console.log("❌ Radio not selected");
-                    }
+    cards.forEach((card, index) => {
+
+        console.log("Checking question:", index + 1);
+
+        let questionValid = true;
+
+        const inputs = card.querySelectorAll("input, textarea, select");
+
+        inputs.forEach(input => {
+
+            if (input.type === "radio") {
+
+                const group = card.querySelectorAll(
+                    `input[name='${input.name}']`
+                );
+
+                let checked = false;
+
+                group.forEach(r => {
+                    if (r.checked) checked = true;
+                });
+
+                if (!checked) {
+                    questionValid = false;
+                    console.log("❌ Radio not selected");
                 }
+            }
 
-                if (input.type === "checkbox") {
-                    // Handled in reason logic
+            if (input.type === "checkbox") {
+                // Handled in reason logic
+            }
+
+            if (input.tagName === "TEXTAREA") {
+                if (input.value.trim() === "") {
+                    questionValid = false;
+                    input.classList.add("field-error");
+                    console.log("❌ Empty textarea");
                 }
+            }
 
-                if (input.tagName === "TEXTAREA") {
-                    if (input.value.trim() === "") {
-                        questionValid = false;
-                        input.classList.add("field-error");
-                        console.log("❌ Empty textarea");
-                    }
+            if (input.type === "number") {
+                if (input.value === "" || isNaN(input.value)) {
+                    questionValid = false;
+                    input.classList.add("field-error");
+                    console.log("❌ Invalid number");
                 }
+            }
 
-                if (input.type === "number") {
-                    if (input.value === "" || isNaN(input.value)) {
-                        questionValid = false;
-                        input.classList.add("field-error");
-                        console.log("❌ Invalid number");
-                    }
+            if (input.type === "date") {
+                if (input.value === "") {
+                    questionValid = false;
+                    input.classList.add("field-error");
+                    console.log("❌ Date missing");
                 }
+            }
 
-                if (input.type === "date") {
-                    if (input.value === "") {
-                        questionValid = false;
-                        input.classList.add("field-error");
-                        console.log("❌ Date missing");
-                    }
+            if (input.type === "time") {
+                if (input.value === "") {
+                    questionValid = false;
+                    input.classList.add("field-error");
+                    console.log("❌ Time missing");
                 }
-
-                if (input.type === "time") {
-                    if (input.value === "") {
-                        questionValid = false;
-                        input.classList.add("field-error");
-                        console.log("❌ Time missing");
-                    }
-                }
-            });
-
-            if (!questionValid) {
-                card.classList.add("question-error");
-                isValid = false;
             }
         });
 
-        validateReasonRules();
-    }
+        if (!questionValid) {
+            card.classList.add("question-error");
+            isValid = false;
+        }
+    });
 
-    /* =====================================================
-       REASON VALIDATION (FIXED LOGIC)
-    ===================================================== */
+    validateReasonRules();
+}
 
-    function validateReasonRules() {
+/* =====================================================
+   REASON VALIDATION (FIXED LOGIC)
+===================================================== */
 
-        console.log("Validating requires_reason logic...");
+function validateReasonRules() {
 
-        document.querySelectorAll(".question-container")
-            .forEach(container => {
+    console.log("Validating requires_reason logic...");
 
-                const selectedOption =
-                    container.querySelector("input[type='radio']:checked");
+    document.querySelectorAll(".question-container")
+        .forEach(container => {
 
-                if (!selectedOption) return;
+            const selectedOption =
+                container.querySelector("input[type='radio']:checked");
 
-                if (selectedOption.dataset.requiresReason !== "true")
-                    return;
+            if (!selectedOption) return;
 
-                console.log("Reason required for this selection");
+            if (selectedOption.dataset.requiresReason !== "true")
+                return;
 
-                const reasonBlock =
-                    container.querySelector(".reason-block");
+            console.log("Reason required for this selection");
 
-                if (!reasonBlock) return;
+            const reasonBlock =
+                container.querySelector(".reason-block");
 
-                const checkboxes =
-                    reasonBlock.querySelectorAll("input[type='checkbox']:checked");
+            if (!reasonBlock) return;
 
-                const customText =
-                    reasonBlock.querySelector("textarea");
+            const checkboxes =
+                reasonBlock.querySelectorAll("input[type='checkbox']:checked");
 
-                if (checkboxes.length === 0 &&
-                    customText.value.trim() === "") {
+            const customText =
+                reasonBlock.querySelector("textarea");
 
-                    console.log("❌ Reason missing");
+            if (checkboxes.length === 0 &&
+                customText.value.trim() === "") {
 
-                    reasonBlock.classList.add("field-error");
+                console.log("❌ Reason missing");
 
-                    isValid = false;
-                }
-            });
-    }
+                reasonBlock.classList.add("field-error");
 
-    /* =====================================================
-       BUILD PAYLOAD
-    ===================================================== */
+                isValid = false;
+            }
+        });
+}
 
-    function buildPayload(executionId) {
-        const formData = new FormData();
-        formData.append("ExecutionId", executionId);
+/* =====================================================
+   BUILD PAYLOAD
+===================================================== */
 
-        document.querySelectorAll(".question-container").forEach((container, index) => {
-            const templateItemId = container.dataset.question;
+function buildPayload(executionId) {
+    const formData = new FormData();
+    formData.append("ExecutionId", executionId);
 
-            const selectedOption = container.querySelector("input[type='radio']:checked");
-            const selectedOptionId = selectedOption ? selectedOption.value : null;
+    document.querySelectorAll(".question-container").forEach((container, index) => {
+        const templateItemId = container.dataset.question;
 
-            const selectedReasonIds = [];
-            container.querySelectorAll(".reason-block input[type='checkbox']:checked')
-                .forEach(c => selectedReasonIds.push(c.value));
+        const selectedOption = container.querySelector("input[type='radio']:checked");
+        const selectedOptionId = selectedOption ? selectedOption.value : null;
 
-            const customReason = container.querySelector(".reason-block textarea")?.value || "";
+        const selectedReasonIds = [];
+        container.querySelectorAll(".reason-block input[type='checkbox']:checked')
+            .forEach(c => selectedReasonIds.push(c.value));
 
-            // Append normal fields
-            formData.append(`Responses[${index}].TemplateItemId`, templateItemId);
-            formData.append(`Responses[${index}].SelectedOptionId`, selectedOptionId);
-            formData.append(`Responses[${index}].CustomReason`, customReason);
+        const customReason = container.querySelector(".reason-block textarea")?.value || "";
 
-            selectedReasonIds.forEach((reasonId, rIndex) => {
-                formData.append(`Responses[${index}].SelectedReasonIds[${rIndex}]`, reasonId);
-            });
+        // Append normal fields
+        formData.append(`Responses[${index}].TemplateItemId`, templateItemId);
+        formData.append(`Responses[${index}].SelectedOptionId`, selectedOptionId);
+        formData.append(`Responses[${index}].CustomReason`, customReason);
 
-            // Append attachments
-            const files = container.querySelectorAll("input[type='file']");
-            files.forEach(input => {
-                for (let i = 0; i < input.files.length; i++) {
-                    formData.append(`Responses[${index}].Attachments`, input.files[i]);
-                }
-            });
+        selectedReasonIds.forEach((reasonId, rIndex) => {
+            formData.append(`Responses[${index}].SelectedReasonIds[${rIndex}]`, reasonId);
         });
 
-        return formData;
-    }
+        // Append attachments
+        const files = container.querySelectorAll("input[type='file']");
+        files.forEach(input => {
+            for (let i = 0; i < input.files.length; i++) {
+                formData.append(`Responses[${index}].Attachments`, input.files[i]);
+            }
+        });
+    });
 
-    /* =====================================================
-       SEND TO BACKEND
-    ===================================================== */
+    return formData;
+}
 
-    function sendToBackend(payload) {
+/* =====================================================
+   SEND TO BACKEND
+===================================================== */
 
-        console.log("Sending to backend...");
+function sendToBackend(payload) {
 
-        fetch('/AuditExecutions/Submit', {
-            method: 'POST',
-            body: (payload)
-        })
-            .then(async response => {
+    console.log("Sending to backend...");
 
-                const data = await response.json();
+    fetch('/AuditExecutions/Submit', {
+        method: 'POST',
+        body: (payload)
+    })
+        .then(async response => {
 
-                console.log("Backend Response:", data);
+            const data = await response.json();
 
-                if (!response.ok || !data.success) {
+            console.log("Backend Response:", data);
 
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Server Error',
-                        html: data.message || 'Unknown backend error'
-                    });
-
-                    return;
-                }
-
-                Swal.fire({
-                    icon: 'success',
-                    title: 'Success',
-                    text: 'Audit submitted successfully.'
-                }).then(() => {
-                    window.location.href = "/AuditExecutions";
-                });
-
-            })
-            .catch(error => {
-
-                console.log("Network/Error:", error);
+            if (!response.ok || !data.success) {
 
                 Swal.fire({
                     icon: 'error',
-                    title: 'Unexpected Error',
-                    text: error.toString()
+                    title: 'Server Error',
+                    html: data.message || 'Unknown backend error'
                 });
+
+                return;
+            }
+
+            Swal.fire({
+                icon: 'success',
+                title: 'Success',
+                text: 'Audit submitted successfully.'
+            }).then(() => {
+                window.location.href = "/AuditExecutions";
             });
-    } 
+
+        })
+        .catch(error => {
+
+            console.log("Network/Error:", error);
+
+            Swal.fire({
+                icon: 'error',
+                title: 'Unexpected Error',
+                text: error.toString()
+            });
+        });
+} 
