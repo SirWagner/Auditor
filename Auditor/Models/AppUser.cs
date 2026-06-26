@@ -11,17 +11,17 @@ public partial class AppUser
 
     public Guid AzureAdObjectId { get; set; }
 
-    public string PasswordHash { get; set; }
-
     public string DisplayName { get; set; }
-
-    public string? Role { get; set; }
 
     public string Email { get; set; }
 
     public bool IsActive { get; set; }
 
     public DateTime CreatedDate { get; set; }
+
+    public string PasswordHash { get; set; }
+
+    public string Role { get; set; }
 
     public virtual ICollection<AuditExecution> AuditExecutions { get; set; } = new List<AuditExecution>();
 

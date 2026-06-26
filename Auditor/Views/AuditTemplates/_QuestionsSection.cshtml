@@ -1,59 +1,49 @@
 @model Auditor.ViewModels.AuditTemplate.AuditTemplateCreateViewModel
 
-<div class="card shadow-sm">
+<div class="list-table-wrapper p-0">
 
-    <div class="card-header bg-light d-flex justify-content-between align-items-center">
-        <strong>Questions (<span id="questionCount">0</span>)</strong>
+    <!-- HEADER -->
+    <div class="d-flex justify-content-between align-items-center px-4 py-3 border-bottom">
+        <div class="d-flex align-items-center gap-3">
+            <h5 class="mb-0 fw-semibold">Questions</h5>
+
+            <span id="questionCount"
+                  class="cell-badge">
+                0
+            </span>
+        </div>
 
         <button type="button"
-                class="btn btn-sm btn-primary"
+                class="btn-list-primary"
                 data-bs-toggle="modal"
                 data-bs-target="#questionBankModal">
-                <span class="bi bi-plus-circle"></span> Add from Question Bank
+            <i class="bi bi-plus-circle"></i>
+            Add Question
         </button>
     </div>
 
-    <div class="card-body">
-        <div id="questionContainer" class="questions-list">
-            <div class="text-muted text-center py-4">
-                No questions added yet. Click the button above to add questions.
+    <!-- BODY -->
+    <div class="p-4">
+
+        <div id="questionContainer" class="questions-container">
+
+            <!-- EMPTY STATE -->
+            <div id="emptyState" class="list-empty-state">
+                <div class="empty-state-icon">🧩</div>
+                <div class="empty-state-title">No Questions Added</div>
+                <div class="empty-state-text">
+                    Start building your audit by selecting questions from the bank.
+                </div>
+
+                <button type="button"
+                        class="btn-list-primary"
+                        data-bs-toggle="modal"
+                        data-bs-target="#questionBankModal">
+                    Add First Question
+                </button>
             </div>
+
         </div>
+
     </div>
-
 </div>
-
-<style>
-    #questionContainer {
-        min-height: 100px;
-    }
-
-    #questionContainer.has-questions .text-muted {
-        display: none;
-    }
-</style>
-
-<script>
-    // Update question count when questions change
-    const updateQuestionCount = () => {
-        const count = document.querySelectorAll("#questionContainer > .card").length;
-        document.getElementById("questionCount").textContent = count;
-        
-        const container = document.getElementById("questionContainer");
-        if (count > 0) {
-            container.classList.add("has-questions");
-        } else {
-            container.classList.remove("has-questions");
-        }
-    };
-
-    // Watch for changes
-    const observer = new MutationObserver(updateQuestionCount);
-    document.addEventListener("DOMContentLoaded", () => {
-        observer.observe(document.getElementById("questionContainer"), {
-            childList: true,
-            subtree: true
-        });
-        updateQuestionCount();
-    });
-</script>

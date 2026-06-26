@@ -50,16 +50,6 @@
             <div class="container-fluid">
                 <!-- Header Left: Logo & Mobile Menu Toggle -->
                 <div class="az-header-left">
-
-                    @if (User.Identity?.IsAuthenticated == true)
-                    {
-                        <form asp-action="Logout" asp-controller="Auth" method="post" style="display:inline;">
-                            @Html.AntiForgeryToken()
-                            <button type="submit" class="btn-logout">
-                                Sign Out
-                            </button>
-                        </form>
-                    }
                     <a asp-area="" asp-controller="Template" asp-action="dashboard" class="az-logo">
                         <i class="typcn typcn-radar"></i>
                         <span>Auditor</span>
@@ -110,6 +100,9 @@
                                 <i class="typcn typcn-clipboard"></i> Audit Templates
                             </a>
                             <nav class="az-menu-sub">
+                                <a asp-area="" asp-controller="QuestionBanks" asp-action="Create" class="nav-link">
+                                    <i class="typcn typcn-document-add"></i> Add Question
+                                </a>
                                 <a asp-area="" asp-controller="AuditTemplates" asp-action="Create" class="nav-link">
                                     <i class="typcn typcn-document-add"></i> New Template
                                 </a>
@@ -172,6 +165,7 @@
                 </div>
             </div>
         </header>
+
 
         <!-- CONTENT WRAPPER - Isolated from header styles -->
         <div class="auditor-content-wrapper">

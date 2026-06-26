@@ -1,80 +1,50 @@
 @model Auditor.ViewModels.AuditTemplate.AuditTemplateCreateViewModel
 
-<div class="modal fade" id="questionBankModal" tabindex="-1" aria-labelledby="questionBankModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
+<div class="modal fade" id="questionBankModal" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
 
         <div class="modal-content">
 
-            <div class="modal-header">
-                <h5 class="modal-title" id="questionBankModalLabel">Select Questions to Add</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            <!-- HEADER -->
+            <div class="modal-header border-bottom">
+                <div>
+                    <h5 class="modal-title fw-semibold">Question Bank</h5>
+                    <small class="text-muted">Select questions to include in your audit</small>
+                </div>
+
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
 
+            <!-- BODY -->
             <div class="modal-body">
 
-                <div class="input-group mb-3">
-                    <span class="input-group-text">
-                        <span class="bi bi-search"></span>
-                    </span>
+                <!-- SEARCH -->
+                <div class="list-search mb-3">
                     <input type="text"
                            id="questionSearch"
                            class="form-control"
-                           placeholder="Search questions by name or description..."
-                           aria-label="Search questions" />
+                           placeholder="Search questions..." />
                 </div>
 
-                <div id="questionBankList" class="list-group list-group-flush" style="max-height: 400px; overflow-y: auto;">
-                    <!-- Rendered by JavaScript -->
+                <!-- LIST -->
+                <div id="questionBankList" class="question-bank-list">
+                    <!-- JS renders -->
                 </div>
 
-                <div id="noPendingQuestions" class="text-muted text-center py-4" style="display: none;">
-                    No questions available or all questions already added.
+                <!-- EMPTY -->
+                <div id="noPendingQuestions" class="list-empty-state d-none">
+                    <div class="empty-state-icon">📭</div>
+                    <div class="empty-state-title">No Questions Found</div>
                 </div>
 
             </div>
 
+            <!-- FOOTER -->
             <div class="modal-footer">
-                <small class="text-muted">Click a question to add it to the template</small>
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <small class="text-muted">Click a question to add it</small>
+                <button class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
             </div>
 
         </div>
-
     </div>
 </div>
-
-<style>
-    #questionBankList .list-group-item {
-        cursor: pointer;
-        transition: background-color 0.15s ease-in-out;
-        padding: 0.75rem 1rem;
-        border: none;
-        border-bottom: 1px solid #dee2e6;
-    }
-
-    #questionBankList .list-group-item:last-child {
-        border-bottom: none;
-    }
-
-    #questionBankList .list-group-item:hover {
-        background-color: #e7f1ff;
-        border-left: 4px solid #0d6efd;
-        padding-left: calc(1rem - 4px);
-    }
-
-    #questionBankList .list-group-item:active {
-        background-color: #cfe2ff;
-    }
-
-    #questionBankList .list-group-item.already-added {
-        opacity: 0.5;
-        cursor: not-allowed;
-        background-color: #f8f9fa;
-    }
-
-    #questionBankList .list-group-item.already-added:hover {
-        background-color: #f8f9fa;
-        border-left: none;
-        padding-left: 1rem;
-    }
-</style>

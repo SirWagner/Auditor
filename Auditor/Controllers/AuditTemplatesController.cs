@@ -37,7 +37,19 @@ namespace Auditor.Controllers
         {
             if (!ModelState.IsValid)
             {
-                return View(await _service.GetCreateViewModelAsync());
+                var errors = ModelState
+                    .Where(x => x.Value.Errors.Count > 0)
+                    .Select(x => new {
+                        Field = x.Key,
+                        Errors = x.Value.Errors.Select(e => e.ErrorMessage)
+                    });
+
+                foreach (var e in errors)
+                {
+                    Console.WriteLine($"{e.Field}: {string.Join(",", e.Errors)}");
+                }
+
+                return View(model); // TEMP
             }
 
             await _service.CreateAsync(model);
@@ -69,3 +81,4 @@ namespace Auditor.Controllers
 
     }
 }
+

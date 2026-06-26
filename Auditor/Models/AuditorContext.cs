@@ -53,7 +53,7 @@ public partial class AuditorContext : DbContext
 
     public virtual DbSet<QuestionType> QuestionTypes { get; set; }
 
-
+   
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<Airport>(entity =>
@@ -77,19 +77,7 @@ public partial class AuditorContext : DbContext
             entity.Property(e => e.Name)
                 .IsRequired()
                 .HasMaxLength(255)
-                .HasColumnName("Name");
-            entity.Property(e => e.AirSide)
-                .IsRequired()
-                .HasMaxLength(255)
-                .HasColumnName("AirSide");
-            entity.Property(e => e.ComercialArea)
-                .IsRequired()
-                .HasMaxLength(255)
-                .HasColumnName("ComercialArea");
-            entity.Property(e => e.TerminalSection)
-                .IsRequired()
-                .HasMaxLength(255)
-                .HasColumnName("TerminalSection");
+                .HasColumnName("name");
         });
 
         modelBuilder.Entity<AppUser>(entity =>
@@ -117,8 +105,9 @@ public partial class AuditorContext : DbContext
             entity.Property(e => e.PasswordHash)
                 .HasMaxLength(255)
                 .HasColumnName("password_hash");
-
-            entity.Property(e => e.Role).HasMaxLength(50).HasColumnName("role");
+            entity.Property(e => e.Role)
+                .HasMaxLength(50)
+                .HasColumnName("role");
         });
 
         modelBuilder.Entity<AuditAttachment>(entity =>

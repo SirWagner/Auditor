@@ -1,40 +1,48 @@
 @model Auditor.ViewModels.AuditTemplate.AuditTemplateCreateViewModel
 
-<div class="card shadow-sm mb-4">
-    <div class="card-header bg-light">
-        <strong>Template Information</strong>
+<div class="list-table-wrapper" style="padding: 2rem;">
+    <div class="section-title-wrapper mb-4">
+        <h3 class="empty-state-title" style="text-align: left; margin: 0; font-size: 1.25rem;">
+            General Information
+        </h3>
+        <p class="text-muted">Define the basic properties and versioning of this template.</p>
     </div>
 
-    <div class="card-body row g-3">
-
-        <div class="col-md-6">
-            <label class="form-label">Name</label>
-            <input asp-for="Name" class="form-control" />
+    <div class="row g-4">
+        <div class="col-md-8">
+            <label class="form-label fw-bold">Template Name</label>
+            <input asp-for="Name" class="form-control" placeholder="e.g., Annual Safety Inspection" />
             <span asp-validation-for="Name" class="text-danger"></span>
         </div>
 
-        <div class="col-md-6">
-            <label class="form-label">Version</label>
-            <input asp-for="Version" class="form-control" />
+        <div class="col-md-4">
+            <label class="form-label fw-bold">Version</label>
+            <div class="input-group">
+                <span class="input-group-text">v</span>
+                <input asp-for="Version" class="form-control" placeholder="1.0" />
+            </div>
         </div>
 
         <div class="col-md-12">
-            <label class="form-label">Description</label>
-            <textarea asp-for="Description" class="form-control"></textarea>
-        </div>
-
-        <div class="col-md-6 form-check mt-3">
-            <input asp-for="IsActive" class="form-check-input" />
-            <label class="form-check-label">Active</label>
+            <label class="form-label fw-bold">Description</label>
+            <textarea asp-for="Description" class="form-control" rows="3" placeholder="Describe the purpose of this audit..."></textarea>
         </div>
 
         <div class="col-md-6">
-            <label class="form-label">Created By</label>
+            <label class="form-label fw-bold">Assign Owner</label>
             <select asp-for="CreatedBy"
                     class="form-select"
                     asp-items="Model.Users">
             </select>
         </div>
 
+        <div class="col-md-6 d-flex align-items-end">
+            <div class="form-check status-toggle-wrapper">
+                <input asp-for="IsActive" class="form-check-input" id="isActiveCheck" />
+                <label class="form-check-label fw-bold ms-2" for="isActiveCheck">
+                    Set as Active Template
+                </label>
+            </div>
+        </div>
     </div>
 </div>
