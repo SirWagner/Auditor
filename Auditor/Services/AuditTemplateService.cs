@@ -1,4 +1,5 @@
-﻿using Auditor.Models;
+﻿using Auditor.DTO.AuditTemplate;
+using Auditor.Models;
 using Auditor.Services.Interfaces;
 using Auditor.ViewModels.AuditTemplate;
 using Microsoft.AspNetCore.Mvc;
@@ -10,8 +11,10 @@ namespace Auditor.Services
     public class AuditTemplateService : IAuditTemplateService
     {
         private readonly AuditorContext _context;
+        private readonly ILogger<AuditTemplateService> _logger;
 
-        public AuditTemplateService(AuditorContext context)
+        public AuditTemplateService(AuditorContext context,
+    ILogger<AuditTemplateService> logger)
         {
             _context = context;
         }
@@ -33,69 +36,77 @@ namespace Auditor.Services
                 .ToListAsync();
         }
 
-        public async Task<AuditTemplateCreateViewModel> GetCreateViewModelAsync()
+
+        public async Task CreateAsync(AuditTemplateCreateDTO AuditTemplateCreateDTO) 
         {
+            ArgumentNullException.ThrowIfNull(AuditTemplateCreateDTO);
 
-            var vm = new AuditTemplateCreateViewModel
+            if (AuditTemplateCreateDTO.AuditTemplateItemsDTO == null || !AuditTemplateCreateDTO.AuditTemplateItemsDTO.Any())
+                throw new ArgumentException("The audit template must contain at least one question.", nameof(AuditTemplateCreateDTO));
+
+            _logger.LogInformation(
+                "Creating audit template. CreatorId: {CreatorId}, QuestionCount: {QuestionCount}",
+                AuditTemplateCreateDTO.CreatedBy,
+                AuditTemplateCreateDTO.AuditTemplateItemsDTO.Count);
+
+            await using var transaction = await _context.Database.BeginTransactionAsync();
+
+            try
             {
-                Users = await _context.AppUsers
-                    .Select(u => new SelectListItem
-                    {
-                        Value = u.Id.ToString(),
-                        Text = u.DisplayName
-                    })
-                    .ToListAsync(),
-
-                QuestionBankTypes = await _context.QuestionTypes
-                    .Select(q => new SelectListItem
-                    {
-                        Value = q.Id.ToString(),
-                        Text = q.Name
-                    })
-                    .ToListAsync(),
-                QuestionBank = await _context.QuestionBanks
-                   .Select(q => new QuestionBankListViewModel
-                   {
-                       Id = q.Id,
-                       Text = q.QuestionText,
-                       QuestionType = q.QuestionType.Name,  // or however you reference the type
-                       Description = q.QuestionText
-                   })
-                   .ToListAsync()
-            };
-
-            return vm;
-        }
-
-        public async Task CreateAsync(AuditTemplateCreateViewModel model)
-        {
-            var template = new AuditTemplate
-            {
-                Name = model.Name,
-                Description = model.Description,
-                Version = model.Version,
-                IsActive = model.IsActive,
-                CreatedBy = model.CreatedBy,
-                CreatedDate = DateTime.UtcNow
-            };
-
-            _context.AuditTemplates.Add(template);
-            await _context.SaveChangesAsync();
-
-            int sequence = 1;
-
-            foreach (var item in model.Items)
-            {
-                _context.AuditTemplateItems.Add(new AuditTemplateItem
+                var template = new AuditTemplate
                 {
-                    TemplateId = template.Id,
-                    QuestionBankId = item.QuestionBankId,
-                    Mandatory = item.Mandatory,
-                    Sequence = sequence++
-                });
-            }
+                    Name = AuditTemplateCreateDTO.Name,
+                    Description = AuditTemplateCreateDTO.Description,
+                    Version = AuditTemplateCreateDTO.Version,
+                    IsActive = AuditTemplateCreateDTO.IsActive,
+                    CreatedBy = AuditTemplateCreateDTO.CreatedBy,
+                    CreatedDate = DateTime.UtcNow
+                };
 
-            await _context.SaveChangesAsync();
+                _context.AuditTemplates.Add(template);
+
+                // Persist first so the template ID is generated.
+                await _context.SaveChangesAsync();
+
+                var templateQuestions = AuditTemplateCreateDTO.AuditTemplateItemsDTO.Select(item => new AuditTemplateItem
+                {
+                    Mandatory = item.Mandatory,
+                    QuestionBankId = item.QuestionBankId,
+                    Sequence = item.Sequence,
+                    TemplateId = template.Id
+                });
+
+                _context.AuditTemplateItems.AddRange(templateQuestions);
+
+                await _context.SaveChangesAsync();
+                await transaction.CommitAsync();
+
+                _logger.LogInformation(
+                    "Audit template created successfully. TemplateId: {TemplateId}",
+                    template.Id);
+            }
+            catch (DbUpdateException ex)
+            {
+                await transaction.RollbackAsync();
+
+                _logger.LogError(
+                    ex,
+                    "Database error while creating audit template. CreatorId: {CreatorId}",
+                    AuditTemplateCreateDTO.CreatedBy);
+
+                throw;
+            }
+            catch (Exception ex)
+            {
+                await transaction.RollbackAsync();
+
+                _logger.LogError(
+                    ex,
+                    "Unexpected error while creating audit template. CreatorId: {CreatorId}",
+                    AuditTemplateCreateDTO.CreatedBy);
+
+                throw;
+            }
         }
         public async Task<AuditTemplateEditViewModel> GetEditViewModelAsync(long id)
         {

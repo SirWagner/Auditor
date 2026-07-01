@@ -1,4 +1,5 @@
-﻿using Auditor.ViewModels.AuditTemplate;
+﻿using Auditor.DTO.AuditTemplate;
+using Auditor.ViewModels.AuditTemplate;
 
 namespace Auditor.Services.Interfaces
 {
@@ -7,8 +8,7 @@ namespace Auditor.Services.Interfaces
         Task<List<AuditTemplateListViewModel>> GetAllAsync();
         Task<AuditTemplateDetailsViewModel> GetById(long id);
 
-        Task<AuditTemplateCreateViewModel> GetCreateViewModelAsync();
-        Task CreateAsync(AuditTemplateCreateViewModel model);
+        Task CreateAsync(AuditTemplateCreateDTO auditTemplateDTO);
         Task<AuditTemplateEditViewModel> GetEditViewModelAsync(long id);
         Task UpdateAsync(AuditTemplateEditViewModel model);
 

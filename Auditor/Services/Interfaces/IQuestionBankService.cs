@@ -1,0 +1,9 @@
+﻿using Auditor.DTO.Questionbanks;
+
+namespace Auditor.Services.Interfaces
+{
+    public interface IQuestionBankService
+    {
+        public Task<List<QuestionBankInfoDTO>> GetAll();
+    }
+}

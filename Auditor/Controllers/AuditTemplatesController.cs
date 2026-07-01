@@ -1,4 +1,6 @@
-﻿using Auditor.Models;
+﻿using Auditor.DTO.AppUsers;
+using Auditor.DTO.AuditTemplate;
+using Auditor.Models;
 using Auditor.Services.Interfaces;
 using Auditor.ViewModels.AuditTemplate;
 using Microsoft.AspNetCore.Mvc;
@@ -14,20 +16,60 @@ namespace Auditor.Controllers
     public class AuditTemplatesController : Controller
     {
         private readonly IAuditTemplateService _service;
+        private readonly IAppUserService _appUserService;
+        private readonly IQuestionBankService _questionBankService;
 
-        public AuditTemplatesController(IAuditTemplateService service)
+        public AuditTemplatesController(IAuditTemplateService service,
+                                        IAppUserService AppUserService,
+                                        IQuestionBankService QuestionBankService)
         {
             _service = service;
+            _appUserService = AppUserService;
+            _questionBankService = QuestionBankService;
         }
         public async Task<IActionResult> Index()
         {
+            
+
             var templates = await _service.GetAllAsync();
             return View(templates);
         }
 
         public async Task<IActionResult> Create()
         {
-            var vm = await _service.GetCreateViewModelAsync();
+
+
+            var Users = await _appUserService.GetAll();
+            var QuestionBanks = await _questionBankService.GetAll();
+
+            var vm = new AuditTemplateCreateViewModel
+            {
+                Users = Users
+                    .Select(u => new SelectListItem
+                    {
+                        Value = u.Id.ToString(),
+                        Text = u.DisplayName
+                    })
+                    .ToList(),
+
+                //QuestionBankTypes = await _context.QuestionTypes
+                //    .Select(q => new SelectListItem
+                //    {
+                //        Value = q.Id.ToString(),
+                //        Text = q.Name
+                //    })
+                //    .ToListAsync(),
+                QuestionBank = QuestionBanks
+                   .Select(q => new QuestionBankListViewModel
+                   {
+                       Id = q.Id,
+                       Text = q.QuestionText,
+                       QuestionType = q.QuestionType,  // or however you reference the type
+                       Description = q.Category
+                   })
+                   .ToList()
+            };
+
             return View(vm);
         }
         public async Task<IActionResult> Details(long id)
@@ -38,26 +80,22 @@ namespace Auditor.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create(AuditTemplateCreateViewModel model)
+        public async Task<IActionResult> Create(AuditTemplateCreateDTO AuditTemplateDTO)
         {
-            if (!ModelState.IsValid)
+            try
             {
-                var errors = ModelState
-                    .Where(x => x.Value.Errors.Count > 0)
-                    .Select(x => new {
-                        Field = x.Key,
-                        Errors = x.Value.Errors.Select(e => e.ErrorMessage)
-                    });
+                await _service.CreateAsync(AuditTemplateDTO);
 
-                foreach (var e in errors)
-                {
-                    Console.WriteLine($"{e.Field}: {string.Join(",", e.Errors)}");
-                }
-
-                return View(model); // TEMP
+            }
+            catch (DbUpdateException ex)
+            {
+                return Problem(
+                     detail: ex.Message,
+                    title: "Internal Server Error",
+                    statusCode: 500
+                    );
             }
 
-            await _service.CreateAsync(model);
             return RedirectToAction(nameof(Index));
         }
 

@@ -28,13 +28,13 @@
             <textarea asp-for="Description" class="form-control" rows="3" placeholder="Describe the purpose of this audit..."></textarea>
         </div>
 
-        <div class="col-md-6">
+     @*    <div class="col-md-6">
             <label class="form-label fw-bold">Assign Owner</label>
             <select asp-for="CreatedBy"
                     class="form-select"
-                    asp-items="Model.Users">
+                    asp-items="Model.CreatedBy">
             </select>
-        </div>
+        </div> *@
 
         <div class="col-md-6 d-flex align-items-end">
             <div class="form-check status-toggle-wrapper">

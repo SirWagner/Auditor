@@ -39,6 +39,8 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
 
 //Services
 builder.Services.AddScoped<IAuditTemplateService, AuditTemplateService>();
+builder.Services.AddScoped<IAppUserService, AppUserService>();
+builder.Services.AddScoped<IQuestionBankService, QuestionBankService>();
 
 
 //builder.Services.AddControllersWithViews(options =>
