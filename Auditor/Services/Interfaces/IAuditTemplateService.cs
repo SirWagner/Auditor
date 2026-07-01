@@ -6,10 +6,10 @@ namespace Auditor.Services.Interfaces
     public interface IAuditTemplateService
     {
         Task<List<AuditTemplateListViewModel>> GetAllAsync();
-        Task<AuditTemplateDetailsViewModel> GetById(long id);
+        Task<AuditTemplateDetailsDTO> GetById(long id);
 
         Task CreateAsync(AuditTemplateCreateDTO auditTemplateDTO);
-        Task<AuditTemplateEditViewModel> GetEditViewModelAsync(long id);
+        //Task<AuditTemplateEditViewModel> GetEditViewModelAsync(long id);
         Task UpdateAsync(AuditTemplateEditViewModel model);
 
     }

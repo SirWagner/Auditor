@@ -19,6 +19,14 @@ namespace Auditor.ViewModels.AuditTemplate
 
         // Dropdowns
         public List<SelectListItem> Users { get; set; } = new();
-        public List<SelectListItem> QuestionBank { get; set; } = new();
+        public List<AuditTemplateEditQuestionBankViewModel> QuestionBank { get; set; } = new();
+    }
+
+    public class AuditTemplateEditQuestionBankViewModel
+    {
+        public long Id { get; set; }
+        public string Text { get; set; }
+        public string QuestionType { get; set; }  // "Boolean", "Date", "Radio", "Checklist", etc.
+        public string Description { get; set; }
     }
 }

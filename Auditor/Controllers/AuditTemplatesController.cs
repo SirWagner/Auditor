@@ -15,7 +15,7 @@ namespace Auditor.Controllers
 {
     public class AuditTemplatesController : Controller
     {
-        private readonly IAuditTemplateService _service;
+        private readonly IAuditTemplateService _auditTemplateService;
         private readonly IAppUserService _appUserService;
         private readonly IQuestionBankService _questionBankService;
 
@@ -23,7 +23,7 @@ namespace Auditor.Controllers
                                         IAppUserService AppUserService,
                                         IQuestionBankService QuestionBankService)
         {
-            _service = service;
+            _auditTemplateService = service;
             _appUserService = AppUserService;
             _questionBankService = QuestionBankService;
         }
@@ -31,7 +31,7 @@ namespace Auditor.Controllers
         {
             
 
-            var templates = await _service.GetAllAsync();
+            var templates = await _auditTemplateService.GetAllAsync();
             return View(templates);
         }
 
@@ -75,8 +75,30 @@ namespace Auditor.Controllers
         }
         public async Task<IActionResult> Details(long id)
         {
-            var template = await _service.GetById(id);
-            return View(template);
+
+            var template = await _auditTemplateService.GetById(id);
+
+            var vm = new AuditTemplateDetailsViewModel
+            {
+                Name = template.Name,
+                Description = template.Description,
+                Version = template.Version,
+                IsActive = template.IsActive,
+                CreatedBy = template.UserDisplayName,
+
+                Items = template.ItemsDetails
+                    .OrderBy(i => i.Sequence)
+                    .Select(i => new AuditTemplateDetailsQuestionsViewModel
+                    {
+                        Mandatory = i.Mandatory,
+                        Sequence = i.Sequence,
+                        QuestionText = i.QuestionText,
+                        Category = i.Category,
+                        Type = i.Type,
+                    }).ToList(),
+            };
+
+            return View(vm);
         }
 
         [HttpPost]
@@ -93,7 +115,7 @@ namespace Auditor.Controllers
                                                            AuditTemplate.Description, AuditTemplate.Version, 
                     AuditTemplate.IsActive, randomUser.First().Id, Questions);
 
-                await _service.CreateAsync(AuditTemplateDTO);
+                await _auditTemplateService.CreateAsync(AuditTemplateDTO);
 
             }
             catch (DbUpdateException ex)
@@ -110,7 +132,35 @@ namespace Auditor.Controllers
 
         public async Task<IActionResult> Edit(long id)
         {
-            var vm = await _service.GetEditViewModelAsync(id);
+            var template = await _auditTemplateService.GetById(id);
+
+            var Users = await _appUserService.GetAll();
+            var QuestionBanks = await _questionBankService.GetAll();
+
+            var vm = new AuditTemplateEditViewModel
+            {
+                Name = template.Name,
+                Description = template.Description,
+                Version = template.Version,
+                IsActive = template.IsActive,
+
+                Users = Users
+                    .Select(u => new SelectListItem
+                    {
+                        Value = u.Id.ToString(),
+                        Text = u.DisplayName
+                    })
+                    .ToList(),
+                QuestionBank = QuestionBanks
+                   .Select(q => new AuditTemplateEditQuestionBankViewModel
+                   {
+                       Id = q.Id,
+                       Text = q.QuestionText,
+                       QuestionType = q.QuestionType,  // or however you reference the type
+                       Description = q.Category
+                   })
+                   .ToList()
+            };
 
             if (vm == null)
                 return NotFound();
@@ -121,10 +171,10 @@ namespace Auditor.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(AuditTemplateEditViewModel model)
         {
-            if (!ModelState.IsValid)
-                return View(await _service.GetEditViewModelAsync(model.Id));
+            //if (!ModelState.IsValid)
+            //    return View(await _auditTemplateService.GetEditViewModelAsync(model.Id));
 
-            await _service.UpdateAsync(model);
+            //await _auditTemplateService.UpdateAsync(model);
 
             return RedirectToAction(nameof(Index));
         }

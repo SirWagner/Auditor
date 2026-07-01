@@ -23,7 +23,7 @@
 
                 <div class="azia-subtitle">
                     Version <strong>@Model.Version</strong>
-                    · ID @Model.Id
+                    · ID @Model.Version
                     · Created by <strong>@Model.CreatedBy</strong>
                 </div>
 
@@ -62,12 +62,12 @@
             <button class="azia-tab" data-tab="config">
                 <i class="fas fa-cogs"></i>
                 Configuration
-            </button>
+            </button>pdate 
 
-            <button class="azia-tab" data-tab="meta">
+          @*   <button class="azia-tab" data-tab="meta">
                 <i class="fas fa-database"></i>
                 Metadata
-            </button>
+            </button> *@
 
         </div>
 
@@ -96,7 +96,7 @@
                             </div>
 
                             <div class="azia-card-footer">
-                                Bank ID: @item.QuestionBankId
+                                Category: @item.Category
                             </div>
 
                         </div>
@@ -116,8 +116,8 @@
                     </div>
 
                     <div class="azia-info-grid">
-                        <div>Users: <strong>@(Model.Users?.Count ?? 0)</strong></div>
-                        <div>Question Bank: <strong>@(Model.QuestionBank?.Count ?? 0)</strong></div>
+                        @* <div>Users: <strong>@(Model.Users?.Count ?? 0)</strong></div> *@
+                        <div>Question Bank: <strong>@(Model.Items?.Count ?? 0)</strong></div>
                     </div>
 
                 </div>
@@ -125,7 +125,7 @@
             </div>
 
             <!-- META -->
-            <div class="azia-panel" id="meta">
+            @* <div class="azia-panel" id="meta">
 
                 <div class="azia-card">
 
@@ -134,13 +134,13 @@
                     </div>
 
                     <div class="azia-info-grid">
-                        <div>ID: <strong>@Model.Id</strong></div>
+                        <div>ID: <strong>@Model.</strong></div>
                         <div>Created By: <strong>@Model.CreatedBy</strong></div>
                     </div>
 
                 </div>
 
-            </div>
+            </div> *@
 
         </div>
 

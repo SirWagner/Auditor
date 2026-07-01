@@ -107,53 +107,6 @@ namespace Auditor.Services
                 throw;
             }
         }
-        public async Task<AuditTemplateEditViewModel> GetEditViewModelAsync(long id)
-        {
-            var template = await _context.AuditTemplates
-                .Include(t => t.AuditTemplateItems)
-                .ThenInclude(i => i.QuestionBank)
-                .FirstOrDefaultAsync(t => t.Id == id);
-
-            if (template == null)
-                return null;
-
-            var vm = new AuditTemplateEditViewModel
-            {
-                Id = template.Id,
-                Name = template.Name,
-                Description = template.Description,
-                Version = template.Version,
-                IsActive = template.IsActive,
-                CreatedBy = template.CreatedBy,
-
-                Items = template.AuditTemplateItems
-                    .OrderBy(i => i.Sequence)
-                    .Select(i => new AuditTemplateItemViewModel
-                    {
-                        QuestionBankId = i.QuestionBankId,
-                        Mandatory = i.Mandatory,
-                        Sequence = i.Sequence,
-                        QuestionText = i.QuestionBank.QuestionText
-                    }).ToList(),
-
-                Users = await _context.AppUsers
-                    .Select(u => new SelectListItem
-                    {
-                        Value = u.Id.ToString(),
-                        Text = u.DisplayName
-                    }).ToListAsync(),
-
-                QuestionBank = await _context.QuestionBanks
-                    .Where(q => q.IsActive)
-                    .Select(q => new SelectListItem
-                    {
-                        Value = q.Id.ToString(),
-                        Text = q.QuestionText
-                    }).ToListAsync()
-            };
-
-            return vm;
-        }
         public async Task UpdateAsync(AuditTemplateEditViewModel model)
         {
             var template = await _context.AuditTemplates
@@ -187,52 +140,30 @@ namespace Auditor.Services
             await _context.SaveChangesAsync();
         }
 
-        public async Task<AuditTemplateDetailsViewModel> GetById(long id)
+        public async Task<AuditTemplateDetailsDTO> GetById(long id)
         {
             var template = await _context.AuditTemplates
                 .Include(t => t.AuditTemplateItems)
-                .ThenInclude(i => i.QuestionBank)
+                    .ThenInclude(i => i.QuestionBank)
+                    .ThenInclude(qb => qb.QuestionType)
+                .Include(t => t.AuditTemplateItems)
+                    .ThenInclude(i => i.QuestionBank)
+                    .ThenInclude(qb => qb.Category)
+                .Include(user => user.CreatedByNavigation)
                 .FirstOrDefaultAsync(t => t.Id == id);
 
             if (template == null)
                 return null;
 
-            var vm = new AuditTemplateDetailsViewModel
-            {
-                Id = template.Id,
-                Name = template.Name,
-                Description = template.Description,
-                Version = template.Version,
-                IsActive = template.IsActive,
-                CreatedBy = template.CreatedBy,
+            var Questions = template.AuditTemplateItems.Select(item=>new AuditTemplateItemsDetailsDTO(item.Mandatory, item.Sequence,
+                item.QuestionBank.QuestionText, item.QuestionBank.QuestionType.Name,item.QuestionBank.Category.Name)).ToList();
 
-                Items = template.AuditTemplateItems
-                    .OrderBy(i => i.Sequence)
-                    .Select(i => new AuditTemplateItemViewModel
-                    {
-                        QuestionBankId = i.QuestionBankId,
-                        Mandatory = i.Mandatory,
-                        Sequence = i.Sequence,
-                        QuestionText = i.QuestionBank.QuestionText
-                    }).ToList(),
+            var AuditTemplateDetails = new AuditTemplateDetailsDTO(template.Name, template.Description, template.Version,
+                template.IsActive, template.CreatedByNavigation.DisplayName,Questions);
 
-                Users = await _context.AppUsers
-                    .Select(u => new SelectListItem
-                    {
-                        Value = u.Id.ToString(),
-                        Text = u.DisplayName
-                    }).ToListAsync(),
+            return AuditTemplateDetails;
 
-                QuestionBank = await _context.QuestionBanks
-                    .Where(q => q.IsActive)
-                    .Select(q => new SelectListItem
-                    {
-                        Value = q.Id.ToString(),
-                        Text = q.QuestionText
-                    }).ToListAsync()
-            };
-
-            return vm;
+            
         }
     }
 }
