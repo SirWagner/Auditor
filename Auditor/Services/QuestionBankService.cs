@@ -15,6 +15,8 @@ namespace Auditor.Services
                             ILogger<QuestionBankService> logger)
         {
             _context = context;
+            _logger = logger;
+
         }
 
         public async Task<List<QuestionBankInfoDTO>> GetAll()

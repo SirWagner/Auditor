@@ -35,6 +35,7 @@ namespace Auditor.Controllers
             return View(templates);
         }
 
+        //This is for displaying the AuditTemplate page
         public async Task<IActionResult> Create()
         {
 
@@ -80,10 +81,18 @@ namespace Auditor.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create(AuditTemplateCreateDTO AuditTemplateDTO)
+        public async Task<IActionResult> Create(CreateAuditTemplateRequest AuditTemplate)
         {
             try
             {
+                //TODO => Grab the current user to know who created tje AuditTemplate
+                var randomUser = await _appUserService.GetAll();
+                var Questions = AuditTemplate.Items
+                                .Select(item=>new AuditTemplateItemsDTO(item.QuestionBankId,item.Mandatory, item.Sequence)).ToList();
+                var AuditTemplateDTO = new AuditTemplateCreateDTO(AuditTemplate.Name,
+                                                           AuditTemplate.Description, AuditTemplate.Version, 
+                    AuditTemplate.IsActive, randomUser.First().Id, Questions);
+
                 await _service.CreateAsync(AuditTemplateDTO);
 
             }

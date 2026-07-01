@@ -17,6 +17,7 @@ namespace Auditor.Services
     ILogger<AuditTemplateService> logger)
         {
             _context = context;
+            _logger = logger;
         }
         public async Task<List<AuditTemplateListViewModel>> GetAllAsync()
         {
@@ -45,9 +46,7 @@ namespace Auditor.Services
                 throw new ArgumentException("The audit template must contain at least one question.", nameof(AuditTemplateCreateDTO));
 
             _logger.LogInformation(
-                "Creating audit template. CreatorId: {CreatorId}, QuestionCount: {QuestionCount}",
-                AuditTemplateCreateDTO.CreatedBy,
-                AuditTemplateCreateDTO.AuditTemplateItemsDTO.Count);
+                "Creating audit template. ");
 
             await using var transaction = await _context.Database.BeginTransactionAsync();
 
