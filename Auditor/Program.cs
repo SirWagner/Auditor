@@ -1,33 +1,45 @@
 ﻿using Auditor.Models;
 using Auditor.Services;
 using Auditor.Services.Interfaces;
-using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
-using Microsoft.AspNetCore.Authentication.OpenIdConnect;
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Mvc.Authorization;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Identity.Web;
-using Microsoft.Identity.Web.UI;
-using System;
+using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
-//builder.Services.AddAuthentication(OpenIdConnectDefaults.AuthenticationScheme)
-//    .AddMicrosoftIdentityWebApp(builder.Configuration.GetSection("AzureAd"));
+#region =========================
+// LOGGING (Serilog)
+#endregion
 
+Log.Logger = new LoggerConfiguration()
+    .ReadFrom.Configuration(builder.Configuration)
+    .Enrich.FromLogContext()
+    .WriteTo.Console()
+    .WriteTo.File(
+        path: "Logs/audit-log-.txt",
+        rollingInterval: RollingInterval.Day,
+        retainedFileCountLimit: 30,
+        shared: true)
+    .CreateLogger();
 
-///database
+builder.Host.UseSerilog();
+
+#region =========================
+// SERVICES
+#endregion
+
+// MVC + Razor
 builder.Services.AddControllersWithViews();
-builder.Services.AddRazorPages()
-    .AddMicrosoftIdentityUI()
-    ;
+builder.Services.AddRazorPages();
 
+// DB Context
 builder.Services.AddDbContext<AuditorContext>(options =>
-   options.UseSqlServer(builder.Configuration.GetConnectionString("AudConnection") ?? throw new InvalidOperationException("Connection string 'AudConnection' not found.")));
+    options.UseSqlServer(
+        builder.Configuration.GetConnectionString("AudConnection")
+        ?? throw new InvalidOperationException("Connection string 'AudConnection' not found.")
+    ));
 
+// Authentication (Cookie-based)
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
     .AddCookie(options =>
     {
@@ -35,32 +47,33 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
         options.LogoutPath = "/Auth/Logout";
         options.AccessDeniedPath = "/Auth/Login";
         options.ExpireTimeSpan = TimeSpan.FromHours(8);
+        options.SlidingExpiration = true;
     });
 
-//Services
+// Application Services
 builder.Services.AddScoped<IAuditTemplateService, AuditTemplateService>();
 builder.Services.AddScoped<IAppUserService, AppUserService>();
 builder.Services.AddScoped<IQuestionBankService, QuestionBankService>();
 
-
-//builder.Services.AddControllersWithViews(options =>
-//{
-//    var policy = new AuthorizationPolicyBuilder()
-//        .RequireAuthenticatedUser()
-//        .Build();
-//    options.Filters.Add(new AuthorizeFilter(policy));
-//});
-
-
+#region =========================
+// BUILD APP
+#endregion
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
+#region =========================
+// PIPELINE CONFIGURATION
+#endregion
+
+// Error handling
+if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Home/Error");
-    // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
     app.UseHsts();
+}
+else
+{
+    app.UseDeveloperExceptionPage();
 }
 
 app.UseHttpsRedirection();
@@ -71,13 +84,46 @@ app.UseRouting();
 app.UseAuthentication();
 app.UseAuthorization();
 
+#region =========================
+// ROUTING
+#endregion
+
 app.MapControllerRoute(
     name: "default",
-pattern: "{controller=Auth}/{action=login}");
-//pattern: "{controller=AuditExecutions}/{action=Index}");
+    pattern: "{controller=Auth}/{action=Login}/{id?}");
+
 app.MapRazorPages();
 
-using (var scope = app.Services.CreateScope())
-    await scope.ServiceProvider.GetRequiredService<AuditorContext>().Database.MigrateAsync();
+#region =========================
+// DATABASE MIGRATION
+#endregion
 
-app.Run();
+try
+{
+    using var scope = app.Services.CreateScope();
+    var db = scope.ServiceProvider.GetRequiredService<AuditorContext>();
+    await db.Database.MigrateAsync();
+}
+catch (Exception ex)
+{
+    Log.Fatal(ex, "Database migration failed during startup");
+    throw;
+}
+
+#region =========================
+// RUN
+#endregion
+
+try
+{
+    Log.Information("Starting Auditor application...");
+    app.Run();
+}
+catch (Exception ex)
+{
+    Log.Fatal(ex, "Application terminated unexpectedly");
+}
+finally
+{
+    Log.CloseAndFlush();
+}
