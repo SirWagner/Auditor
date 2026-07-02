@@ -3,8 +3,8 @@ import QuestionView from "./QuestionView.js";
 import QuestionService from "./QuestionService.js";
 
 export default class QuestionManager {
-    constructor({ questionBank }) {
-        this.store = new QuestionStore(questionBank);
+    constructor({ questionBank, addedQuestionsId }) {
+        this.store = new QuestionStore(questionBank, addedQuestionsId);
         this.view = new QuestionView();
         this.service = new QuestionService(this.store);
 

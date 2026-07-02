@@ -1,11 +1,11 @@
 ﻿export default class QuestionStore {
-    constructor(questionBank = []) {
+    constructor(questionBank = [], addedQuestionsId = new Set()) {
         this.availableQuestions = questionBank;
 
-        this.addedQuestionIds = new Set();
+        this.addedQuestionIds = addedQuestionsId;
 
         // This becomes the ONLY index source of truth
-        this.nextQuestionIndex = 0;
+        this.nextQuestionIndex = addedQuestionsId?.length ?? 0;
     }
 
     /* -----------------------------

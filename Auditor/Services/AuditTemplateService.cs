@@ -107,38 +107,7 @@ namespace Auditor.Services
                 throw;
             }
         }
-        public async Task UpdateAsync(AuditTemplateEditViewModel model)
-        {
-            var template = await _context.AuditTemplates
-                .Include(t => t.AuditTemplateItems)
-                .FirstOrDefaultAsync(t => t.Id == model.Id);
-
-            if (template == null)
-                return;
-
-            template.Name = model.Name;
-            template.Description = model.Description;
-            template.Version = model.Version;
-            template.IsActive = model.IsActive;
-
-            // Remove old items
-            _context.AuditTemplateItems.RemoveRange(template.AuditTemplateItems);
-
-            int sequence = 1;
-
-            foreach (var item in model.Items)
-            {
-                _context.AuditTemplateItems.Add(new AuditTemplateItem
-                {
-                    TemplateId = template.Id,
-                    QuestionBankId = item.QuestionBankId,
-                    Mandatory = item.Mandatory,
-                    Sequence = sequence++
-                });
-            }
-
-            await _context.SaveChangesAsync();
-        }
+       
 
         public async Task<AuditTemplateDetailsDTO> GetById(long id)
         {
@@ -155,7 +124,7 @@ namespace Auditor.Services
             if (template == null)
                 return null;
 
-            var Questions = template.AuditTemplateItems.Select(item=>new AuditTemplateItemsDetailsDTO(item.Mandatory, item.Sequence,
+            var Questions = template.AuditTemplateItems.Select(item=>new AuditTemplateItemsDetailsDTO(item.Id, item.Mandatory, item.Sequence,
                 item.QuestionBank.QuestionText, item.QuestionBank.QuestionType.Name,item.QuestionBank.Category.Name)).ToList();
 
             var AuditTemplateDetails = new AuditTemplateDetailsDTO(template.Name, template.Description, template.Version,
@@ -164,6 +133,46 @@ namespace Auditor.Services
             return AuditTemplateDetails;
 
             
+        }
+
+        public async Task UpdateAsync(AuditTemplateEditDTO AuditTemplateEditDTO)
+        {
+            var ExistingAuditTemplate = await _context.AuditTemplates
+                .Include(t => t.AuditTemplateItems)
+                .FirstOrDefaultAsync(t => t.Id == AuditTemplateEditDTO.Id);
+
+            if (ExistingAuditTemplate == null)
+                return;
+
+            ExistingAuditTemplate.Name = AuditTemplateEditDTO.Name;
+            ExistingAuditTemplate.Description = AuditTemplateEditDTO.Description;
+            ExistingAuditTemplate.Version = AuditTemplateEditDTO.Version;
+            ExistingAuditTemplate.IsActive = AuditTemplateEditDTO.IsActive;
+
+            var AuditTemplateItemsToRemove =
+                ExistingAuditTemplate.AuditTemplateItems
+                    .Where(item =>
+                        !AuditTemplateEditDTO.AuditTemplateItemsDTO
+                            .Any(dto => dto.QuestionBankId == item.QuestionBankId)
+                    )
+                    .ToList();
+
+            // Remove old items
+            _context.AuditTemplateItems.RemoveRange(AuditTemplateItemsToRemove);
+
+
+            foreach (var item in AuditTemplateEditDTO.AuditTemplateItemsDTO)
+            {
+                _context.AuditTemplateItems.Add(new AuditTemplateItem
+                {
+                    TemplateId = ExistingAuditTemplate.Id,
+                    QuestionBankId = item.QuestionBankId,
+                    Mandatory = item.Mandatory,
+                    Sequence = item.Sequence
+                });
+            }
+
+            await _context.SaveChangesAsync();
         }
     }
 }

@@ -7,15 +7,11 @@ namespace Auditor.ViewModels.AuditTemplate
         public long Id { get; set; }
 
         // Template Info
-        public string Name { get; set; }
-        public string Description { get; set; }
-        public string Version { get; set; }
-        public bool IsActive { get; set; }
+        public AuditTemplateInfoViewModel AuditTemplateInfoViewModel { get; set; }
 
-        public long CreatedBy { get; set; }
 
         // Questions
-        public List<AuditTemplateItemViewModel> Items { get; set; } = new();
+        public List<AuditTemplateItemViewModel> AuditTemplateItemViewModel { get; set; } = new();
 
         // Dropdowns
         public List<SelectListItem> Users { get; set; } = new();

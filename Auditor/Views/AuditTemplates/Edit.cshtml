@@ -84,7 +84,8 @@
         <!-- STEP 1: Template Info -->
         <div class="form-step-section" id="step-1">
             <div class="list-table-wrapper" style="padding: 2rem;">
-                <partial name="_TemplateInfoSection" model="Model" />
+                <input hidden name="Id" value="@Model.Id" />
+                <partial name="_TemplateInfoSection" model="Model.AuditTemplateInfoViewModel" />
                 <div class="mt-4 text-end">
                     <button type="button" class="btn-list-primary next-step">Continue to Questions →</button>
                 </div>
@@ -131,7 +132,9 @@
 
     <script>
         window.__AUDIT_TEMPLATE_DATA__ = {
-            questionBank: @Html.Raw(Json.Serialize(Model.QuestionBank))
+            questionBank: @Html.Raw(Json.Serialize(Model.QuestionBank)),
+            addedQuestionsIds:@Html.Raw(Json.Serialize(Model.AuditTemplateItemViewModel.Select(item=>item.QuestionBankId))),
+
         };
     </script>
 

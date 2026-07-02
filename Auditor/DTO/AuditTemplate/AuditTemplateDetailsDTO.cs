@@ -4,7 +4,7 @@
         bool IsActive, string UserDisplayName,List<AuditTemplateItemsDetailsDTO> ItemsDetails)
     {
     }
-    public sealed record class AuditTemplateItemsDetailsDTO(bool Mandatory, int Sequence, string QuestionText, string Type, string Category)
+    public sealed record class AuditTemplateItemsDetailsDTO(long Id, bool Mandatory, int Sequence, string QuestionText, string Type, string Category)
     {
     }
 }

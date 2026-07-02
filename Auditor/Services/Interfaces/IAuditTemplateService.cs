@@ -10,7 +10,7 @@ namespace Auditor.Services.Interfaces
 
         Task CreateAsync(AuditTemplateCreateDTO auditTemplateDTO);
         //Task<AuditTemplateEditViewModel> GetEditViewModelAsync(long id);
-        Task UpdateAsync(AuditTemplateEditViewModel model);
+        Task UpdateAsync(AuditTemplateEditDTO AuditTemplateEditDTO);
 
     }
 }

@@ -139,11 +139,22 @@ namespace Auditor.Controllers
 
             var vm = new AuditTemplateEditViewModel
             {
-                Name = template.Name,
-                Description = template.Description,
-                Version = template.Version,
-                IsActive = template.IsActive,
-
+                AuditTemplateInfoViewModel = new AuditTemplateInfoViewModel()
+                {
+                    Name = template.Name,
+                    Description = template.Description,
+                    Version = template.Version,
+                    IsActive = template.IsActive,
+                },
+                AuditTemplateItemViewModel= template.ItemsDetails.Select(
+                    selectedQuestion =>new AuditTemplateItemViewModel()
+                    {
+                        Mandatory= selectedQuestion.Mandatory,
+                        QuestionBankId = selectedQuestion.Id, 
+                        QuestionText = selectedQuestion.QuestionText,
+                        Sequence = selectedQuestion.Sequence
+                    }
+                    ).ToList(),
                 Users = Users
                     .Select(u => new SelectListItem
                     {
@@ -169,12 +180,32 @@ namespace Auditor.Controllers
         }
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(AuditTemplateEditViewModel model)
+        public async Task<IActionResult> Edit(EditAuditTemplateRequest AuditTemplate)
         {
             //if (!ModelState.IsValid)
             //    return View(await _auditTemplateService.GetEditViewModelAsync(model.Id));
 
-            //await _auditTemplateService.UpdateAsync(model);
+            try
+            {
+                //TODO => Grab the current user to know who created tje AuditTemplate
+                var randomUser = await _appUserService.GetAll();
+                var Questions = AuditTemplate.Items
+                                .Select(item => new AuditTemplateEditItemsDTO(item.QuestionBankId, item.Mandatory, item.Sequence)).ToList();
+                var AuditTemplateDTO = new AuditTemplateEditDTO(AuditTemplate.Id, AuditTemplate.Name,
+                                                           AuditTemplate.Description, AuditTemplate.Version,
+                    AuditTemplate.IsActive, randomUser.First().Id, Questions);
+
+                await _auditTemplateService.UpdateAsync(AuditTemplateDTO);
+
+            }
+            catch (DbUpdateException ex)
+            {
+                return Problem(
+                     detail: ex.Message,
+                    title: "Internal Server Error",
+                    statusCode: 500
+                    );
+            }
 
             return RedirectToAction(nameof(Index));
         }
