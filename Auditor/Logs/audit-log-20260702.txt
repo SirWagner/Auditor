@@ -3503,3 +3503,54 @@ FROM [app_user] AS [a]
 2026-07-02 21:19:07.560 +02:00 [INF] Request starting HTTP/2 GET https://localhost:44369/_framework/aspnetcore-browser-refresh.js - null null
 2026-07-02 21:19:07.562 +02:00 [INF] Request finished HTTP/2 GET https://localhost:44369/_framework/aspnetcore-browser-refresh.js - 200 14919 application/javascript; charset=utf-8 1.4678ms
 2026-07-02 21:19:07.576 +02:00 [INF] Request finished HTTP/2 GET https://localhost:44369/_vs/browserLink - 200 null text/javascript; charset=UTF-8 15.6108ms
+2026-07-02 21:24:55.403 +02:00 [INF] User profile is available. Using 'C:\Users\Mmamu\AppData\Local\ASP.NET\DataProtection-Keys' as key repository and Windows DPAPI to encrypt keys at rest.
+2026-07-02 21:24:56.879 +02:00 [INF] Executed DbCommand (32ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT 1
+2026-07-02 21:24:56.916 +02:00 [INF] Executed DbCommand (21ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT OBJECT_ID(N'[__EFMigrationsHistory]');
+2026-07-02 21:24:56.921 +02:00 [INF] Executed DbCommand (3ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT 1
+2026-07-02 21:24:56.922 +02:00 [INF] Executed DbCommand (1ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT OBJECT_ID(N'[__EFMigrationsHistory]');
+2026-07-02 21:24:56.936 +02:00 [INF] Executed DbCommand (3ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT [MigrationId], [ProductVersion]
+FROM [__EFMigrationsHistory]
+ORDER BY [MigrationId];
+2026-07-02 21:24:56.964 +02:00 [INF] No migrations were applied. The database is already up to date.
+2026-07-02 21:24:56.968 +02:00 [INF] Starting Auditor application...
+2026-07-02 21:24:57.107 +02:00 [INF] Request starting HTTP/2 GET https://localhost:44369/ - null null
+2026-07-02 21:24:57.121 +02:00 [INF] Application started. Press Ctrl+C to shut down.
+2026-07-02 21:24:57.122 +02:00 [INF] Hosting environment: Development
+2026-07-02 21:24:57.122 +02:00 [INF] Content root path: E:\Code\auditor-wagner\Auditor
+2026-07-02 21:24:57.263 +02:00 [INF] Executing endpoint 'Auditor.Controllers.AuthController.Login (Auditor)'
+2026-07-02 21:24:57.282 +02:00 [INF] Route matched with {action = "Login", controller = "Auth", page = "", area = ""}. Executing controller action with signature Microsoft.AspNetCore.Mvc.IActionResult Login() on controller Auditor.Controllers.AuthController (Auditor).
+2026-07-02 21:24:57.297 +02:00 [INF] Executing ViewResult, running view Login.
+2026-07-02 21:24:57.420 +02:00 [INF] Executed ViewResult - view Login executed in 126.4669ms.
+2026-07-02 21:24:57.423 +02:00 [INF] Executed action Auditor.Controllers.AuthController.Login (Auditor) in 140.4067ms
+2026-07-02 21:24:57.423 +02:00 [INF] Executed endpoint 'Auditor.Controllers.AuthController.Login (Auditor)'
+2026-07-02 21:24:57.431 +02:00 [INF] Request finished HTTP/2 GET https://localhost:44369/ - 200 null text/html; charset=utf-8 328.5621ms
+2026-07-02 21:24:57.475 +02:00 [INF] Request starting HTTP/2 GET https://localhost:44369/_vs/browserLink - null null
+2026-07-02 21:24:57.475 +02:00 [INF] Request starting HTTP/2 GET https://localhost:44369/_framework/aspnetcore-browser-refresh.js - null null
+2026-07-02 21:24:57.481 +02:00 [INF] Request finished HTTP/2 GET https://localhost:44369/_framework/aspnetcore-browser-refresh.js - 200 14919 application/javascript; charset=utf-8 4.6785ms
+2026-07-02 21:24:57.520 +02:00 [INF] Request finished HTTP/2 GET https://localhost:44369/_vs/browserLink - 200 null text/javascript; charset=UTF-8 45.5123ms
+2026-07-02 21:25:04.639 +02:00 [INF] Request starting HTTP/2 GET https://localhost:44369/Template/Dashboard - null null
+2026-07-02 21:25:04.667 +02:00 [INF] Executing endpoint 'Auditor.Controllers.TemplateController.Dashboard (Auditor)'
+2026-07-02 21:25:04.669 +02:00 [INF] Route matched with {action = "Dashboard", controller = "Template", page = "", area = ""}. Executing controller action with signature Microsoft.AspNetCore.Mvc.IActionResult Dashboard() on controller Auditor.Controllers.TemplateController (Auditor).
+2026-07-02 21:25:04.672 +02:00 [INF] Executing ViewResult, running view Dashboard.
+2026-07-02 21:25:04.721 +02:00 [INF] Executed ViewResult - view Dashboard executed in 50.2366ms.
+2026-07-02 21:25:04.721 +02:00 [INF] Executed action Auditor.Controllers.TemplateController.Dashboard (Auditor) in 51.3477ms
+2026-07-02 21:25:04.721 +02:00 [INF] Executed endpoint 'Auditor.Controllers.TemplateController.Dashboard (Auditor)'
+2026-07-02 21:25:04.722 +02:00 [INF] Request finished HTTP/2 GET https://localhost:44369/Template/Dashboard - 200 null text/html; charset=utf-8 82.9864ms
+2026-07-02 21:25:04.785 +02:00 [INF] Request starting HTTP/2 GET https://localhost:44369/Azia/js/jquery.cookie.js - null null
+2026-07-02 21:25:04.789 +02:00 [INF] Request starting HTTP/2 GET https://localhost:44369/_vs/browserLink - null null
+2026-07-02 21:25:04.796 +02:00 [INF] Request starting HTTP/2 GET https://localhost:44369/_framework/aspnetcore-browser-refresh.js - null null
+2026-07-02 21:25:04.849 +02:00 [INF] Request finished HTTP/2 GET https://localhost:44369/_framework/aspnetcore-browser-refresh.js - 200 14919 application/javascript; charset=utf-8 55.0272ms
+2026-07-02 21:25:04.852 +02:00 [INF] Request finished HTTP/2 GET https://localhost:44369/Azia/js/jquery.cookie.js - 404 null null 67.2727ms
+2026-07-02 21:25:04.854 +02:00 [INF] Request reached the end of the middleware pipeline without being handled by application code. Request path: GET https://localhost:44369/Azia/js/jquery.cookie.js, Response status code: 404
+2026-07-02 21:25:04.870 +02:00 [INF] Request finished HTTP/2 GET https://localhost:44369/_vs/browserLink - 200 null text/javascript; charset=UTF-8 80.3249ms
+2026-07-02 21:25:05.486 +02:00 [INF] Request starting HTTP/1.1 GET https://localhost:44369/Azia/lib/bootstrap/js/bootstrap.bundle.min.js.map - null null
+2026-07-02 21:25:05.487 +02:00 [INF] Request finished HTTP/1.1 GET https://localhost:44369/Azia/lib/bootstrap/js/bootstrap.bundle.min.js.map - 404 null null 1.6226ms
+2026-07-02 21:25:05.488 +02:00 [INF] Request reached the end of the middleware pipeline without being handled by application code. Request path: GET https://localhost:44369/Azia/lib/bootstrap/js/bootstrap.bundle.min.js.map, Response status code: 404
+2026-07-02 21:25:05.493 +02:00 [INF] Request starting HTTP/2 GET https://localhost:44369/Azia/lib/bootstrap/js/bootstrap.bundle.min.js.map - null null
+2026-07-02 21:25:05.494 +02:00 [INF] Request finished HTTP/2 GET https://localhost:44369/Azia/lib/bootstrap/js/bootstrap.bundle.min.js.map - 404 null null 1.2297ms
+2026-07-02 21:25:05.494 +02:00 [INF] Request reached the end of the middleware pipeline without being handled by application code. Request path: GET https://localhost:44369/Azia/lib/bootstrap/js/bootstrap.bundle.min.js.map, Response status code: 404
