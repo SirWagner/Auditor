@@ -282,6 +282,19 @@
         text-decoration: none;
     }
 
+/* Toggle active/inactive button */
+.btn-toggle {
+    background-color: #fef3c7;
+    color: #92400e;
+    cursor: pointer;
+}
+
+    .btn-toggle:hover {
+        background-color: #fde68a;
+        transform: translateY(-1px);
+        box-shadow: 0 2px 8px rgba(146, 64, 14, 0.2);
+    }
+
 /* Secondary/Info button */
 .btn-secondary-action {
     background-color: #f3f4f6;

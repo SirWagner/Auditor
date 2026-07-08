@@ -1,0 +1,46 @@
+@model Auditor.Models.AuditExecution
+
+@{
+    ViewData["Title"] = "Accept Audit";
+    Layout = "~/Views/Shared/_LayoutExec.cshtml";
+}
+
+<div class="audit-exec-wrapper" style="display:flex; justify-content:center; padding:2.5rem 1rem;">
+    <div class="audit-exec-card" style="width:100%; max-width:600px; background:#fff; border-radius:18px; padding:2.2rem; box-shadow:0 18px 40px rgba(120,0,255,0.12);">
+
+        <h2 class="text-center">@Model.Schedule?.Template?.Name</h2>
+        <h4 class="text-center text-muted">Site: @Model.Schedule?.Site?.Name</h4>
+
+        <hr />
+
+        @if (TempData["Error"] != null)
+        {
+            <div class="alert alert-danger">@TempData["Error"]</div>
+        }
+
+        <p>You have been assigned this audit, scheduled for <strong>@Model.OriginalAuditDate.ToString("MMM dd, yyyy")</strong>. Please accept or reject it below.</p>
+
+        <div class="d-flex gap-2 justify-content-center mt-4">
+            <form asp-action="Accept" asp-route-executionId="@Model.Id" method="post">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="confirm" value="true" />
+                <button type="submit" class="btn btn-success px-4">Accept Audit</button>
+            </form>
+
+            <button type="button" class="btn btn-outline-danger px-4" data-bs-toggle="collapse" data-bs-target="#rejectForm">
+                Reject Audit
+            </button>
+        </div>
+
+        <div class="collapse mt-3" id="rejectForm">
+            <form asp-action="Reject" asp-route-executionId="@Model.Id" method="post">
+                @Html.AntiForgeryToken()
+                <div class="form-group mb-2">
+                    <label>Reason for rejection</label>
+                    <textarea name="reason" class="form-control" required></textarea>
+                </div>
+                <button type="submit" class="btn btn-danger">Confirm Rejection</button>
+            </form>
+        </div>
+    </div>
+</div>

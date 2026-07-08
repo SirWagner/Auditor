@@ -82,13 +82,19 @@
                             </td>
                             <td>
                                 <div class="list-actions">
-                                    <a asp-controller="AuditExecutions"
-                                           asp-action="Execute"
-                                           asp-route-executionId="@item.Id"
-                                           class="action-btn btn-edit"
-                                           style="background-color: #28a745; color: white; border-color: #28a745;">
-                                        Continue
-                                    </a>
+                                    @{
+                                        var continueAction = item.Status == "PENDING_ACCEPTANCE" ? "Accept" : "Execute";
+                                    }
+                                    @if (item.Status == "PENDING_ACCEPTANCE" || item.Status == "IN_PROGRESS" || item.Status == "REJECTED")
+                                    {
+                                        <a asp-controller="AuditExecutions"
+                                               asp-action="@continueAction"
+                                               asp-route-executionId="@item.Id"
+                                               class="action-btn btn-edit"
+                                               style="background-color: #28a745; color: white; border-color: #28a745;">
+                                            Continue
+                                        </a>
+                                    }
 
                                     <a asp-action="Details"
                                            asp-route-id="@item.Id"

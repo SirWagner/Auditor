@@ -66,6 +66,10 @@
                                 <div class="list-actions">
                                     <a asp-action="Edit" asp-route-id="@item.Id" class="action-btn btn-edit">Edit</a>
                                     <a asp-action="Details" asp-route-id="@item.Id" class="action-btn btn-view">View</a>
+                                    <form asp-action="ToggleActive" asp-route-id="@item.Id" method="post">
+                                        @Html.AntiForgeryToken()
+                                        <button type="submit" class="action-btn btn-toggle">@(item.IsActive ? "Deactivate" : "Activate")</button>
+                                    </form>
                                     <a asp-action="Delete" asp-route-id="@item.Id" class="action-btn btn-delete">Delete</a>
                                 </div>
                             </td>

@@ -7,6 +7,11 @@
 
 <h2>Audit Details</h2>
 
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-danger">@TempData["Error"]</div>
+}
+
 <dl class="row">
 
     <dt class="col-sm-3">Audit Template</dt>
@@ -20,6 +25,27 @@
 
     <dt class="col-sm-3">Due Date</dt>
     <dd class="col-sm-9">@Model.DueDate</dd>
+
+    <dt class="col-sm-3">Status</dt>
+    <dd class="col-sm-9">@Model.Status</dd>
+
+    <dt class="col-sm-3">Auditors</dt>
+    <dd class="col-sm-9">
+        @if (Model.Auditors?.Count > 0)
+        {
+            @string.Join(", ", Model.Auditors.Select(a => a.DisplayName))
+        }
+        else
+        {
+            <span class="text-muted">None assigned</span>
+        }
+    </dd>
+
+    @if (Model.Status == "CANCELLED" && !string.IsNullOrEmpty(Model.CancellationReason))
+    {
+        <dt class="col-sm-3">Cancellation Reason</dt>
+        <dd class="col-sm-9">@Model.CancellationReason</dd>
+    }
 
 </dl>
 
@@ -35,6 +61,21 @@
     </a>
 
 </div>
+
+@if (Model.Status == "SCHEDULED")
+{
+    <hr />
+    <h4>Cancel Schedule</h4>
+    <form asp-action="Cancel" asp-route-id="@Model.Id" method="post" class="row g-2 align-items-center">
+        @Html.AntiForgeryToken()
+        <div class="col-auto">
+            <input type="text" name="reason" class="form-control" placeholder="Cancellation reason" required />
+        </div>
+        <div class="col-auto">
+            <button type="submit" class="btn btn-danger" onclick="return confirm('Cancel this schedule?');">Cancel Schedule</button>
+        </div>
+    </form>
+}
 
 <br />
 

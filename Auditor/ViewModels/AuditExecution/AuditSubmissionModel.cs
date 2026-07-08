@@ -1,4 +1,6 @@
-﻿namespace Auditor.ViewModels.AuditExecution
+﻿using Microsoft.AspNetCore.Http;
+
+namespace Auditor.ViewModels.AuditExecution
 {
     public class AuditSubmissionModel
     {
@@ -15,5 +17,7 @@
 
         public List<long> SelectedReasonIds { get; set; }
         public string CustomReason { get; set; }
+
+        public List<IFormFile> Attachments { get; set; }
     }
 }

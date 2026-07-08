@@ -61,7 +61,10 @@
                                 <div class="list-actions">
                                     <a asp-action="Edit" asp-route-id="@item.Id" class="action-btn btn-edit">Edit</a>
                                     <a asp-action="Details" asp-route-id="@item.Id" class="action-btn btn-view">View</a>
-                                    <a asp-action="Delete" asp-route-id="@item.Id" class="action-btn btn-delete">Delete</a>
+                                    <form asp-action="Delete" asp-route-id="@item.Id" method="post" onsubmit="return confirm('Delete this site?');">
+                                        @Html.AntiForgeryToken()
+                                        <button type="submit" class="action-btn btn-delete">Delete</button>
+                                    </form>
                                 </div>
                             </td>
                         </tr>

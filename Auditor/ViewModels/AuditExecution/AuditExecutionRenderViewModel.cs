@@ -11,6 +11,8 @@ namespace Auditor.ViewModels.AuditExecution
 
         public string SiteName { get; set; }
 
+        public string Status { get; set; }
+
         public List<QuestionViewModel> Questions { get; set; }
 
     }

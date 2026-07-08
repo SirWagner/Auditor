@@ -53,6 +53,8 @@ public partial class AuditorContext : DbContext
 
     public virtual DbSet<QuestionType> QuestionTypes { get; set; }
 
+    public virtual DbSet<ScheduleChangeRequest> ScheduleChangeRequests { get; set; }
+
    
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -340,6 +342,46 @@ public partial class AuditorContext : DbContext
                     });
         });
 
+        modelBuilder.Entity<ScheduleChangeRequest>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+
+            entity.ToTable("schedule_change_request");
+
+            entity.Property(e => e.Id).HasColumnName("id");
+            entity.Property(e => e.ScheduleId).HasColumnName("schedule_id");
+            entity.Property(e => e.RequestedBy).HasColumnName("requested_by");
+            entity.Property(e => e.AuthorizerId).HasColumnName("authorizer_id");
+            entity.Property(e => e.Reason)
+                .IsRequired()
+                .HasMaxLength(1000)
+                .HasColumnName("reason");
+            entity.Property(e => e.Status)
+                .IsRequired()
+                .HasMaxLength(50)
+                .HasColumnName("status");
+            entity.Property(e => e.RequestDate)
+                .HasDefaultValueSql("(sysdatetime())")
+                .HasColumnName("request_date");
+            entity.Property(e => e.DecisionDate).HasColumnName("decision_date");
+            entity.Property(e => e.EscalationLevel).HasColumnName("escalation_level");
+
+            entity.HasOne(d => d.Schedule).WithMany()
+                .HasForeignKey(d => d.ScheduleId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK__sched_chg__sched__req01");
+
+            entity.HasOne(d => d.RequestedByNavigation).WithMany()
+                .HasForeignKey(d => d.RequestedBy)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK__sched_chg__reqby__req02");
+
+            entity.HasOne(d => d.Authorizer).WithMany()
+                .HasForeignKey(d => d.AuthorizerId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK__sched_chg__auth__req03");
+        });
+
         modelBuilder.Entity<AuditSite>(entity =>
         {
             entity.HasKey(e => e.Id).HasName("PK__audit_si__3213E83F2E69B5A2");
@@ -426,11 +468,18 @@ public partial class AuditorContext : DbContext
                 .IsRequired()
                 .HasMaxLength(50)
                 .HasColumnName("version");
+            entity.Property(e => e.ModifiedBy).HasColumnName("modified_by");
+            entity.Property(e => e.ModifiedDate).HasColumnName("modified_date");
 
             entity.HasOne(d => d.CreatedByNavigation).WithMany(p => p.AuditTemplates)
                 .HasForeignKey(d => d.CreatedBy)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK__audit_tem__creat__6C190EBB");
+
+            entity.HasOne(d => d.ModifiedByNavigation).WithMany()
+                .HasForeignKey(d => d.ModifiedBy)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK__audit_tem__modif__6C190EBC");
         });
 
         modelBuilder.Entity<AuditTemplateItem>(entity =>
@@ -446,6 +495,8 @@ public partial class AuditorContext : DbContext
             entity.Property(e => e.QuestionBankId).HasColumnName("question_bank_id");
             entity.Property(e => e.Sequence).HasColumnName("sequence");
             entity.Property(e => e.TemplateId).HasColumnName("template_id");
+            entity.Property(e => e.ModifiedBy).HasColumnName("modified_by");
+            entity.Property(e => e.ModifiedDate).HasColumnName("modified_date");
 
             entity.HasOne(d => d.QuestionBank).WithMany(p => p.AuditTemplateItems)
                 .HasForeignKey(d => d.QuestionBankId)
