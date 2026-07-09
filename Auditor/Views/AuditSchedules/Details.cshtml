@@ -1,46 +1,296 @@
 ﻿@model Auditor.Models.AuditSchedule
 
 @{
-    ViewData["Title"] = "Audit Details";
+    ViewData["Title"] = "Audit Schedule Details";
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
-<h2>Audit Details</h2>
 
-<dl class="row">
+<div class="details-page-container">
 
-    <dt class="col-sm-3">Audit Template</dt>
-    <dd class="col-sm-9">@Model.Template.Name</dd>
 
-    <dt class="col-sm-3">Site</dt>
-    <dd class="col-sm-9">@Model.Site.Name</dd>
+    <!-- Breadcrumb -->
+    <div class="details-breadcrumb">
 
-    <dt class="col-sm-3">Scheduled Date</dt>
-    <dd class="col-sm-9">@Model.ScheduledDate</dd>
+        <a asp-controller="Template"
+           asp-action="Dashboard">
+            Dashboard
+        </a>
 
-    <dt class="col-sm-3">Due Date</dt>
-    <dd class="col-sm-9">@Model.DueDate</dd>
+        <span>›</span>
 
-</dl>
+        <a asp-action="Index">
+            Audit Schedules
+        </a>
 
-<div>
+        <span>›</span>
 
-    <a asp-controller="AuditExecutions"
-       asp-action="Start"
-       asp-route-scheduleId="@Model.Id"
-       class="btn btn-primary">
+        <span>
+            Schedule #@Model.Id
+        </span>
 
-        Start Audit
+    </div>
 
-    </a>
+
+
+    <!-- Compact Header -->
+    <div class="details-header">
+
+
+        <div>
+
+            <h1>
+                Audit Schedule #@Model.Id
+            </h1>
+
+
+            <div class="text-muted small mt-1">
+
+                Created:
+                @Model.CreatedDate.ToString("MMM dd, yyyy")
+
+                <span class="mx-2">•</span>
+
+                Scheduled:
+                @Model.ScheduledDate.ToString("MMM dd, yyyy")
+
+            </div>
+
+
+        </div>
+
+
+
+        <div class="details-header-actions">
+
+
+            <a asp-controller="AuditExecutions"
+               asp-action="Start"
+               asp-route-scheduleId="@Model.Id"
+               class="btn-details-primary">
+
+                <i class="fas fa-play"></i>
+
+                Start Audit
+
+            </a>
+
+
+
+            <a asp-action="Index"
+               class="btn-details-secondary">
+
+                <i class="fas fa-arrow-left"></i>
+
+                Back
+
+            </a>
+
+
+        </div>
+
+
+    </div>
+
+
+
+
+    <!-- Main Information -->
+    <div class="details-info-card">
+
+
+        <div class="details-info-card-header">
+
+            <h2>
+                Audit Schedule Information
+            </h2>
+
+        </div>
+
+
+
+        <div class="details-info-card-body">
+
+
+            <div class="details-info-grid">
+
+
+                <div class="details-info-field">
+
+                    <div class="details-info-label">
+                        Audit Template
+                    </div>
+
+                    <div class="details-info-value">
+
+                        <strong>
+                            @Model.Template?.Name
+                        </strong>
+
+                    </div>
+
+                </div>
+
+
+
+
+                <div class="details-info-field">
+
+                    <div class="details-info-label">
+                        Audit Site
+                    </div>
+
+                    <div class="details-info-value">
+
+                        <strong>
+                            @Model.Site?.Name
+                        </strong>
+
+                    </div>
+
+                </div>
+
+
+
+
+
+                <div class="details-info-field">
+
+                    <div class="details-info-label">
+                        Assigned Auditor
+                    </div>
+
+                    <div class="details-info-value">
+
+                        @Model.Scheduler?.DisplayName
+
+                    </div>
+
+                </div>
+
+
+
+
+
+                <div class="details-info-field">
+
+                    <div class="details-info-label">
+                        Due Date
+                    </div>
+
+                    <div class="details-info-value">
+
+                        <strong>
+                            @Model.DueDate.ToString("MMM dd, yyyy")
+                        </strong>
+
+                    </div>
+
+                </div>
+
+
+
+
+                <div class="details-info-field">
+
+                    <div class="details-info-label">
+                        Status
+                    </div>
+
+
+                    <div class="details-info-value">
+
+                        @{
+                            var statusClass = Model.Status switch
+                            {
+                                "SCHEDULED" => "active",
+                                "COMPLETED" => "active",
+                                "CANCELLED" => "inactive",
+                                _ => "warning"
+                            };
+                        }
+
+
+                        <span class="details-status-badge @statusClass">
+
+                            @Model.Status
+
+                        </span>
+
+
+                    </div>
+
+                </div>
+
+
+
+
+                <div class="details-info-field">
+
+                    <div class="details-info-label">
+                        Created Date
+                    </div>
+
+
+                    <div class="details-info-value">
+
+                        @Model.CreatedDate.ToString("MMM dd, yyyy")
+
+                    </div>
+
+                </div>
+
+
+
+            </div>
+
+
+        </div>
+
+
+    </div>
+
+
+
+
+
+    <!-- Execution Section -->
+    <div class="details-section mt-4">
+
+
+        <h2 class="details-section-title">
+
+            Audit Execution
+
+        </h2>
+
+
+
+        <div class="details-info-card">
+
+
+            <div class="details-info-card-body">
+
+
+                <p class="text-muted mb-0">
+
+                    This schedule is ready for execution. Start the audit when the assigned auditor is prepared.
+
+                </p>
+
+
+            </div>
+
+
+        </div>
+
+
+    </div>
+
+
 
 </div>
 
-<br />
-
-<div>
-    <a asp-action="Index">Back to List</a>
-</div>
 
 @section Scripts {
     @{
