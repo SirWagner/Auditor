@@ -3554,3 +3554,202 @@ ORDER BY [MigrationId];
 2026-07-02 21:25:05.493 +02:00 [INF] Request starting HTTP/2 GET https://localhost:44369/Azia/lib/bootstrap/js/bootstrap.bundle.min.js.map - null null
 2026-07-02 21:25:05.494 +02:00 [INF] Request finished HTTP/2 GET https://localhost:44369/Azia/lib/bootstrap/js/bootstrap.bundle.min.js.map - 404 null null 1.2297ms
 2026-07-02 21:25:05.494 +02:00 [INF] Request reached the end of the middleware pipeline without being handled by application code. Request path: GET https://localhost:44369/Azia/lib/bootstrap/js/bootstrap.bundle.min.js.map, Response status code: 404
+2026-07-02 21:27:54.964 +02:00 [INF] Request starting HTTP/2 GET https://localhost:44369/AuditTemplates/Index - null null
+2026-07-02 21:27:56.152 +02:00 [INF] Executing endpoint 'Auditor.Controllers.AuditTemplatesController.Index (Auditor)'
+2026-07-02 21:27:56.160 +02:00 [INF] Route matched with {action = "Index", controller = "AuditTemplates", page = "", area = ""}. Executing controller action with signature System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.IActionResult] Index() on controller Auditor.Controllers.AuditTemplatesController (Auditor).
+2026-07-02 21:27:58.169 +02:00 [INF] Executed DbCommand (368ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT [a].[id] AS [Id], [a].[name] AS [Name], [a].[version] AS [Version], [a].[is_active] AS [IsActive], [a0].[display_name] AS [CreatedByName], [a].[created_date] AS [CreatedDate], (
+    SELECT COUNT(*)
+    FROM [audit_template_item] AS [a1]
+    WHERE [a].[id] = [a1].[template_id]) AS [QuestionCount]
+FROM [audit_template] AS [a]
+INNER JOIN [app_user] AS [a0] ON [a].[created_by] = [a0].[id]
+2026-07-02 21:27:58.191 +02:00 [INF] Executing ViewResult, running view Index.
+2026-07-02 21:27:58.223 +02:00 [INF] Executed ViewResult - view Index executed in 32.7509ms.
+2026-07-02 21:27:58.224 +02:00 [INF] Executed action Auditor.Controllers.AuditTemplatesController.Index (Auditor) in 2063.4537ms
+2026-07-02 21:27:58.225 +02:00 [INF] Executed endpoint 'Auditor.Controllers.AuditTemplatesController.Index (Auditor)'
+2026-07-02 21:27:58.231 +02:00 [INF] Request finished HTTP/2 GET https://localhost:44369/AuditTemplates/Index - 200 null text/html; charset=utf-8 3266.5771ms
+2026-07-02 21:27:58.357 +02:00 [INF] Request starting HTTP/2 GET https://localhost:44369/_framework/aspnetcore-browser-refresh.js - null null
+2026-07-02 21:27:58.473 +02:00 [INF] Request finished HTTP/2 GET https://localhost:44369/_framework/aspnetcore-browser-refresh.js - 200 14919 application/javascript; charset=utf-8 115.206ms
+2026-07-02 21:27:58.473 +02:00 [INF] Request starting HTTP/2 GET https://localhost:44369/_vs/browserLink - null null
+2026-07-02 21:27:59.517 +02:00 [INF] Request finished HTTP/2 GET https://localhost:44369/_vs/browserLink - 200 null text/javascript; charset=UTF-8 1044.553ms
+2026-07-02 21:28:01.294 +02:00 [INF] Request starting HTTP/2 GET https://localhost:44369/AuditSchedules/Index - null null
+2026-07-02 21:28:01.912 +02:00 [INF] Executing endpoint 'Auditor.Controllers.AuditSchedulesController.Index (Auditor)'
+2026-07-02 21:28:01.947 +02:00 [INF] Route matched with {action = "Index", controller = "AuditSchedules", page = "", area = ""}. Executing controller action with signature System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.IActionResult] Index() on controller Auditor.Controllers.AuditSchedulesController (Auditor).
+2026-07-02 21:28:02.695 +02:00 [INF] Executed DbCommand (236ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT [a].[id], [a].[cancellation_reason], [a].[created_date], [a].[due_date], [a].[modification_reason], [a].[scheduled_date], [a].[scheduler_id], [a].[site_id], [a].[status], [a].[template_id], [a1].[id], [a1].[created_by], [a1].[created_date], [a1].[description], [a1].[is_active], [a1].[name], [a1].[version], [a2].[id], [a2].[airport_id], [a2].[created_by], [a2].[created_date], [a2].[department_id], [a2].[location], [a2].[name], [a2].[status]
+FROM [audit_schedule] AS [a]
+INNER JOIN [audit_template] AS [a1] ON [a].[template_id] = [a1].[id]
+INNER JOIN [audit_site] AS [a2] ON [a].[site_id] = [a2].[id]
+WHERE [a].[status] = 'SCHEDULED' AND NOT EXISTS (
+    SELECT 1
+    FROM [audit_execution] AS [a0]
+    WHERE [a0].[schedule_id] = [a].[id])
+2026-07-02 21:28:03.075 +02:00 [INF] Executing ViewResult, running view Index.
+2026-07-02 21:28:03.129 +02:00 [INF] Executed ViewResult - view Index executed in 69.8793ms.
+2026-07-02 21:28:03.129 +02:00 [INF] Executed action Auditor.Controllers.AuditSchedulesController.Index (Auditor) in 1181.9235ms
+2026-07-02 21:28:03.129 +02:00 [INF] Executed endpoint 'Auditor.Controllers.AuditSchedulesController.Index (Auditor)'
+2026-07-02 21:28:03.130 +02:00 [INF] Request finished HTTP/2 GET https://localhost:44369/AuditSchedules/Index - 200 null text/html; charset=utf-8 1836.4075ms
+2026-07-02 21:28:03.293 +02:00 [INF] Request starting HTTP/2 GET https://localhost:44369/_framework/aspnetcore-browser-refresh.js - null null
+2026-07-02 21:28:03.312 +02:00 [INF] Request finished HTTP/2 GET https://localhost:44369/_framework/aspnetcore-browser-refresh.js - 200 14919 application/javascript; charset=utf-8 19.6308ms
+2026-07-02 21:28:03.313 +02:00 [INF] Request starting HTTP/2 GET https://localhost:44369/_vs/browserLink - null null
+2026-07-02 21:28:03.498 +02:00 [INF] Request finished HTTP/2 GET https://localhost:44369/_vs/browserLink - 200 null text/javascript; charset=UTF-8 185.3735ms
+2026-07-02 21:28:12.017 +02:00 [INF] Request starting HTTP/2 GET https://localhost:44369/AuditSchedules/Details/1 - null null
+2026-07-02 21:28:12.041 +02:00 [INF] Executing endpoint 'Auditor.Controllers.AuditSchedulesController.Details (Auditor)'
+2026-07-02 21:28:12.062 +02:00 [INF] Route matched with {action = "Details", controller = "AuditSchedules", page = "", area = ""}. Executing controller action with signature System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.IActionResult] Details(System.Nullable`1[System.Int64]) on controller Auditor.Controllers.AuditSchedulesController (Auditor).
+2026-07-02 21:28:12.232 +02:00 [INF] Executed DbCommand (49ms) [Parameters=[@__id_0='?' (DbType = Int64)], CommandType='"Text"', CommandTimeout='30']
+SELECT TOP(1) [a].[id], [a].[cancellation_reason], [a].[created_date], [a].[due_date], [a].[modification_reason], [a].[scheduled_date], [a].[scheduler_id], [a].[site_id], [a].[status], [a].[template_id], [a0].[id], [a0].[azure_ad_object_id], [a0].[created_date], [a0].[display_name], [a0].[email], [a0].[is_active], [a0].[password_hash], [a0].[role], [a1].[id], [a1].[airport_id], [a1].[created_by], [a1].[created_date], [a1].[department_id], [a1].[location], [a1].[name], [a1].[status], [a2].[id], [a2].[created_by], [a2].[created_date], [a2].[description], [a2].[is_active], [a2].[name], [a2].[version]
+FROM [audit_schedule] AS [a]
+INNER JOIN [app_user] AS [a0] ON [a].[scheduler_id] = [a0].[id]
+INNER JOIN [audit_site] AS [a1] ON [a].[site_id] = [a1].[id]
+INNER JOIN [audit_template] AS [a2] ON [a].[template_id] = [a2].[id]
+WHERE [a].[id] = @__id_0
+2026-07-02 21:28:12.299 +02:00 [INF] Executing ViewResult, running view Details.
+2026-07-02 21:28:12.332 +02:00 [INF] Executed ViewResult - view Details executed in 34.3378ms.
+2026-07-02 21:28:12.350 +02:00 [INF] Executed action Auditor.Controllers.AuditSchedulesController.Details (Auditor) in 270.5376ms
+2026-07-02 21:28:12.350 +02:00 [INF] Executed endpoint 'Auditor.Controllers.AuditSchedulesController.Details (Auditor)'
+2026-07-02 21:28:12.351 +02:00 [INF] Request finished HTTP/2 GET https://localhost:44369/AuditSchedules/Details/1 - 200 null text/html; charset=utf-8 333.5054ms
+2026-07-02 21:28:12.410 +02:00 [INF] Request starting HTTP/2 GET https://localhost:44369/_framework/aspnetcore-browser-refresh.js - null null
+2026-07-02 21:28:12.431 +02:00 [INF] Request finished HTTP/2 GET https://localhost:44369/_framework/aspnetcore-browser-refresh.js - 200 14919 application/javascript; charset=utf-8 20.2966ms
+2026-07-02 21:28:12.431 +02:00 [INF] Request starting HTTP/2 GET https://localhost:44369/_vs/browserLink - null null
+2026-07-02 21:28:12.494 +02:00 [INF] Request finished HTTP/2 GET https://localhost:44369/_vs/browserLink - 200 null text/javascript; charset=UTF-8 63.0739ms
+2026-07-02 21:28:14.608 +02:00 [INF] Request starting HTTP/2 GET https://localhost:44369/_framework/aspnetcore-browser-refresh.js - null null
+2026-07-02 21:28:14.619 +02:00 [INF] Request finished HTTP/2 GET https://localhost:44369/_framework/aspnetcore-browser-refresh.js - 200 14919 application/javascript; charset=utf-8 11.2993ms
+2026-07-02 21:28:15.705 +02:00 [INF] Request starting HTTP/2 GET https://localhost:44369/AuditSchedules/Create - null null
+2026-07-02 21:28:16.043 +02:00 [INF] Executing endpoint 'Auditor.Controllers.AuditSchedulesController.Create (Auditor)'
+2026-07-02 21:28:16.044 +02:00 [INF] Route matched with {action = "Create", controller = "AuditSchedules", page = "", area = ""}. Executing controller action with signature Microsoft.AspNetCore.Mvc.IActionResult Create() on controller Auditor.Controllers.AuditSchedulesController (Auditor).
+2026-07-02 21:28:16.045 +02:00 [INF] Executing ViewResult, running view Create.
+2026-07-02 21:28:16.294 +02:00 [INF] Executed DbCommand (79ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT [a].[id], [a].[created_by], [a].[created_date], [a].[description], [a].[is_active], [a].[name], [a].[version]
+FROM [audit_template] AS [a]
+2026-07-02 21:28:16.444 +02:00 [INF] Executed DbCommand (68ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT [a].[id], [a].[airport_id], [a].[created_by], [a].[created_date], [a].[department_id], [a].[location], [a].[name], [a].[status]
+FROM [audit_site] AS [a]
+2026-07-02 21:28:16.464 +02:00 [INF] Executed DbCommand (6ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT [a].[id], [a].[azure_ad_object_id], [a].[created_date], [a].[display_name], [a].[email], [a].[is_active], [a].[password_hash], [a].[role]
+FROM [app_user] AS [a]
+2026-07-02 21:28:16.490 +02:00 [INF] Executed ViewResult - view Create executed in 445.1863ms.
+2026-07-02 21:28:16.490 +02:00 [INF] Executed action Auditor.Controllers.AuditSchedulesController.Create (Auditor) in 446.3875ms
+2026-07-02 21:28:16.490 +02:00 [INF] Executed endpoint 'Auditor.Controllers.AuditSchedulesController.Create (Auditor)'
+2026-07-02 21:28:16.491 +02:00 [INF] Request finished HTTP/2 GET https://localhost:44369/AuditSchedules/Create - 200 null text/html; charset=utf-8 785.431ms
+2026-07-02 21:28:16.612 +02:00 [INF] Request starting HTTP/2 GET https://localhost:44369/_vs/browserLink - null null
+2026-07-02 21:28:16.645 +02:00 [INF] Request starting HTTP/2 GET https://localhost:44369/_framework/aspnetcore-browser-refresh.js - null null
+2026-07-02 21:28:16.646 +02:00 [INF] Request finished HTTP/2 GET https://localhost:44369/_framework/aspnetcore-browser-refresh.js - 200 14919 application/javascript; charset=utf-8 1.5224ms
+2026-07-02 21:28:16.874 +02:00 [INF] Request finished HTTP/2 GET https://localhost:44369/_vs/browserLink - 200 null text/javascript; charset=UTF-8 262.2299ms
+2026-07-02 21:33:43.245 +02:00 [INF] Request starting HTTP/2 GET https://localhost:44369/AuditSchedules/Create - null null
+2026-07-02 21:33:43.251 +02:00 [INF] Executing endpoint 'Auditor.Controllers.AuditSchedulesController.Create (Auditor)'
+2026-07-02 21:33:43.253 +02:00 [INF] Route matched with {action = "Create", controller = "AuditSchedules", page = "", area = ""}. Executing controller action with signature Microsoft.AspNetCore.Mvc.IActionResult Create() on controller Auditor.Controllers.AuditSchedulesController (Auditor).
+2026-07-02 21:33:43.255 +02:00 [INF] Executing ViewResult, running view Create.
+2026-07-02 21:33:43.285 +02:00 [INF] Executed DbCommand (2ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT [a].[id], [a].[created_by], [a].[created_date], [a].[description], [a].[is_active], [a].[name], [a].[version]
+FROM [audit_template] AS [a]
+2026-07-02 21:33:43.295 +02:00 [INF] Executed DbCommand (1ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT [a].[id], [a].[airport_id], [a].[created_by], [a].[created_date], [a].[department_id], [a].[location], [a].[name], [a].[status]
+FROM [audit_site] AS [a]
+2026-07-02 21:33:43.302 +02:00 [INF] Executed DbCommand (1ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT [a].[id], [a].[azure_ad_object_id], [a].[created_date], [a].[display_name], [a].[email], [a].[is_active], [a].[password_hash], [a].[role]
+FROM [app_user] AS [a]
+2026-07-02 21:33:43.322 +02:00 [INF] Executed ViewResult - view Create executed in 68.9006ms.
+2026-07-02 21:33:43.322 +02:00 [INF] Executed action Auditor.Controllers.AuditSchedulesController.Create (Auditor) in 69.3838ms
+2026-07-02 21:33:43.322 +02:00 [INF] Executed endpoint 'Auditor.Controllers.AuditSchedulesController.Create (Auditor)'
+2026-07-02 21:33:43.322 +02:00 [INF] Request finished HTTP/2 GET https://localhost:44369/AuditSchedules/Create - 200 null text/html; charset=utf-8 77.2905ms
+2026-07-02 21:33:43.337 +02:00 [INF] Request starting HTTP/2 GET https://localhost:44369/_vs/browserLink - null null
+2026-07-02 21:33:43.337 +02:00 [INF] Request starting HTTP/2 GET https://localhost:44369/_framework/aspnetcore-browser-refresh.js - null null
+2026-07-02 21:33:43.338 +02:00 [INF] Request finished HTTP/2 GET https://localhost:44369/_framework/aspnetcore-browser-refresh.js - 200 14919 application/javascript; charset=utf-8 0.9869ms
+2026-07-02 21:33:43.358 +02:00 [INF] Request finished HTTP/2 GET https://localhost:44369/_vs/browserLink - 200 null text/javascript; charset=UTF-8 21.4848ms
+2026-07-02 21:38:19.907 +02:00 [INF] User profile is available. Using 'C:\Users\Mmamu\AppData\Local\ASP.NET\DataProtection-Keys' as key repository and Windows DPAPI to encrypt keys at rest.
+2026-07-02 21:38:21.293 +02:00 [INF] Executed DbCommand (26ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT 1
+2026-07-02 21:38:21.329 +02:00 [INF] Executed DbCommand (22ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT OBJECT_ID(N'[__EFMigrationsHistory]');
+2026-07-02 21:38:21.332 +02:00 [INF] Executed DbCommand (1ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT 1
+2026-07-02 21:38:21.334 +02:00 [INF] Executed DbCommand (1ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT OBJECT_ID(N'[__EFMigrationsHistory]');
+2026-07-02 21:38:21.347 +02:00 [INF] Executed DbCommand (3ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT [MigrationId], [ProductVersion]
+FROM [__EFMigrationsHistory]
+ORDER BY [MigrationId];
+2026-07-02 21:38:21.363 +02:00 [INF] No migrations were applied. The database is already up to date.
+2026-07-02 21:38:21.367 +02:00 [INF] Starting Auditor application...
+2026-07-02 21:38:21.501 +02:00 [INF] Request starting HTTP/2 GET https://localhost:44369/ - null null
+2026-07-02 21:38:21.515 +02:00 [INF] Application started. Press Ctrl+C to shut down.
+2026-07-02 21:38:21.515 +02:00 [INF] Hosting environment: Development
+2026-07-02 21:38:21.515 +02:00 [INF] Content root path: E:\Code\auditor-wagner\Auditor
+2026-07-02 21:38:21.641 +02:00 [INF] Executing endpoint 'Auditor.Controllers.AuthController.Login (Auditor)'
+2026-07-02 21:38:21.654 +02:00 [INF] Route matched with {action = "Login", controller = "Auth", page = "", area = ""}. Executing controller action with signature Microsoft.AspNetCore.Mvc.IActionResult Login() on controller Auditor.Controllers.AuthController (Auditor).
+2026-07-02 21:38:21.661 +02:00 [INF] Executing ViewResult, running view Login.
+2026-07-02 21:38:21.777 +02:00 [INF] Executed ViewResult - view Login executed in 114.8048ms.
+2026-07-02 21:38:21.780 +02:00 [INF] Executed action Auditor.Controllers.AuthController.Login (Auditor) in 125.5073ms
+2026-07-02 21:38:21.780 +02:00 [INF] Executed endpoint 'Auditor.Controllers.AuthController.Login (Auditor)'
+2026-07-02 21:38:21.790 +02:00 [INF] Request finished HTTP/2 GET https://localhost:44369/ - 200 null text/html; charset=utf-8 294.4637ms
+2026-07-02 21:38:21.829 +02:00 [INF] Request starting HTTP/2 GET https://localhost:44369/_framework/aspnetcore-browser-refresh.js - null null
+2026-07-02 21:38:21.829 +02:00 [INF] Request starting HTTP/2 GET https://localhost:44369/_vs/browserLink - null null
+2026-07-02 21:38:21.834 +02:00 [INF] Request finished HTTP/2 GET https://localhost:44369/_framework/aspnetcore-browser-refresh.js - 200 14919 application/javascript; charset=utf-8 3.4067ms
+2026-07-02 21:38:21.871 +02:00 [INF] Request finished HTTP/2 GET https://localhost:44369/_vs/browserLink - 200 null text/javascript; charset=UTF-8 42.7354ms
+2026-07-02 21:38:26.999 +02:00 [INF] Request starting HTTP/2 GET https://localhost:44369/Template/Dashboard - null null
+2026-07-02 21:38:27.013 +02:00 [INF] Executing endpoint 'Auditor.Controllers.TemplateController.Dashboard (Auditor)'
+2026-07-02 21:38:27.015 +02:00 [INF] Route matched with {action = "Dashboard", controller = "Template", page = "", area = ""}. Executing controller action with signature Microsoft.AspNetCore.Mvc.IActionResult Dashboard() on controller Auditor.Controllers.TemplateController (Auditor).
+2026-07-02 21:38:27.019 +02:00 [INF] Executing ViewResult, running view Dashboard.
+2026-07-02 21:38:27.067 +02:00 [INF] Executed ViewResult - view Dashboard executed in 50.6076ms.
+2026-07-02 21:38:27.068 +02:00 [INF] Executed action Auditor.Controllers.TemplateController.Dashboard (Auditor) in 52.444ms
+2026-07-02 21:38:27.068 +02:00 [INF] Executed endpoint 'Auditor.Controllers.TemplateController.Dashboard (Auditor)'
+2026-07-02 21:38:27.070 +02:00 [INF] Request finished HTTP/2 GET https://localhost:44369/Template/Dashboard - 200 null text/html; charset=utf-8 70.32ms
+2026-07-02 21:38:27.126 +02:00 [INF] Request starting HTTP/2 GET https://localhost:44369/_framework/aspnetcore-browser-refresh.js - null null
+2026-07-02 21:38:27.126 +02:00 [INF] Request starting HTTP/2 GET https://localhost:44369/Azia/js/jquery.cookie.js - null null
+2026-07-02 21:38:27.128 +02:00 [INF] Request finished HTTP/2 GET https://localhost:44369/_framework/aspnetcore-browser-refresh.js - 200 14919 application/javascript; charset=utf-8 1.9827ms
+2026-07-02 21:38:27.138 +02:00 [INF] Request finished HTTP/2 GET https://localhost:44369/Azia/js/jquery.cookie.js - 404 null null 11.9035ms
+2026-07-02 21:38:27.138 +02:00 [INF] Request starting HTTP/2 GET https://localhost:44369/_vs/browserLink - null null
+2026-07-02 21:38:27.139 +02:00 [INF] Request reached the end of the middleware pipeline without being handled by application code. Request path: GET https://localhost:44369/Azia/js/jquery.cookie.js, Response status code: 404
+2026-07-02 21:38:27.157 +02:00 [INF] Request finished HTTP/2 GET https://localhost:44369/_vs/browserLink - 200 null text/javascript; charset=UTF-8 19.5617ms
+2026-07-02 21:38:27.802 +02:00 [INF] Request starting HTTP/1.1 GET https://localhost:44369/Azia/lib/bootstrap/js/bootstrap.bundle.min.js.map - null null
+2026-07-02 21:38:27.804 +02:00 [INF] Request finished HTTP/1.1 GET https://localhost:44369/Azia/lib/bootstrap/js/bootstrap.bundle.min.js.map - 404 null null 2.3378ms
+2026-07-02 21:38:27.804 +02:00 [INF] Request reached the end of the middleware pipeline without being handled by application code. Request path: GET https://localhost:44369/Azia/lib/bootstrap/js/bootstrap.bundle.min.js.map, Response status code: 404
+2026-07-02 21:38:27.810 +02:00 [INF] Request starting HTTP/2 GET https://localhost:44369/Azia/lib/bootstrap/js/bootstrap.bundle.min.js.map - null null
+2026-07-02 21:38:27.811 +02:00 [INF] Request finished HTTP/2 GET https://localhost:44369/Azia/lib/bootstrap/js/bootstrap.bundle.min.js.map - 404 null null 0.7882ms
+2026-07-02 21:38:27.811 +02:00 [INF] Request reached the end of the middleware pipeline without being handled by application code. Request path: GET https://localhost:44369/Azia/lib/bootstrap/js/bootstrap.bundle.min.js.map, Response status code: 404
+2026-07-02 21:38:30.131 +02:00 [INF] Request starting HTTP/2 GET https://localhost:44369/AuditSchedules/Index - null null
+2026-07-02 21:38:30.138 +02:00 [INF] Executing endpoint 'Auditor.Controllers.AuditSchedulesController.Index (Auditor)'
+2026-07-02 21:38:30.141 +02:00 [INF] Route matched with {action = "Index", controller = "AuditSchedules", page = "", area = ""}. Executing controller action with signature System.Threading.Tasks.Task`1[Microsoft.AspNetCore.Mvc.IActionResult] Index() on controller Auditor.Controllers.AuditSchedulesController (Auditor).
+2026-07-02 21:38:30.510 +02:00 [INF] Executed DbCommand (17ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT [a].[id], [a].[cancellation_reason], [a].[created_date], [a].[due_date], [a].[modification_reason], [a].[scheduled_date], [a].[scheduler_id], [a].[site_id], [a].[status], [a].[template_id], [a1].[id], [a1].[created_by], [a1].[created_date], [a1].[description], [a1].[is_active], [a1].[name], [a1].[version], [a2].[id], [a2].[airport_id], [a2].[created_by], [a2].[created_date], [a2].[department_id], [a2].[location], [a2].[name], [a2].[status]
+FROM [audit_schedule] AS [a]
+INNER JOIN [audit_template] AS [a1] ON [a].[template_id] = [a1].[id]
+INNER JOIN [audit_site] AS [a2] ON [a].[site_id] = [a2].[id]
+WHERE [a].[status] = 'SCHEDULED' AND NOT EXISTS (
+    SELECT 1
+    FROM [audit_execution] AS [a0]
+    WHERE [a0].[schedule_id] = [a].[id])
+2026-07-02 21:38:30.630 +02:00 [INF] Executing ViewResult, running view Index.
+2026-07-02 21:38:30.657 +02:00 [INF] Executed ViewResult - view Index executed in 28.1941ms.
+2026-07-02 21:38:30.658 +02:00 [INF] Executed action Auditor.Controllers.AuditSchedulesController.Index (Auditor) in 516.8547ms
+2026-07-02 21:38:30.659 +02:00 [INF] Executed endpoint 'Auditor.Controllers.AuditSchedulesController.Index (Auditor)'
+2026-07-02 21:38:30.664 +02:00 [INF] Request finished HTTP/2 GET https://localhost:44369/AuditSchedules/Index - 200 null text/html; charset=utf-8 533.0116ms
+2026-07-02 21:38:30.699 +02:00 [INF] Request starting HTTP/2 GET https://localhost:44369/_vs/browserLink - null null
+2026-07-02 21:38:30.699 +02:00 [INF] Request starting HTTP/2 GET https://localhost:44369/_framework/aspnetcore-browser-refresh.js - null null
+2026-07-02 21:38:30.701 +02:00 [INF] Request finished HTTP/2 GET https://localhost:44369/_framework/aspnetcore-browser-refresh.js - 200 14919 application/javascript; charset=utf-8 1.0981ms
+2026-07-02 21:38:30.709 +02:00 [INF] Request finished HTTP/2 GET https://localhost:44369/_vs/browserLink - 200 null text/javascript; charset=UTF-8 9.8669ms
+2026-07-02 21:38:31.674 +02:00 [INF] Request starting HTTP/2 GET https://localhost:44369/AuditSchedules/Create - null null
+2026-07-02 21:38:31.682 +02:00 [INF] Executing endpoint 'Auditor.Controllers.AuditSchedulesController.Create (Auditor)'
+2026-07-02 21:38:31.685 +02:00 [INF] Route matched with {action = "Create", controller = "AuditSchedules", page = "", area = ""}. Executing controller action with signature Microsoft.AspNetCore.Mvc.IActionResult Create() on controller Auditor.Controllers.AuditSchedulesController (Auditor).
+2026-07-02 21:38:31.689 +02:00 [INF] Executing ViewResult, running view Create.
+2026-07-02 21:38:31.818 +02:00 [INF] Executed DbCommand (2ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT [a].[id], [a].[created_by], [a].[created_date], [a].[description], [a].[is_active], [a].[name], [a].[version]
+FROM [audit_template] AS [a]
+2026-07-02 21:38:31.839 +02:00 [INF] Executed DbCommand (1ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT [a].[id], [a].[airport_id], [a].[created_by], [a].[created_date], [a].[department_id], [a].[location], [a].[name], [a].[status]
+FROM [audit_site] AS [a]
+2026-07-02 21:38:31.847 +02:00 [INF] Executed DbCommand (1ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT [a].[id], [a].[azure_ad_object_id], [a].[created_date], [a].[display_name], [a].[email], [a].[is_active], [a].[password_hash], [a].[role]
+FROM [app_user] AS [a]
+2026-07-02 21:38:31.884 +02:00 [INF] Executed ViewResult - view Create executed in 195.7459ms.
+2026-07-02 21:38:31.885 +02:00 [INF] Executed action Auditor.Controllers.AuditSchedulesController.Create (Auditor) in 198.1177ms
+2026-07-02 21:38:31.885 +02:00 [INF] Executed endpoint 'Auditor.Controllers.AuditSchedulesController.Create (Auditor)'
+2026-07-02 21:38:31.885 +02:00 [INF] Request finished HTTP/2 GET https://localhost:44369/AuditSchedules/Create - 200 null text/html; charset=utf-8 211.7486ms
+2026-07-02 21:38:31.903 +02:00 [INF] Request starting HTTP/2 GET https://localhost:44369/css/audit-schedule/create.css - null null
+2026-07-02 21:38:31.903 +02:00 [INF] Request starting HTTP/2 GET https://localhost:44369/_vs/browserLink - null null
+2026-07-02 21:38:31.903 +02:00 [INF] Request starting HTTP/2 GET https://localhost:44369/_framework/aspnetcore-browser-refresh.js - null null
+2026-07-02 21:38:31.905 +02:00 [INF] Request finished HTTP/2 GET https://localhost:44369/_framework/aspnetcore-browser-refresh.js - 200 14919 application/javascript; charset=utf-8 1.5771ms
+2026-07-02 21:38:31.919 +02:00 [INF] Request finished HTTP/2 GET https://localhost:44369/_vs/browserLink - 200 null text/javascript; charset=UTF-8 15.9302ms
+2026-07-02 21:38:31.943 +02:00 [INF] Sending file. Request path: '/css/audit-schedule/create.css'. Physical path: 'E:\Code\auditor-wagner\Auditor\wwwroot\css\audit-schedule\create.css'
+2026-07-02 21:38:31.943 +02:00 [INF] Request finished HTTP/2 GET https://localhost:44369/css/audit-schedule/create.css - 200 1706 text/css 40.6878ms

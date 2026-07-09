@@ -1,66 +1,415 @@
-﻿@model Auditor.Models.AuditSchedule
-
+﻿@model CreateAuditScheduleInfo
+@using Auditor.DTO.AuditSchedule
 @{
-    ViewData["Title"] = "Create";
+    ViewData["Title"] = "Schedule Audit";
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
-<h1>Create</h1>
+<link href="~/css/audit-schedule/create.css" rel="stylesheet" />
 
-<h4>AuditSchedule</h4>
-<hr />
-<div class="row">
-    <div class="col-md-4">
-        <form asp-action="Create">
-            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-            <div class="form-group">
-                <label asp-for="TemplateId" class="control-label"></label>
-                <select asp-for="TemplateId" class ="form-control" asp-items="ViewBag.TemplateId"></select>
-            </div>
-            <div class="form-group">
-                <label asp-for="SiteId" class="control-label"></label>
-                <select asp-for="SiteId" class ="form-control" asp-items="ViewBag.SiteId"></select>
-            </div>
-            <div class="form-group">
-                <label asp-for="SchedulerId" class="control-label"></label>
-                <select asp-for="SchedulerId" class ="form-control" asp-items="ViewBag.SchedulerId"></select>
-            </div>
-            <div class="form-group">
-                <label asp-for="ScheduledDate" class="control-label"></label>
-                <input asp-for="ScheduledDate" class="form-control" />
-                <span asp-validation-for="ScheduledDate" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="DueDate" class="control-label"></label>
-                <input asp-for="DueDate" class="form-control" />
-                <span asp-validation-for="DueDate" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="Status" class="control-label"></label>
-                <input asp-for="Status" class="form-control" value="SCHEDULED" />
-                <span asp-validation-for="Status" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="ModificationReason" class="control-label"></label>
-                <input asp-for="ModificationReason" class="form-control" />
-                <span asp-validation-for="ModificationReason" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="CancellationReason" class="control-label"></label>
-                <input asp-for="CancellationReason" class="form-control" />
-                <span asp-validation-for="CancellationReason" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <input type="submit" value="Create" class="btn btn-primary" />
-            </div>
-        </form>
+<div class="form-page-container">
+
+    <!-- Breadcrumb Navigation -->
+    <div class="form-page-breadcrumb">
+        <a asp-controller="Template" asp-action="Dashboard">Dashboard</a>
+        <span>›</span>
+        <a asp-action="Index">Audit Schedules</a>
+        <span>›</span>
+        <span>Create New</span>
     </div>
-</div>
 
-<div>
-    <a asp-action="Index">Back to List</a>
-</div>
 
+    <!-- Page Title Section -->
+    <div class="form-page-title-section">
+
+        <div class="form-page-title-content">
+
+            <h1>Schedule New Audit</h1>
+
+            <p>
+                Create a scheduled audit by assigning a template, site and responsible auditor.
+            </p>
+
+        </div>
+
+        <div class="form-page-meta">
+
+            <span class="form-meta-badge">
+                New Schedule
+            </span>
+
+        </div>
+
+    </div>
+
+
+    <!-- Form Layout -->
+    <div class="form-wrapper">
+
+
+        <!-- Main Form -->
+        <div class="form-main">
+
+
+            <!-- Form Header -->
+            <div class="form-main-header">
+
+                <h2>
+                    <i class="typcn typcn-calendar-outline"></i>
+                    Audit Schedule Details
+                </h2>
+
+            </div>
+
+
+            <!-- Form Content -->
+            <div class="form-main-content">
+
+                <form asp-action="Create"
+                      method="post"
+                      id="scheduleForm"
+                      novalidate>
+
+
+                  <!-- Validation -->
+                    @if (!ViewData.ModelState.IsValid)
+                    {
+                        <div class="validation-alert">
+
+                            <h3>
+                                <i class="fas fa-times-circle"></i>
+                                Form Validation Errors
+                            </h3>
+
+                            <ul>
+                                @foreach (var modelState in ViewData.ModelState.Values)
+                                {
+                                    @foreach (var error in modelState.Errors)
+                                    {
+                                        <li>@error.ErrorMessage</li>
+                                    }
+                                }
+                            </ul>
+
+                        </div>
+                    }
+
+
+
+                    <!-- Audit Information -->
+                    <div class="form-section">
+
+                        <h3 class="form-section-title">
+                            Audit Assignment
+                        </h3>
+
+                        <p class="form-section-description">
+                            Select the audit template, site and auditor responsible for execution.
+                        </p>
+
+
+                        <div class="form-grid">
+
+
+                            <!-- Template -->
+                            <div class="form-group">
+
+                                <label asp-for="TemplateId">
+                                    Audit Template
+                                    <span class="required">*</span>
+                                </label>
+
+
+                                <select asp-for="TemplateId"
+                                        asp-items="Model.Templates"
+                                        class="form-control"
+                                        required>
+
+                                    <option value="">
+                                        -- Select Template --
+                                    </option>
+
+                                </select>
+
+
+                                <span asp-validation-for="TemplateId"
+                                      class="form-group-error"></span>
+
+
+                                <div class="form-group-hint">
+                                    Select the audit template that defines the audit requirements.
+                                </div>
+
+                            </div>
+
+
+
+                            <!-- Site -->
+                            <div class="form-group">
+
+                                <label asp-for="SiteId">
+                                    Audit Site
+                                    <span class="required">*</span>
+                                </label>
+
+
+                                <select asp-for="SiteId"
+                                        asp-items="Model.Sites"
+                                        class="form-control"
+                                        required>
+
+                                    <option value="">
+                                        -- Select Site --
+                                    </option>
+
+                                </select>
+
+
+                                <span asp-validation-for="SiteId"
+                                      class="form-group-error"></span>
+
+
+                                <div class="form-group-hint">
+                                    Choose the airport location where the audit will take place.
+                                </div>
+
+                            </div>
+
+
+
+                            <!-- Auditor -->
+                            <div class="form-group">
+
+                                <label asp-for="SchedulerId">
+                                    Assigned Auditor
+                                    <span class="required">*</span>
+                                </label>
+
+
+                                <select asp-for="SchedulerId"
+                                        asp-items="Model.Schedulers"
+                                        class="form-control"
+                                        required>
+
+                                    <option value="">
+                                        -- Select Auditor --
+                                    </option>
+
+                                </select>
+
+
+                                <span asp-validation-for="SchedulerId"
+                                      class="form-group-error"></span>
+
+
+                                <div class="form-group-hint">
+                                    Person responsible for performing the scheduled audit.
+                                </div>
+
+                            </div>
+
+
+                        </div>
+
+                    </div>
+
+
+
+
+
+                    <!-- Schedule Details -->
+                    <div class="form-section">
+
+                        <h3 class="form-section-title">
+                            Schedule Details
+                        </h3>
+
+
+                        <p class="form-section-description">
+                            Define the execution deadline for this audit.
+                        </p>
+
+
+
+                        <div class="form-grid">
+
+
+                            <div class="form-group">
+
+                                <label asp-for="DueDate">
+                                    Due Date
+                                    <span class="required">*</span>
+                                </label>
+
+
+                                <input asp-for="DueDate"
+                                       class="form-control"
+                                       required />
+
+
+                                <span asp-validation-for="DueDate"
+                                      class="form-group-error"></span>
+
+
+                                <div class="form-group-hint">
+                                    The date by which the audit should be completed.
+                                </div>
+
+
+                            </div>
+
+
+                        </div>
+
+
+                    </div>
+
+
+                </form>
+
+
+            </div>
+
+
+
+            <!-- Footer -->
+            <div class="form-main-footer">
+
+
+                <a asp-action="Index"
+                   class="btn-cancel">
+
+                    <i class="fas fa-times"></i>
+
+                    Cancel
+
+                </a>
+
+
+
+                <button form="scheduleForm"
+                        type="submit"
+                        class="btn-submit">
+
+                    <i class="fas fa-calendar-check"></i>
+
+                    Create Schedule
+
+                </button>
+
+
+            </div>
+
+
+        </div>
+
+
+
+
+
+        <!-- Sidebar -->
+        <div class="form-sidebar">
+
+
+
+            <div class="form-sidebar-card">
+
+                <h3>
+                    <i class="fas fa-info-circle"></i>
+                    About Audit Scheduling
+                </h3>
+
+
+                <p>
+                    Audit schedules assign an audit template to an auditor
+                    for execution at a specific audit site.
+                </p>
+
+
+            </div>
+
+
+
+
+            <div class="form-sidebar-card">
+
+                <h3>
+                    <i class="fas fa-list"></i>
+                    Scheduling Process
+                </h3>
+
+
+                <ul style="list-style:none;padding:0;margin:0;font-size:12px;">
+
+                    <li style="margin-bottom:8px;">
+                        <strong>1.</strong> Select the audit template
+                    </li>
+
+                    <li style="margin-bottom:8px;">
+                        <strong>2.</strong> Choose the audit site
+                    </li>
+
+                    <li style="margin-bottom:8px;">
+                        <strong>3.</strong> Assign the auditor
+                    </li>
+
+                    <li>
+                        <strong>4.</strong> Define the due date
+                    </li>
+
+                </ul>
+
+
+            </div>
+
+
+
+
+            <div class="form-sidebar-card form-sidebar-help">
+
+                <h3>
+                    <i class="fas fa-question-circle"></i>
+                    Need Help?
+                </h3>
+
+
+                <p>
+                    Fields marked with <span class="required">*</span>
+                    are required before creating an audit schedule.
+                </p>
+
+
+            </div>
+
+
+
+
+            <div class="form-sidebar-card">
+
+                <h3>
+                    <i class="fas fa-lightbulb"></i>
+                    Tips
+                </h3>
+
+
+                <p>
+                    Ensure the selected auditor has the required access
+                    and that the due date provides enough time for completion.
+                </p>
+
+
+            </div>
+
+
+        </div>
+
+
+    </div>
+
+
+</div>
 @section Scripts {
-    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
 }

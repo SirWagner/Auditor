@@ -1,20 +1,25 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+﻿using Auditor.DTO.AuditSchedule;
+using Auditor.Models;
+using Auditor.Services.Interfaces;
+using Auditor.ViewModels.AuditSchedule;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
-using Auditor.Models;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace Auditor.Controllers
 {
     public class AuditSchedulesController : Controller
     {
+        private readonly IAuditScheduleService _auditScheduleService;
         private readonly AuditorContext _context;
 
-        public AuditSchedulesController(AuditorContext context)
+        public AuditSchedulesController(IAuditScheduleService AuditScheduleService, AuditorContext context)
         {
+            _auditScheduleService = AuditScheduleService;
             _context = context;
         }
 
@@ -68,10 +73,17 @@ namespace Auditor.Controllers
         // GET: AuditSchedules/Create
         public IActionResult Create()
         {
-            ViewData["SchedulerId"] = new SelectList(_context.AppUsers, "Id", "Id");
-            ViewData["SiteId"] = new SelectList(_context.AuditSites, "Id", "Name");
-            ViewData["TemplateId"] = new SelectList(_context.AuditTemplates, "Id", "Name");
-            return View();
+            var model = new CreateAuditScheduleInfo(
+                SchedulerId: null,
+                SiteId: null,
+                TemplateId: null,
+                DueDate: null,
+                new SelectList(_context.AppUsers, "Id", "DisplayName").ToList(),
+                new SelectList(_context.AuditSites, "Id", "Name").ToList(),
+                new SelectList(_context.AuditTemplates, "Id", "Name").ToList()
+            );
+
+            return View(model);
         }
 
         // POST: AuditSchedules/Create
@@ -79,18 +91,11 @@ namespace Auditor.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("Id,TemplateId,SiteId,SchedulerId,ScheduledDate,DueDate,Status,ModificationReason,CancellationReason,CreatedDate")] AuditSchedule auditSchedule)
+        public async Task<IActionResult> Create(CreateAuditScheduleRequest AuditSchedule)
         {
-            if (ModelState.IsValid)
-            {
-                _context.Add(auditSchedule);
-                await _context.SaveChangesAsync();
-                return RedirectToAction(nameof(Index));
-            }
-            ViewData["SchedulerId"] = new SelectList(_context.AppUsers, "Id", "Id", auditSchedule.SchedulerId);
-            ViewData["SiteId"] = new SelectList(_context.AuditSites, "Id", "Name", auditSchedule.SiteId);
-            ViewData["TemplateId"] = new SelectList(_context.AuditTemplates, "Id", "Name", auditSchedule.TemplateId);
-            return View(auditSchedule);
+            var schedule = new AuditScheduleCreateDTO(AuditSchedule.TemplateId, AuditSchedule.SiteId, AuditSchedule.SchedulerId, DateTime.UtcNow, AuditSchedule.DueDate);
+            var result = await _auditScheduleService.Create(schedule);
+            return RedirectToAction(nameof(Index));
         }
 
         // GET: AuditSchedules/Edit/5
