@@ -1,0 +1,10 @@
+@{
+    var version = System.Reflection.Assembly.GetEntryAssembly()?.GetName().Version?.ToString(3) ?? "dev";
+}
+<footer class="border-top footer text-muted mt-5">
+    <div class="container">
+        <div class="py-3">
+            Auditor v@(version) &middot; &copy; @DateTime.UtcNow.Year - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
+        </div>
+    </div>
+</footer>

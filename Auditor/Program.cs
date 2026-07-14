@@ -54,6 +54,7 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
 builder.Services.AddScoped<IAuditTemplateService, AuditTemplateService>();
 builder.Services.AddScoped<IAppUserService, AppUserService>();
 builder.Services.AddScoped<IQuestionBankService, QuestionBankService>();
+builder.Services.AddScoped<IDashboardService, DashboardService>();
 builder.Services.AddHostedService<ScheduleMonitoringHostedService>();
 
 #region =========================

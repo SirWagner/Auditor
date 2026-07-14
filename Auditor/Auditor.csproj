@@ -6,6 +6,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <UserSecretsId>aspnet-Auditor-161b96f7-a8ef-4781-9a50-90a59b7fcede</UserSecretsId>
     <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
+    <Version>1.0.0</Version>
   </PropertyGroup>
 
   <ItemGroup>

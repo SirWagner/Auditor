@@ -1,4 +1,5 @@
 using Auditor.Models;
+using Auditor.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Diagnostics;
@@ -9,10 +10,12 @@ namespace Auditor.Controllers
     public class TemplateController : Controller
     {
         private readonly ILogger<HomeController> _logger;
+        private readonly IDashboardService _dashboardService;
 
-        public TemplateController(ILogger<HomeController> logger)
+        public TemplateController(ILogger<HomeController> logger, IDashboardService dashboardService)
         {
             _logger = logger;
+            _dashboardService = dashboardService;
         }
 
         public IActionResult Index()
@@ -33,9 +36,10 @@ namespace Auditor.Controllers
         }
 
 
-        public IActionResult Dashboard()
+        public async Task<IActionResult> Dashboard()
         {
-            return View();
+            var vm = await _dashboardService.GetDashboardStatsAsync();
+            return View(vm);
         }
     }
 
