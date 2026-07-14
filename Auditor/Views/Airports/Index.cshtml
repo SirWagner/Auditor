@@ -22,10 +22,13 @@
             <table class="list-table table airport-table">
                 <thead>
                     <tr >
-                        <th style="width: 30%;">@Html.DisplayNameFor(model => model.FirstOrDefault().Name)</th>
-                        <th style="width: 15%;">@Html.DisplayNameFor(model => model.FirstOrDefault().Code)</th>
-                        <th style="width: 35%;">@Html.DisplayNameFor(model => model.FirstOrDefault().Location)</th>
-                        <th style="width: 20%;">Actions</th>
+                        <th style="width: 20%;">@Html.DisplayNameFor(model => model.FirstOrDefault().Name)</th>
+                        <th style="width: 10%;">@Html.DisplayNameFor(model => model.FirstOrDefault().Code)</th>
+                        <th style="width: 20%;">@Html.DisplayNameFor(model => model.FirstOrDefault().Location)</th>
+                        <th style="width: 12%;">Air Side</th>
+                        <th style="width: 13%;">Commercial Area</th>
+                        <th style="width: 13%;">Terminal Section</th>
+                        <th style="width: 12%;">Actions</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -43,6 +46,21 @@
                             <td>
                                 <div class="cell-secondary">
                                     @Html.DisplayFor(modelItem => item.Location)
+                                </div>
+                            </td>
+                            <td>
+                                <div class="cell-secondary">
+                                    @Html.DisplayFor(modelItem => item.AirSide)
+                                </div>
+                            </td>
+                            <td>
+                                <div class="cell-secondary">
+                                    @Html.DisplayFor(modelItem => item.ComercialArea)
+                                </div>
+                            </td>
+                            <td>
+                                <div class="cell-secondary">
+                                    @Html.DisplayFor(modelItem => item.TerminalSection)
                                 </div>
                             </td>
                             <td>

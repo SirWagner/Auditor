@@ -1,80 +1,234 @@
-﻿@model Auditor.Models.AuditSchedule
+@model Auditor.Models.AuditSchedule
 
 @{
-    ViewData["Title"] = "Edit";
+    ViewData["Title"] = "Edit Schedule";
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
-<h1>Edit</h1>
-
-<h4>AuditSchedule</h4>
-<hr />
-<div class="row">
-    <div class="col-md-4">
-        <form asp-action="Edit">
-            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-            <input type="hidden" asp-for="Id" />
-            <div class="form-group">
-                <label asp-for="TemplateId" class="control-label"></label>
-                <select asp-for="TemplateId" class="form-control" asp-items="ViewBag.TemplateId"></select>
-                <span asp-validation-for="TemplateId" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="SiteId" class="control-label"></label>
-                <select asp-for="SiteId" class="form-control" asp-items="ViewBag.SiteId"></select>
-                <span asp-validation-for="SiteId" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="SchedulerId" class="control-label"></label>
-                <select asp-for="SchedulerId" class="form-control" asp-items="ViewBag.SchedulerId"></select>
-                <span asp-validation-for="SchedulerId" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label for="selectedAuditorIds" class="control-label">Auditors</label>
-                <select name="selectedAuditorIds" class="form-control" asp-items="ViewBag.Auditors" multiple></select>
-                <small class="text-muted">Hold Ctrl/Cmd to select multiple auditors.</small>
-            </div>
-            <div class="form-group">
-                <label asp-for="ScheduledDate" class="control-label"></label>
-                <input asp-for="ScheduledDate" class="form-control" />
-                <span asp-validation-for="ScheduledDate" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="DueDate" class="control-label"></label>
-                <input asp-for="DueDate" class="form-control" />
-                <span asp-validation-for="DueDate" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="Status" class="control-label"></label>
-                <input asp-for="Status" class="form-control" />
-                <span asp-validation-for="Status" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="ModificationReason" class="control-label"></label>
-                <input asp-for="ModificationReason" class="form-control" />
-                <span asp-validation-for="ModificationReason" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="CancellationReason" class="control-label"></label>
-                <input asp-for="CancellationReason" class="form-control" />
-                <span asp-validation-for="CancellationReason" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="CreatedDate" class="control-label"></label>
-                <input asp-for="CreatedDate" class="form-control" />
-                <span asp-validation-for="CreatedDate" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <input type="submit" value="Save" class="btn btn-primary" />
-            </div>
-        </form>
+<div class="form-page-container">
+    <div class="form-page-breadcrumb">
+        <a asp-controller="Template" asp-action="Dashboard">Dashboard</a>
+        <span>›</span>
+        <a asp-controller="AuditSchedules" asp-action="Index">Scheduled Audits</a>
+        <span>›</span>
+        <span>Edit</span>
     </div>
-</div>
 
-<div>
-    <a asp-action="Index">Back to List</a>
+    <div class="form-page-title-section">
+        <div class="form-page-title-content">
+            <h1>Edit Schedule</h1>
+            <p>Update the template, site, auditors, or timing for this scheduled audit</p>
+        </div>
+        <div class="form-page-meta">
+            <span class="form-meta-badge">Editing</span>
+        </div>
+    </div>
+
+    <div class="form-wrapper">
+        <div class="form-main">
+            <div class="form-main-header">
+                <h2>
+                    <i class="typcn typcn-calendar-outline"></i>
+                    Schedule Details
+                </h2>
+            </div>
+
+            <div class="form-main-content">
+                <form asp-action="Edit" method="post" novalidate id="editScheduleForm">
+                    <input type="hidden" asp-for="Id" />
+                    <input type="hidden" asp-for="CreatedDate" />
+
+                    @if (!ViewData.ModelState.IsValid)
+                    {
+                        <div class="validation-alert">
+                            <h3>
+                                <i class="fas fa-times-circle"></i>
+                                Form Validation Errors
+                            </h3>
+                            <ul>
+                                @foreach (var modelState in ViewData.ModelState.Values)
+                                {
+                                    @foreach (var error in modelState.Errors)
+                                    {
+                                        <li>@error.ErrorMessage</li>
+                                    }
+                                }
+                            </ul>
+                        </div>
+                    }
+
+                    <div class="form-section">
+                        <h3 class="form-section-title">What to Audit</h3>
+
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label asp-for="TemplateId">
+                                    Audit Template
+                                    <span class="required">*</span>
+                                </label>
+                                <select asp-for="TemplateId" asp-items="ViewBag.TemplateId" required></select>
+                                <span asp-validation-for="TemplateId" class="form-group-error"></span>
+                            </div>
+
+                            <div class="form-group">
+                                <label asp-for="SiteId">
+                                    Site
+                                    <span class="required">*</span>
+                                </label>
+                                <select asp-for="SiteId" asp-items="ViewBag.SiteId" required></select>
+                                <span asp-validation-for="SiteId" class="form-group-error"></span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-section">
+                        <h3 class="form-section-title">Who's Involved</h3>
+
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label asp-for="SchedulerId">
+                                    Scheduler
+                                    <span class="required">*</span>
+                                </label>
+                                <select asp-for="SchedulerId" asp-items="ViewBag.SchedulerId" required></select>
+                                <span asp-validation-for="SchedulerId" class="form-group-error"></span>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="selectedAuditorIds">
+                                    Auditors
+                                    <span class="required">*</span>
+                                </label>
+                                <select name="selectedAuditorIds" asp-items="ViewBag.Auditors" multiple required></select>
+                                <div class="form-group-hint">
+                                    Hold Ctrl/Cmd to select multiple auditors.
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-section">
+                        <h3 class="form-section-title">Timing</h3>
+
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label asp-for="ScheduledDate">
+                                    Scheduled Date
+                                    <span class="required">*</span>
+                                </label>
+                                <input asp-for="ScheduledDate" asp-format="{0:yyyy-MM-ddTHH:mm}" type="datetime-local" required />
+                                <span asp-validation-for="ScheduledDate" class="form-group-error"></span>
+                            </div>
+
+                            <div class="form-group">
+                                <label asp-for="DueDate">
+                                    Due Date
+                                    <span class="required">*</span>
+                                </label>
+                                <input asp-for="DueDate" asp-format="{0:yyyy-MM-ddTHH:mm}" type="datetime-local" required />
+                                <span asp-validation-for="DueDate" class="form-group-error"></span>
+                                <div class="form-group-hint">
+                                    Schedules past this date with no action taken are auto-cancelled.
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-section">
+                        <h3 class="form-section-title">Status &amp; Notes</h3>
+                        <p class="form-section-description">
+                            To properly cancel a schedule with a reason, use the Cancel action on the schedule's details page instead of editing status here directly.
+                        </p>
+
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label asp-for="Status">
+                                    Status
+                                    <span class="required">*</span>
+                                </label>
+                                <select asp-for="Status" required>
+                                    <option value="SCHEDULED">SCHEDULED</option>
+                                    <option value="CANCELLED">CANCELLED</option>
+                                </select>
+                                <span asp-validation-for="Status" class="form-group-error"></span>
+                            </div>
+
+                            <div class="form-group">
+                                <label asp-for="ModificationReason">Modification Reason</label>
+                                <input asp-for="ModificationReason" type="text" placeholder="Why is this schedule being changed?" />
+                                <span asp-validation-for="ModificationReason" class="form-group-error"></span>
+                            </div>
+
+                            <div class="form-group">
+                                <label asp-for="CancellationReason">Cancellation Reason</label>
+                                <input asp-for="CancellationReason" type="text" />
+                                <span asp-validation-for="CancellationReason" class="form-group-error"></span>
+                                <div class="form-group-hint">
+                                    Only relevant if Status is set to CANCELLED.
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+
+            <div class="form-main-footer">
+                <a asp-action="Index" class="btn-cancel">
+                    <i class="fas fa-times"></i>
+                    Cancel
+                </a>
+                <button form="editScheduleForm" type="submit" class="btn-submit">
+                    <i class="fas fa-save"></i>
+                    Save Changes
+                </button>
+            </div>
+        </div>
+
+        <div class="form-sidebar">
+            <div class="form-sidebar-card">
+                <h3>
+                    <i class="fas fa-info-circle"></i>
+                    Information
+                </h3>
+                <p>
+                    Created on @Model.CreatedDate.ToString("MMM dd, yyyy HH:mm").
+                </p>
+            </div>
+
+            <div class="form-sidebar-card form-sidebar-help">
+                <h3>
+                    <i class="fas fa-question-circle"></i>
+                    Need Help?
+                </h3>
+                <p>
+                    Fields marked with <span class="required">*</span> are required.
+                </p>
+            </div>
+        </div>
+    </div>
 </div>
 
 @section Scripts {
     @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const form = document.getElementById('editScheduleForm');
+            const inputs = form.querySelectorAll('input, textarea, select');
+            inputs.forEach(input => {
+                const errorSpan = input.parentElement.querySelector('.form-group-error');
+                if (errorSpan && errorSpan.textContent.trim()) {
+                    input.closest('.form-group').classList.add('has-error');
+                }
+            });
+            inputs.forEach(input => {
+                input.addEventListener('input', function () {
+                    this.closest('.form-group').classList.remove('has-error');
+                });
+                input.addEventListener('change', function () {
+                    this.closest('.form-group').classList.remove('has-error');
+                });
+            });
+        });
+    </script>
 }

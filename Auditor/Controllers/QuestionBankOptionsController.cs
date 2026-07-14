@@ -56,7 +56,7 @@ namespace Auditor.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("Id,QuestionBankId,OptionText,OptionValue,DisplayOrder")] QuestionBankOption questionBankOption)
+        public async Task<IActionResult> Create([Bind("Id,QuestionBankId,OptionText,OptionValue,DisplayOrder,RequiresReason")] QuestionBankOption questionBankOption)
         {
             if (ModelState.IsValid)
             {
@@ -90,7 +90,7 @@ namespace Auditor.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(long id, [Bind("Id,QuestionBankId,OptionText,OptionValue,DisplayOrder")] QuestionBankOption questionBankOption)
+        public async Task<IActionResult> Edit(long id, [Bind("Id,QuestionBankId,OptionText,OptionValue,DisplayOrder,RequiresReason")] QuestionBankOption questionBankOption)
         {
             if (id != questionBankOption.Id)
             {

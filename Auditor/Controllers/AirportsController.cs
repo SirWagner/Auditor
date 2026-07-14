@@ -55,7 +55,7 @@ namespace Auditor.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("Id,Name,Code,Location")] Airport airport)
+        public async Task<IActionResult> Create([Bind("Id,Name,Code,Location,AirSide,ComercialArea,TerminalSection")] Airport airport)
         {
             if (ModelState.IsValid)
             {
@@ -87,7 +87,7 @@ namespace Auditor.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(long id, [Bind("Id,Name,Code,Location")] Airport airport)
+        public async Task<IActionResult> Edit(long id, [Bind("Id,Name,Code,Location,AirSide,ComercialArea,TerminalSection")] Airport airport)
         {
             if (id != airport.Id)
             {

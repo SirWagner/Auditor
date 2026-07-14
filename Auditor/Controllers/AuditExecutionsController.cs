@@ -455,28 +455,28 @@ namespace Auditor.Controllers
         // GET: AuditExecutions/Create
         public IActionResult Create()
         {
-            ViewData["AuditorId"] = new SelectList(_context.AppUsers, "Id", "Id");
-            ViewData["ScheduleId"] = new SelectList(_context.AuditSchedules, "Id", "Status");
+            ViewData["AuditorId"] = new SelectList(_context.AppUsers, "Id", "DisplayName");
+            ViewData["ScheduleId"] = new SelectList(GetScheduleOptions(), "Id", "Label");
             return View();
         }
 
         // POST: AuditExecutions/Create
         // To protect from overposting attacks, enable the specific properties you want to bind to.
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
-        //[HttpPost]
-        //[ValidateAntiForgeryToken]
-        //public async Task<IActionResult> Create([Bind("Id,ScheduleId,AuditorId,Status,AcceptanceDate,RejectionReason,SubmissionDate,OriginalAuditDate")] AuditExecution auditExecution)
-        //{
-        //    if (ModelState.IsValid)
-        //    {
-        //        _context.Add(auditExecution);
-        //        await _context.SaveChangesAsync();
-        //        return RedirectToAction(nameof(Index));
-        //    }
-        //    ViewData["AuditorId"] = new SelectList(_context.AppUsers, "Id", "Id", auditExecution.AuditorId);
-        //    ViewData["ScheduleId"] = new SelectList(_context.AuditSchedules, "Id", "Status", auditExecution.ScheduleId);
-        //    return View(auditExecution);
-        //}
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Create([Bind("Id,ScheduleId,AuditorId,Status,AcceptanceDate,RejectionReason,SubmissionDate,OriginalAuditDate")] AuditExecution auditExecution)
+        {
+            if (ModelState.IsValid)
+            {
+                _context.Add(auditExecution);
+                await _context.SaveChangesAsync();
+                return RedirectToAction(nameof(Index));
+            }
+            ViewData["AuditorId"] = new SelectList(_context.AppUsers, "Id", "DisplayName", auditExecution.AuditorId);
+            ViewData["ScheduleId"] = new SelectList(GetScheduleOptions(), "Id", "Label", auditExecution.ScheduleId);
+            return View(auditExecution);
+        }
 
         // GET: AuditExecutions/Edit/5
         public async Task<IActionResult> Edit(long? id)
@@ -491,9 +491,25 @@ namespace Auditor.Controllers
             {
                 return NotFound();
             }
-            ViewData["AuditorId"] = new SelectList(_context.AppUsers, "Id", "Id", auditExecution.AuditorId);
-            ViewData["ScheduleId"] = new SelectList(_context.AuditSchedules, "Id", "Status", auditExecution.ScheduleId);
+            ViewData["AuditorId"] = new SelectList(_context.AppUsers, "Id", "DisplayName", auditExecution.AuditorId);
+            ViewData["ScheduleId"] = new SelectList(GetScheduleOptions(), "Id", "Label", auditExecution.ScheduleId);
             return View(auditExecution);
+        }
+
+        // Builds a friendly "Template @ Site (date)" label for the schedule picker, since AuditSchedule
+        // has no single display-worthy field on its own.
+        private IEnumerable<object> GetScheduleOptions()
+        {
+            return _context.AuditSchedules
+                .Include(s => s.Template)
+                .Include(s => s.Site)
+                .OrderByDescending(s => s.ScheduledDate)
+                .Select(s => new
+                {
+                    s.Id,
+                    Label = s.Template.Name + " @ " + s.Site.Name + " (" + s.ScheduledDate.ToString("MMM dd, yyyy") + ")"
+                })
+                .ToList();
         }
 
         // POST: AuditExecutions/Edit/5
