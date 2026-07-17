@@ -1,38 +1,147 @@
-﻿@model Auditor.Models.QuestionBankReason
+@model Auditor.Models.QuestionBankReason
 
 @{
-    ViewData["Title"] = "Create";
+    ViewData["Title"] = "Create Question Bank Reason";
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
-<h1>Create</h1>
-
-<h4>QuestionBankReason</h4>
-<hr />
-<div class="row">
-    <div class="col-md-4">
-        <form asp-action="Create">
-            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-            <div class="form-group">
-                <label asp-for="QuestionBankId" class="control-label"></label>
-                <select asp-for="QuestionBankId" class ="form-control" asp-items="ViewBag.QuestionBankId"></select>
-            </div>
-            <div class="form-group">
-                <label asp-for="ReasonText" class="control-label"></label>
-                <input asp-for="ReasonText" class="form-control" />
-                <span asp-validation-for="ReasonText" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <input type="submit" value="Create" class="btn btn-primary" />
-            </div>
-        </form>
+<div class="form-page-container">
+    <div class="form-page-breadcrumb">
+        <a asp-controller="Template" asp-action="Dashboard">Dashboard</a>
+        <span>›</span>
+        <a asp-controller="QuestionBankReasons" asp-action="Index">Question Bank Reasons</a>
+        <span>›</span>
+        <span>Create New</span>
     </div>
-</div>
 
-<div>
-    <a asp-action="Index">Back to List</a>
+    <div class="form-page-title-section">
+        <div class="form-page-title-content">
+            <h1>Create Reason</h1>
+            <p>Add a pre-defined reason auditors can select when explaining a non-compliant answer</p>
+        </div>
+        <div class="form-page-meta">
+            <span class="form-meta-badge">New Entry</span>
+        </div>
+    </div>
+
+    <div class="form-wrapper">
+        <div class="form-main">
+            <div class="form-main-header">
+                <h2>
+                    <i class="fas fa-comment-dots"></i>
+                    Reason Details
+                </h2>
+            </div>
+
+            <div class="form-main-content">
+                <form asp-action="Create" method="post" novalidate id="createReasonForm">
+                    @if (!ViewData.ModelState.IsValid)
+                    {
+                        <div class="validation-alert">
+                            <h3>
+                                <i class="fas fa-times-circle"></i>
+                                Form Validation Errors
+                            </h3>
+                            <ul>
+                                @foreach (var modelState in ViewData.ModelState.Values)
+                                {
+                                    @foreach (var error in modelState.Errors)
+                                    {
+                                        <li>@error.ErrorMessage</li>
+                                    }
+                                }
+                            </ul>
+                        </div>
+                    }
+
+                    <div class="form-section">
+                        <h3 class="form-section-title">Basic Information</h3>
+
+                        <div class="form-grid full">
+                            <div class="form-group">
+                                <label asp-for="QuestionBankId">
+                                    Question
+                                    <span class="required">*</span>
+                                </label>
+                                <select asp-for="QuestionBankId" asp-items="ViewBag.QuestionBankId" required>
+                                    <option value="">-- Select Question --</option>
+                                </select>
+                                <span asp-validation-for="QuestionBankId" class="form-group-error"></span>
+                                <div class="form-group-hint">
+                                    The question this reason will be offered for.
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label asp-for="ReasonText">
+                                    Reason Text
+                                    <span class="required">*</span>
+                                </label>
+                                <input asp-for="ReasonText" type="text" placeholder="e.g., Equipment malfunction" required />
+                                <span asp-validation-for="ReasonText" class="form-group-error"></span>
+                                <div class="form-group-hint">
+                                    The wording shown to the auditor as a selectable reason.
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+
+            <div class="form-main-footer">
+                <a asp-action="Index" class="btn-cancel">
+                    <i class="fas fa-times"></i>
+                    Cancel
+                </a>
+                <button form="createReasonForm" type="submit" class="btn-submit">
+                    <i class="fas fa-plus"></i>
+                    Create Reason
+                </button>
+            </div>
+        </div>
+
+        <div class="form-sidebar">
+            <div class="form-sidebar-card">
+                <h3>
+                    <i class="fas fa-info-circle"></i>
+                    Information
+                </h3>
+                <p>
+                    Reasons appear as selectable checkboxes when an auditor answers with an option marked "Requires Reason."
+                </p>
+            </div>
+
+            <div class="form-sidebar-card form-sidebar-help">
+                <h3>
+                    <i class="fas fa-question-circle"></i>
+                    Need Help?
+                </h3>
+                <p>
+                    Fields marked with <span class="required">*</span> are required.
+                </p>
+            </div>
+        </div>
+    </div>
 </div>
 
 @section Scripts {
     @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const form = document.getElementById('createReasonForm');
+            const inputs = form.querySelectorAll('input, textarea, select');
+            inputs.forEach(input => {
+                const errorSpan = input.parentElement.querySelector('.form-group-error');
+                if (errorSpan && errorSpan.textContent.trim()) {
+                    input.closest('.form-group').classList.add('has-error');
+                }
+            });
+            inputs.forEach(input => {
+                input.addEventListener('input', function () {
+                    this.closest('.form-group').classList.remove('has-error');
+                });
+            });
+        });
+    </script>
 }

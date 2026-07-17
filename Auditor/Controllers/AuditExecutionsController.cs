@@ -1,7 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using System.Security.Claims;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
@@ -13,16 +16,24 @@ namespace Auditor.Controllers
     public class AuditExecutionsController : Controller
     {
         private readonly AuditorContext _context;
+        private readonly IWebHostEnvironment _webHostEnvironment;
 
-        public AuditExecutionsController(AuditorContext context)
+        public AuditExecutionsController(AuditorContext context, IWebHostEnvironment webHostEnvironment)
         {
             _context = context;
+            _webHostEnvironment = webHostEnvironment;
+        }
+
+        private bool TryGetCurrentUserId(out long userId)
+        {
+            var claim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            return long.TryParse(claim, out userId);
         }
 
         /*
                 ========================================
                 START AUDIT
-                Creates execution record
+                Creates execution record, pending the auditor's acceptance
                 ========================================
                 */
 
@@ -34,11 +45,14 @@ namespace Auditor.Controllers
             if (schedule == null)
                 return NotFound();
 
+            if (!TryGetCurrentUserId(out var auditorId))
+                return Forbid();
+
             var execution = new AuditExecution
             {
                 ScheduleId = scheduleId,
-                AuditorId = 1, // TODO replace later with logged user 
-                Status = "IN_PROGRESS",
+                AuditorId = auditorId,
+                Status = "PENDING_ACCEPTANCE",
                 OriginalAuditDate = schedule.ScheduledDate
             };
 
@@ -46,10 +60,80 @@ namespace Auditor.Controllers
 
             await _context.SaveChangesAsync();
 
-            return RedirectToAction(
-                "Execute",
-                new { executionId = execution.Id }
-            );
+            return RedirectToAction(nameof(Accept), new { executionId = execution.Id });
+        }
+
+        /*
+        ========================================
+        ACCEPT / REJECT AUDIT
+        ========================================
+        */
+
+        public async Task<IActionResult> Accept(long executionId)
+        {
+            var execution = await _context.AuditExecutions
+                .Include(e => e.Schedule)
+                    .ThenInclude(s => s.Template)
+                .Include(e => e.Schedule)
+                    .ThenInclude(s => s.Site)
+                .FirstOrDefaultAsync(e => e.Id == executionId);
+
+            if (execution == null)
+                return NotFound();
+
+            if (execution.Status != "PENDING_ACCEPTANCE")
+                return RedirectToAction(nameof(Details), new { id = executionId });
+
+            return View(execution);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Accept(long executionId, bool confirm)
+        {
+            var execution = await _context.AuditExecutions.FirstOrDefaultAsync(e => e.Id == executionId);
+            if (execution == null)
+                return NotFound();
+
+            if (execution.Status != "PENDING_ACCEPTANCE")
+                return RedirectToAction(nameof(Details), new { id = executionId });
+
+            execution.AcceptanceDate = DateTime.UtcNow;
+            execution.Status = "IN_PROGRESS";
+            await _context.SaveChangesAsync();
+
+            return RedirectToAction(nameof(Execute), new { executionId });
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Reject(long executionId, string reason)
+        {
+            if (string.IsNullOrWhiteSpace(reason))
+            {
+                TempData["Error"] = "A rejection reason is required.";
+                return RedirectToAction(nameof(Accept), new { executionId });
+            }
+
+            var execution = await _context.AuditExecutions
+                .Include(e => e.Schedule)
+                .FirstOrDefaultAsync(e => e.Id == executionId);
+
+            if (execution == null)
+                return NotFound();
+
+            if (execution.Status != "PENDING_ACCEPTANCE")
+                return RedirectToAction(nameof(Details), new { id = executionId });
+
+            execution.Status = "REJECTED";
+            execution.RejectionReason = reason;
+
+            if (execution.Schedule != null)
+                execution.Schedule.Status = "SCHEDULED";
+
+            await _context.SaveChangesAsync();
+
+            return RedirectToAction(nameof(Index));
         }
 
         /*
@@ -71,6 +155,9 @@ namespace Auditor.Controllers
             if (execution == null)
                 return NotFound();
 
+            if (execution.Status != "IN_PROGRESS" && execution.Status != "REJECTED")
+                return RedirectToAction(nameof(Details), new { id = executionId });
+
             var templateItems = await _context.AuditTemplateItems
                 .Include(t => t.QuestionBank)
                     .ThenInclude(q => q.QuestionType)
@@ -87,13 +174,14 @@ namespace Auditor.Controllers
                 ExecutionId = execution.Id,
                 AuditName = execution.Schedule.Template.Name,
                 SiteName = execution.Schedule.Site.Name,
-                
+                Status = execution.Status,
+
                 Questions = templateItems.Select(t => new QuestionViewModel
                 {
                     TemplateItemId = t.Id,
                     QuestionText = t.QuestionBank.QuestionText,
                     QuestionTypeId = t.QuestionBank.QuestionTypeId,
-                    QuestionTypeName = t.QuestionBank.QuestionType.Name, 
+                    QuestionTypeName = t.QuestionBank.QuestionType.Name,
                     IsMandatory = t.Mandatory,
                     RequiresReason = t.QuestionBank.QuestionBankOptions
                                         .Any(o => o.RequiresReason),
@@ -164,6 +252,8 @@ namespace Auditor.Controllers
                     .ThenInclude(r => r.SelectedOption)
                 .Include(e => e.AuditResponses)
                     .ThenInclude(r => r.Reasons)
+                .Include(e => e.AuditResponses)
+                    .ThenInclude(r => r.AuditResponseAttachments)
                 .Include(e => e.AuditAttachments)
                 .FirstOrDefaultAsync(e => e.Id == id);
 
@@ -173,145 +263,220 @@ namespace Auditor.Controllers
             return View(execution);
         }
         [HttpPost]
-        public async Task<IActionResult> Submit([FromBody] AuditSubmissionModel model)
+        public async Task<IActionResult> Submit(AuditSubmissionModel model)
         {
+            var execution = await _context.AuditExecutions.FirstOrDefaultAsync(x => x.Id == model.ExecutionId);
+
+            if (execution == null)
+                return Json(new { success = false, message = "Execution not found." });
+
+            if (execution.Status != "IN_PROGRESS")
+                return Json(new { success = false, message = $"Cannot submit an execution with status {execution.Status}." });
+
             using var transaction = await _context.Database.BeginTransactionAsync();
 
             try
             {
-                Console.WriteLine("===== AUDIT SUBMISSION START =====");
-
-                var execution = await _context.AuditExecutions
-                    .FirstOrDefaultAsync(x => x.Id == model.ExecutionId);
-
-                if (execution == null)
-                {
-                    return Json(new { success = false, message = "Execution not found." });
-                }
-
-                if (execution.Status == "COMPLETED")
-                {
-                    return Json(new { success = false, message = "Audit already completed." });
-                }
-
-                // Preload template items to get QuestionId
-                var templateItemIds = model.Responses.Select(r => r.TemplateItemId).ToList();
-
-                var templateItems = await _context.AuditTemplateItems
-                    .Where(x => templateItemIds.Contains(x.Id))
-                    .ToDictionaryAsync(x => x.Id);
-
-                foreach (var response in model.Responses)
-                {
-                    if (!templateItems.ContainsKey(response.TemplateItemId))
-                        continue;
-
-                    var templateItem = templateItems[response.TemplateItemId];
-
-                    var entity = new AuditResponse
-                    {
-                        ExecutionId = execution.Id,
-                        TemplateItemId = response.TemplateItemId,
-                        SelectedOptionId = response.SelectedOptionId,
-                        Comment = response.Comment,
-                        Compliant = response.Compliant
-                    };
-
-                    _context.AuditResponses.Add(entity);
-
-                    // Save first to get Response ID
-                    await _context.SaveChangesAsync();
-
-                    var reasonsToAttach = new List<QuestionBankReason>();
-
-                    // Attach existing reasons
-                    if (response.SelectedReasonIds != null && response.SelectedReasonIds.Any())
-                    {
-                        var existingReasons = await _context.QuestionBankReasons
-                            .Where(r => response.SelectedReasonIds.Contains(r.Id))
-                            .ToListAsync();
-
-                        reasonsToAttach.AddRange(existingReasons);
-                    }
-
-                    // Create custom reason
-                    if (!string.IsNullOrWhiteSpace(response.CustomReason))
-                    {
-                        Console.WriteLine("Creating custom reason...");
-
-                        var newReason = new QuestionBankReason
-                        {
-                            QuestionBankId = templateItem.QuestionBankId,
-                            ReasonText = response.CustomReason
-                        };
-
-                        _context.QuestionBankReasons.Add(newReason);
-
-                        await _context.SaveChangesAsync();
-
-                        reasonsToAttach.Add(newReason);
-
-                        Console.WriteLine($"Custom reason created ID {newReason.Id}");
-                    }
-
-                    // Attach reasons to response
-                    foreach (var reason in reasonsToAttach)
-                    {
-                        entity.Reasons.Add(reason);
-                    }
-
-                    await _context.SaveChangesAsync();
-                }
+                await SaveResponsesAsync(execution, model.Responses);
 
                 execution.Status = "COMPLETED";
-
                 await _context.SaveChangesAsync();
-
                 await transaction.CommitAsync();
-
-                Console.WriteLine("===== AUDIT SAVED SUCCESSFULLY =====");
 
                 return Json(new { success = true });
             }
             catch (Exception ex)
             {
                 await transaction.RollbackAsync();
+                return Json(new { success = false, message = ex.InnerException?.Message ?? ex.Message });
+            }
+        }
 
-                Console.WriteLine("ERROR: " + ex.Message);
+        // Persists responses (as an upsert keyed on TemplateItemId) without changing execution status.
+        // Used for the in-progress draft-save workflow: the auditor can leave and come back without
+        // losing answers already entered.
+        [HttpPost]
+        public async Task<IActionResult> SaveDraft(AuditSubmissionModel model)
+        {
+            var execution = await _context.AuditExecutions.FirstOrDefaultAsync(x => x.Id == model.ExecutionId);
 
-                return Json(new
+            if (execution == null)
+                return Json(new { success = false, message = "Execution not found." });
+
+            if (execution.Status != "IN_PROGRESS")
+                return Json(new { success = false, message = $"Cannot save a draft for status {execution.Status}." });
+
+            try
+            {
+                await SaveResponsesAsync(execution, model.Responses);
+                await _context.SaveChangesAsync();
+
+                return Json(new { success = true });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = ex.InnerException?.Message ?? ex.Message });
+            }
+        }
+
+        // Re-submits a previously rejected execution: updates the existing responses in place and
+        // moves the execution back to COMPLETED for review.
+        [HttpPost]
+        public async Task<IActionResult> Resubmit(AuditSubmissionModel model)
+        {
+            var execution = await _context.AuditExecutions.FirstOrDefaultAsync(x => x.Id == model.ExecutionId);
+
+            if (execution == null)
+                return Json(new { success = false, message = "Execution not found." });
+
+            if (execution.Status != "REJECTED")
+                return Json(new { success = false, message = "Only rejected executions can be resubmitted." });
+
+            using var transaction = await _context.Database.BeginTransactionAsync();
+
+            try
+            {
+                await SaveResponsesAsync(execution, model.Responses);
+
+                execution.Status = "COMPLETED";
+                execution.RejectionReason = null;
+                await _context.SaveChangesAsync();
+                await transaction.CommitAsync();
+
+                return Json(new { success = true });
+            }
+            catch (Exception ex)
+            {
+                await transaction.RollbackAsync();
+                return Json(new { success = false, message = ex.InnerException?.Message ?? ex.Message });
+            }
+        }
+
+        // Shared upsert used by Submit/SaveDraft/Resubmit: one AuditResponse row per TemplateItemId,
+        // updated in place on repeated calls so drafts and resubmits don't duplicate rows.
+        private async Task SaveResponsesAsync(AuditExecution execution, List<AuditResponseSubmission> responses)
+        {
+            if (responses == null || responses.Count == 0)
+                return;
+
+            var templateItemIds = responses.Select(r => r.TemplateItemId).ToList();
+
+            var templateItems = await _context.AuditTemplateItems
+                .Where(x => templateItemIds.Contains(x.Id))
+                .ToDictionaryAsync(x => x.Id);
+
+            foreach (var response in responses)
+            {
+                if (!templateItems.TryGetValue(response.TemplateItemId, out var templateItem))
+                    continue;
+
+                var entity = await _context.AuditResponses
+                    .Include(r => r.Reasons)
+                    .FirstOrDefaultAsync(r => r.ExecutionId == execution.Id && r.TemplateItemId == response.TemplateItemId);
+
+                if (entity == null)
                 {
-                    success = false,
-                    message = ex.InnerException?.Message ?? ex.Message
-                });
+                    entity = new AuditResponse
+                    {
+                        ExecutionId = execution.Id,
+                        TemplateItemId = response.TemplateItemId
+                    };
+
+                    _context.AuditResponses.Add(entity);
+                    await _context.SaveChangesAsync(); // need the Id for attachments below
+                }
+
+                entity.SelectedOptionId = response.SelectedOptionId;
+                entity.Comment = response.Comment;
+                entity.Compliant = response.Compliant;
+
+                entity.Reasons.Clear();
+
+                if (response.SelectedReasonIds is { Count: > 0 })
+                {
+                    var existingReasons = await _context.QuestionBankReasons
+                        .Where(r => response.SelectedReasonIds.Contains(r.Id))
+                        .ToListAsync();
+
+                    foreach (var reason in existingReasons)
+                        entity.Reasons.Add(reason);
+                }
+
+                if (!string.IsNullOrWhiteSpace(response.CustomReason))
+                {
+                    var newReason = new QuestionBankReason
+                    {
+                        QuestionBankId = templateItem.QuestionBankId,
+                        ReasonText = response.CustomReason
+                    };
+
+                    _context.QuestionBankReasons.Add(newReason);
+                    await _context.SaveChangesAsync();
+
+                    entity.Reasons.Add(newReason);
+                }
+
+                await _context.SaveChangesAsync();
+
+                if (response.Attachments is { Count: > 0 })
+                {
+                    var uploadDir = Path.Combine(_webHostEnvironment.WebRootPath, "uploads", execution.Id.ToString());
+                    Directory.CreateDirectory(uploadDir);
+
+                    foreach (var file in response.Attachments)
+                    {
+                        if (file.Length == 0)
+                            continue;
+
+                        var safeFileName = $"{entity.Id}_{Guid.NewGuid():N}_{Path.GetFileName(file.FileName)}";
+                        var filePath = Path.Combine(uploadDir, safeFileName);
+
+                        using (var stream = new FileStream(filePath, FileMode.Create))
+                        {
+                            await file.CopyToAsync(stream);
+                        }
+
+                        _context.AuditResponseAttachments.Add(new AuditResponseAttachment
+                        {
+                            ResponseId = entity.Id,
+                            FileName = file.FileName,
+                            FileUrl = $"/uploads/{execution.Id}/{safeFileName}",
+                            ContentType = file.ContentType,
+                            FileSize = file.Length,
+                            UploadedDate = DateTime.UtcNow
+                        });
+                    }
+
+                    await _context.SaveChangesAsync();
+                }
             }
         }
 
         // GET: AuditExecutions/Create
         public IActionResult Create()
         {
-            ViewData["AuditorId"] = new SelectList(_context.AppUsers, "Id", "Id");
-            ViewData["ScheduleId"] = new SelectList(_context.AuditSchedules, "Id", "Status");
+            ViewData["AuditorId"] = new SelectList(_context.AppUsers, "Id", "DisplayName");
+            ViewData["ScheduleId"] = new SelectList(GetScheduleOptions(), "Id", "Label");
             return View();
         }
 
         // POST: AuditExecutions/Create
         // To protect from overposting attacks, enable the specific properties you want to bind to.
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
-        //[HttpPost]
-        //[ValidateAntiForgeryToken]
-        //public async Task<IActionResult> Create([Bind("Id,ScheduleId,AuditorId,Status,AcceptanceDate,RejectionReason,SubmissionDate,OriginalAuditDate")] AuditExecution auditExecution)
-        //{
-        //    if (ModelState.IsValid)
-        //    {
-        //        _context.Add(auditExecution);
-        //        await _context.SaveChangesAsync();
-        //        return RedirectToAction(nameof(Index));
-        //    }
-        //    ViewData["AuditorId"] = new SelectList(_context.AppUsers, "Id", "Id", auditExecution.AuditorId);
-        //    ViewData["ScheduleId"] = new SelectList(_context.AuditSchedules, "Id", "Status", auditExecution.ScheduleId);
-        //    return View(auditExecution);
-        //}
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Create([Bind("Id,ScheduleId,AuditorId,Status,AcceptanceDate,RejectionReason,SubmissionDate,OriginalAuditDate")] AuditExecution auditExecution)
+        {
+            if (ModelState.IsValid)
+            {
+                _context.Add(auditExecution);
+                await _context.SaveChangesAsync();
+                return RedirectToAction(nameof(Index));
+            }
+            ViewData["AuditorId"] = new SelectList(_context.AppUsers, "Id", "DisplayName", auditExecution.AuditorId);
+            ViewData["ScheduleId"] = new SelectList(GetScheduleOptions(), "Id", "Label", auditExecution.ScheduleId);
+            return View(auditExecution);
+        }
 
         // GET: AuditExecutions/Edit/5
         public async Task<IActionResult> Edit(long? id)
@@ -326,9 +491,25 @@ namespace Auditor.Controllers
             {
                 return NotFound();
             }
-            ViewData["AuditorId"] = new SelectList(_context.AppUsers, "Id", "Id", auditExecution.AuditorId);
-            ViewData["ScheduleId"] = new SelectList(_context.AuditSchedules, "Id", "Status", auditExecution.ScheduleId);
+            ViewData["AuditorId"] = new SelectList(_context.AppUsers, "Id", "DisplayName", auditExecution.AuditorId);
+            ViewData["ScheduleId"] = new SelectList(GetScheduleOptions(), "Id", "Label", auditExecution.ScheduleId);
             return View(auditExecution);
+        }
+
+        // Builds a friendly "Template @ Site (date)" label for the schedule picker, since AuditSchedule
+        // has no single display-worthy field on its own.
+        private IEnumerable<object> GetScheduleOptions()
+        {
+            return _context.AuditSchedules
+                .Include(s => s.Template)
+                .Include(s => s.Site)
+                .OrderByDescending(s => s.ScheduledDate)
+                .Select(s => new
+                {
+                    s.Id,
+                    Label = s.Template.Name + " @ " + s.Site.Name + " (" + s.ScheduledDate.ToString("MMM dd, yyyy") + ")"
+                })
+                .ToList();
         }
 
         // POST: AuditExecutions/Edit/5

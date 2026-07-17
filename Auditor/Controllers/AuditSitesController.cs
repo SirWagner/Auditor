@@ -138,6 +138,13 @@ namespace Auditor.Controllers
             if (originalAuditSite == null)
                 return NotFound();
 
+            if (originalAuditSite.Status == "Inactive" || originalAuditSite.Status == "Archived")
+            {
+                ModelState.AddModelError("", $"This site is {originalAuditSite.Status} and cannot be updated. Reactivate it first via Change Status.");
+                await ReloadFormData();
+                return View(auditSite);
+            }
+
             if (!await _context.Airports.AnyAsync(a => a.Id == auditSite.AirportId))
             {
                 ModelState.AddModelError(nameof(auditSite.AirportId), "Selected airport does not exist.");
@@ -258,7 +265,72 @@ namespace Auditor.Controllers
             if (auditSite == null)
                 return NotFound();
 
+            ViewBag.AllTemplates = await _context.AuditTemplates
+                .OrderBy(t => t.Name)
+                .ToListAsync();
+
             return View(auditSite);
+        }
+
+        private static readonly string[] ValidStatuses = { "Active", "Inactive", "Under Review", "Archived" };
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ChangeStatus(long id, string newStatus)
+        {
+            if (!ValidStatuses.Contains(newStatus))
+            {
+                TempData["Error"] = "Invalid status value.";
+                return RedirectToAction(nameof(Details), new { id });
+            }
+
+            var auditSite = await _context.AuditSites.FirstOrDefaultAsync(m => m.Id == id);
+
+            if (auditSite == null)
+                return NotFound();
+
+            auditSite.Status = newStatus;
+            await _context.SaveChangesAsync();
+
+            return RedirectToAction(nameof(Details), new { id });
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> UpdateTemplates(long id, List<long> selectedTemplateIds)
+        {
+            var auditSite = await _context.AuditSites
+                .Include(a => a.Templates)
+                .FirstOrDefaultAsync(m => m.Id == id);
+
+            if (auditSite == null)
+                return NotFound();
+
+            selectedTemplateIds ??= new List<long>();
+
+            var toRemove = auditSite.Templates
+                .Where(t => !selectedTemplateIds.Contains(t.Id))
+                .ToList();
+
+            foreach (var template in toRemove)
+                auditSite.Templates.Remove(template);
+
+            var existingIds = auditSite.Templates.Select(t => t.Id).ToList();
+            var toAddIds = selectedTemplateIds.Except(existingIds).ToList();
+
+            if (toAddIds.Count > 0)
+            {
+                var templatesToAdd = await _context.AuditTemplates
+                    .Where(t => toAddIds.Contains(t.Id))
+                    .ToListAsync();
+
+                foreach (var template in templatesToAdd)
+                    auditSite.Templates.Add(template);
+            }
+
+            await _context.SaveChangesAsync();
+
+            return RedirectToAction(nameof(Details), new { id });
         }
     }
 }

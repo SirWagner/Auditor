@@ -220,6 +220,20 @@
             margin-left: 3px;
         }
 
+.form-group-checkbox label {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 8px;
+    text-transform: none;
+}
+
+    .form-group-checkbox label input[type="checkbox"] {
+        width: 16px;
+        height: 16px;
+        margin: 0;
+    }
+
     .form-group input[type="text"],
     .form-group input[type="email"],
     .form-group input[type="password"],

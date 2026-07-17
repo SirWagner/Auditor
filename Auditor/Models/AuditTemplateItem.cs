@@ -17,6 +17,10 @@ public partial class AuditTemplateItem
 
     public bool Mandatory { get; set; }
 
+    public long? ModifiedBy { get; set; }
+
+    public DateTime? ModifiedDate { get; set; }
+
     public virtual ICollection<AuditResponse> AuditResponses { get; set; } = new List<AuditResponse>();
 
     public virtual QuestionBank QuestionBank { get; set; }

@@ -4,6 +4,7 @@ using Auditor.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Auditor.Migrations
 {
     [DbContext(typeof(AuditorContext))]
-    partial class AuditorContextModelSnapshot : ModelSnapshot
+    [Migration("20260702203559_AddAuditTrailToAuditTemplate")]
+    partial class AddAuditTrailToAuditTemplate
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -907,64 +910,6 @@ namespace Auditor.Migrations
                     b.ToTable("question_type", (string)null);
                 });
 
-            modelBuilder.Entity("Auditor.Models.ScheduleChangeRequest", b =>
-                {
-                    b.Property<long>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("bigint")
-                        .HasColumnName("id");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
-
-                    b.Property<long?>("AuthorizerId")
-                        .HasColumnType("bigint")
-                        .HasColumnName("authorizer_id");
-
-                    b.Property<DateTime?>("DecisionDate")
-                        .HasColumnType("datetime2")
-                        .HasColumnName("decision_date");
-
-                    b.Property<int?>("EscalationLevel")
-                        .HasColumnType("int")
-                        .HasColumnName("escalation_level");
-
-                    b.Property<string>("Reason")
-                        .IsRequired()
-                        .HasMaxLength(1000)
-                        .HasColumnType("nvarchar(1000)")
-                        .HasColumnName("reason");
-
-                    b.Property<DateTime>("RequestDate")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("datetime2")
-                        .HasColumnName("request_date")
-                        .HasDefaultValueSql("(sysdatetime())");
-
-                    b.Property<long>("RequestedBy")
-                        .HasColumnType("bigint")
-                        .HasColumnName("requested_by");
-
-                    b.Property<long>("ScheduleId")
-                        .HasColumnType("bigint")
-                        .HasColumnName("schedule_id");
-
-                    b.Property<string>("Status")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)")
-                        .HasColumnName("status");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("AuthorizerId");
-
-                    b.HasIndex("RequestedBy");
-
-                    b.HasIndex("ScheduleId");
-
-                    b.ToTable("schedule_change_request", (string)null);
-                });
-
             modelBuilder.Entity("AuditResponseReason", b =>
                 {
                     b.HasOne("Auditor.Models.QuestionBankReason", null)
@@ -1237,32 +1182,6 @@ namespace Auditor.Migrations
                         .HasConstraintName("FK__question___quest__6754599E");
 
                     b.Navigation("QuestionBank");
-                });
-
-            modelBuilder.Entity("Auditor.Models.ScheduleChangeRequest", b =>
-                {
-                    b.HasOne("Auditor.Models.AppUser", "Authorizer")
-                        .WithMany()
-                        .HasForeignKey("AuthorizerId")
-                        .HasConstraintName("FK__sched_chg__auth__req03");
-
-                    b.HasOne("Auditor.Models.AppUser", "RequestedByNavigation")
-                        .WithMany()
-                        .HasForeignKey("RequestedBy")
-                        .IsRequired()
-                        .HasConstraintName("FK__sched_chg__reqby__req02");
-
-                    b.HasOne("Auditor.Models.AuditSchedule", "Schedule")
-                        .WithMany()
-                        .HasForeignKey("ScheduleId")
-                        .IsRequired()
-                        .HasConstraintName("FK__sched_chg__sched__req01");
-
-                    b.Navigation("Authorizer");
-
-                    b.Navigation("RequestedByNavigation");
-
-                    b.Navigation("Schedule");
                 });
 
             modelBuilder.Entity("Auditor.Models.Airport", b =>

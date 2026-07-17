@@ -35,6 +35,38 @@
         </div>
     </div>
 
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger">@TempData["Error"]</div>
+    }
+
+    <!-- Change Status -->
+    <div class="details-info-card">
+        <div class="details-info-card-header">
+            <i class="fas fa-toggle-on"></i>
+            <h2>Change Status</h2>
+        </div>
+        <div class="details-info-card-body">
+            <form asp-action="ChangeStatus" asp-route-id="@Model.Id" method="post" style="display:flex; gap:8px; align-items:center;">
+                @Html.AntiForgeryToken()
+                <select name="newStatus" class="form-control" style="max-width:220px;">
+                    @foreach (var status in new[] { "Active", "Inactive", "Under Review", "Archived" })
+                    {
+                        if (status == Model.Status)
+                        {
+                            <option value="@status" selected="selected">@status</option>
+                        }
+                        else
+                        {
+                            <option value="@status">@status</option>
+                        }
+                    }
+                </select>
+                <button type="submit" class="btn-details-primary">Update Status</button>
+            </form>
+        </div>
+    </div>
+
     <!-- Main Information Card -->
     <div class="details-info-card">
         <div class="details-info-card-header">
@@ -241,15 +273,44 @@
     </div>
 
     <!-- Audit Templates Section -->
+    <div class="details-section">
+        <h2 class="details-section-title">
+            <i class="typcn typcn-clipboard"></i>
+            Audit Templates (@(Model.Templates?.Count ?? 0))
+        </h2>
+    </div>
+
+    @{
+        var linkedTemplateIds = (Model.Templates ?? new List<AuditTemplate>()).Select(t => t.Id).ToHashSet();
+        var allTemplates = ViewBag.AllTemplates as List<AuditTemplate> ?? new List<AuditTemplate>();
+    }
+    <div class="details-info-card">
+        <div class="details-info-card-body">
+            <form asp-action="UpdateTemplates" asp-route-id="@Model.Id" method="post">
+                @Html.AntiForgeryToken()
+                @if (allTemplates.Count > 0)
+                {
+                    <div class="details-info-grid">
+                        @foreach (var template in allTemplates)
+                        {
+                            <label class="details-info-field" style="cursor:pointer;">
+                                <input type="checkbox" name="selectedTemplateIds" value="@template.Id" checked="@(linkedTemplateIds.Contains(template.Id) ? "checked" : null)" />
+                                @template.Name <span class="text-muted">(v@(template.Version))</span>
+                            </label>
+                        }
+                    </div>
+                    <button type="submit" class="btn-details-primary" style="margin-top:12px;">Save Template Links</button>
+                }
+                else
+                {
+                    <div class="details-empty-state"><span>No audit templates exist yet.</span></div>
+                }
+            </form>
+        </div>
+    </div>
+
     @if (Model.Templates?.Count > 0)
     {
-        <div class="details-section">
-            <h2 class="details-section-title">
-                <i class="typcn typcn-clipboard"></i>
-                Audit Templates (@Model.Templates.Count)
-            </h2>
-        </div>
-
         <div class="details-table-wrapper">
             <table class="details-table">
                 <thead>

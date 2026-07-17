@@ -21,11 +21,17 @@ public partial class AuditTemplate
 
     public DateTime CreatedDate { get; set; }
 
+    public long? ModifiedBy { get; set; }
+
+    public DateTime? ModifiedDate { get; set; }
+
     public virtual ICollection<AuditSchedule> AuditSchedules { get; set; } = new List<AuditSchedule>();
 
     public virtual ICollection<AuditTemplateItem> AuditTemplateItems { get; set; } = new List<AuditTemplateItem>();
 
     public virtual AppUser CreatedByNavigation { get; set; }
+
+    public virtual AppUser ModifiedByNavigation { get; set; }
 
     public virtual ICollection<AuditSite> Sites { get; set; } = new List<AuditSite>();
 }

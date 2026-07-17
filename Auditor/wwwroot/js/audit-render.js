@@ -86,7 +86,24 @@ function submitAudit(executionId) {
 
     console.log("📦 Payload:", payload);
 
-    sendToBackend(payload);
+    const endpoint = window.__AUDIT_EXECUTION_STATUS__ === "REJECTED"
+        ? "/AuditExecutions/Resubmit"
+        : "/AuditExecutions/Submit";
+
+    sendToBackend(payload, endpoint, "Audit submitted successfully.");
+}
+
+/* =====================================================
+   SAVE DRAFT (no validation - partial answers are fine)
+===================================================== */
+
+function saveDraft(executionId) {
+
+    console.log("Saving draft for execution:", executionId);
+
+    const payload = buildPayload(executionId);
+
+    sendToBackend(payload, "/AuditExecutions/SaveDraft", "Draft saved.");
 }
 
 /* =====================================================
@@ -247,7 +264,7 @@ function buildPayload(executionId) {
         const selectedOptionId = selectedOption ? selectedOption.value : null;
 
         const selectedReasonIds = [];
-        container.querySelectorAll(".reason-block input[type='checkbox']:checked')
+        container.querySelectorAll(".reason-block input[type='checkbox']:checked")
             .forEach(c => selectedReasonIds.push(c.value));
 
         const customReason = container.querySelector(".reason-block textarea")?.value || "";
@@ -277,11 +294,14 @@ function buildPayload(executionId) {
    SEND TO BACKEND
 ===================================================== */
 
-function sendToBackend(payload) {
+function sendToBackend(payload, endpoint, successMessage) {
 
-    console.log("Sending to backend...");
+    endpoint = endpoint || '/AuditExecutions/Submit';
+    successMessage = successMessage || 'Audit submitted successfully.';
 
-    fetch('/AuditExecutions/Submit', {
+    console.log("Sending to backend:", endpoint);
+
+    fetch(endpoint, {
         method: 'POST',
         body: (payload)
     })
@@ -305,9 +325,11 @@ function sendToBackend(payload) {
             Swal.fire({
                 icon: 'success',
                 title: 'Success',
-                text: 'Audit submitted successfully.'
+                text: successMessage
             }).then(() => {
-                window.location.href = "/AuditExecutions";
+                if (endpoint !== '/AuditExecutions/SaveDraft') {
+                    window.location.href = "/AuditExecutions";
+                }
             });
 
         })

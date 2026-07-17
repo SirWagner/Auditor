@@ -148,6 +148,8 @@ namespace Auditor.Services
             ExistingAuditTemplate.Description = AuditTemplateEditDTO.Description;
             ExistingAuditTemplate.Version = AuditTemplateEditDTO.Version;
             ExistingAuditTemplate.IsActive = AuditTemplateEditDTO.IsActive;
+            ExistingAuditTemplate.ModifiedBy = AuditTemplateEditDTO.ModifiedBy;
+            ExistingAuditTemplate.ModifiedDate = DateTime.UtcNow;
 
             var AuditTemplateItemsToRemove =
                 ExistingAuditTemplate.AuditTemplateItems
@@ -160,19 +162,82 @@ namespace Auditor.Services
             // Remove old items
             _context.AuditTemplateItems.RemoveRange(AuditTemplateItemsToRemove);
 
-
             foreach (var item in AuditTemplateEditDTO.AuditTemplateItemsDTO)
             {
-                _context.AuditTemplateItems.Add(new AuditTemplateItem
+                var existingItem = ExistingAuditTemplate.AuditTemplateItems
+                    .FirstOrDefault(i => i.QuestionBankId == item.QuestionBankId);
+
+                if (existingItem != null)
                 {
-                    TemplateId = ExistingAuditTemplate.Id,
-                    QuestionBankId = item.QuestionBankId,
-                    Mandatory = item.Mandatory,
-                    Sequence = item.Sequence
-                });
+                    existingItem.Mandatory = item.Mandatory;
+                    existingItem.Sequence = item.Sequence;
+                }
+                else
+                {
+                    _context.AuditTemplateItems.Add(new AuditTemplateItem
+                    {
+                        TemplateId = ExistingAuditTemplate.Id,
+                        QuestionBankId = item.QuestionBankId,
+                        Mandatory = item.Mandatory,
+                        Sequence = item.Sequence
+                    });
+                }
             }
 
             await _context.SaveChangesAsync();
+        }
+
+        public async Task<bool> DeleteAsync(long id)
+        {
+            var template = await _context.AuditTemplates
+                .Include(t => t.AuditTemplateItems)
+                .Include(t => t.AuditSchedules)
+                .FirstOrDefaultAsync(t => t.Id == id);
+
+            if (template == null)
+                return false;
+
+            if (template.AuditSchedules?.Count > 0)
+                return false;
+
+            await using var transaction = await _context.Database.BeginTransactionAsync();
+
+            try
+            {
+                _context.AuditTemplateItems.RemoveRange(template.AuditTemplateItems);
+                _context.AuditTemplates.Remove(template);
+
+                await _context.SaveChangesAsync();
+                await transaction.CommitAsync();
+
+                _logger.LogInformation("Audit template deleted successfully. TemplateId: {TemplateId}", id);
+
+                return true;
+            }
+            catch (Exception ex)
+            {
+                await transaction.RollbackAsync();
+
+                _logger.LogError(ex, "Error deleting audit template. TemplateId: {TemplateId}", id);
+
+                throw;
+            }
+        }
+
+        public async Task<bool> ToggleActiveAsync(long id, long modifiedByUserId)
+        {
+            var template = await _context.AuditTemplates.FirstOrDefaultAsync(t => t.Id == id);
+
+            if (template == null)
+                return false;
+
+            template.IsActive = !template.IsActive;
+            template.ModifiedBy = modifiedByUserId;
+            template.ModifiedDate = DateTime.UtcNow;
+
+            await _context.SaveChangesAsync();
+
+            return true;
         }
     }
 }

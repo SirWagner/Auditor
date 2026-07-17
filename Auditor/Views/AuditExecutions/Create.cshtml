@@ -1,62 +1,197 @@
-﻿@model Auditor.Models.AuditExecution
+@model Auditor.Models.AuditExecution
 
 @{
-    ViewData["Title"] = "Create";
+    ViewData["Title"] = "Create Audit Execution";
     Layout = "~/Views/Shared/_LayoutExec.cshtml";
 }
 
-<h1>Create</h1>
-
-<h4>AuditExecution</h4>
-<hr />
-<div class="row">
-    <div class="col-md-4">
-        <form asp-action="Create">
-            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-            <div class="form-group">
-                <label asp-for="ScheduleId" class="control-label"></label>
-                <select asp-for="ScheduleId" class ="form-control" asp-items="ViewBag.ScheduleId"></select>
-            </div>
-            <div class="form-group">
-                <label asp-for="AuditorId" class="control-label"></label>
-                <select asp-for="AuditorId" class ="form-control" asp-items="ViewBag.AuditorId"></select>
-            </div>
-            <div class="form-group">
-                <label asp-for="Status" class="control-label"></label>
-                <input asp-for="Status" class="form-control" />
-                <span asp-validation-for="Status" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="AcceptanceDate" class="control-label"></label>
-                <input asp-for="AcceptanceDate" class="form-control" />
-                <span asp-validation-for="AcceptanceDate" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="RejectionReason" class="control-label"></label>
-                <input asp-for="RejectionReason" class="form-control" />
-                <span asp-validation-for="RejectionReason" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="SubmissionDate" class="control-label"></label>
-                <input asp-for="SubmissionDate" class="form-control" />
-                <span asp-validation-for="SubmissionDate" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="OriginalAuditDate" class="control-label"></label>
-                <input asp-for="OriginalAuditDate" class="form-control" />
-                <span asp-validation-for="OriginalAuditDate" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <input type="submit" value="Create" class="btn btn-primary" />
-            </div>
-        </form>
+<div class="form-page-container">
+    <div class="form-page-breadcrumb">
+        <a asp-controller="Template" asp-action="Dashboard">Dashboard</a>
+        <span>›</span>
+        <a asp-controller="AuditExecutions" asp-action="Index">Audit Executions</a>
+        <span>›</span>
+        <span>Create New</span>
     </div>
-</div>
 
-<div>
-    <a asp-action="Index">Back to List</a>
+    <div class="form-page-title-section">
+        <div class="form-page-title-content">
+            <h1>Create Audit Execution</h1>
+            <p>Manually create an execution record for a scheduled audit</p>
+        </div>
+        <div class="form-page-meta">
+            <span class="form-meta-badge">New Entry</span>
+        </div>
+    </div>
+
+    <div class="form-wrapper">
+        <div class="form-main">
+            <div class="form-main-header">
+                <h2>
+                    <i class="typcn typcn-flash-outline"></i>
+                    Execution Details
+                </h2>
+            </div>
+
+            <div class="form-main-content">
+                <form asp-action="Create" method="post" novalidate id="createExecutionForm">
+                    @if (!ViewData.ModelState.IsValid)
+                    {
+                        <div class="validation-alert">
+                            <h3>
+                                <i class="fas fa-times-circle"></i>
+                                Form Validation Errors
+                            </h3>
+                            <ul>
+                                @foreach (var modelState in ViewData.ModelState.Values)
+                                {
+                                    @foreach (var error in modelState.Errors)
+                                    {
+                                        <li>@error.ErrorMessage</li>
+                                    }
+                                }
+                            </ul>
+                        </div>
+                    }
+
+                    <div class="form-section">
+                        <h3 class="form-section-title">Assignment</h3>
+
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label asp-for="ScheduleId">
+                                    Schedule
+                                    <span class="required">*</span>
+                                </label>
+                                <select asp-for="ScheduleId" asp-items="ViewBag.ScheduleId" required>
+                                    <option value="">-- Select Schedule --</option>
+                                </select>
+                                <span asp-validation-for="ScheduleId" class="form-group-error"></span>
+                            </div>
+
+                            <div class="form-group">
+                                <label asp-for="AuditorId">
+                                    Auditor
+                                    <span class="required">*</span>
+                                </label>
+                                <select asp-for="AuditorId" asp-items="ViewBag.AuditorId" required>
+                                    <option value="">-- Select Auditor --</option>
+                                </select>
+                                <span asp-validation-for="AuditorId" class="form-group-error"></span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-section">
+                        <h3 class="form-section-title">Status &amp; Dates</h3>
+                        <p class="form-section-description">
+                            Normally this record is created automatically when an auditor starts an audit. Only set these fields directly for manual corrections.
+                        </p>
+
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label asp-for="Status">
+                                    Status
+                                    <span class="required">*</span>
+                                </label>
+                                <select asp-for="Status" required>
+                                    <option value="PENDING_ACCEPTANCE">PENDING_ACCEPTANCE</option>
+                                    <option value="IN_PROGRESS">IN_PROGRESS</option>
+                                    <option value="COMPLETED">COMPLETED</option>
+                                    <option value="CLOSED">CLOSED</option>
+                                    <option value="REJECTED">REJECTED</option>
+                                </select>
+                                <span asp-validation-for="Status" class="form-group-error"></span>
+                            </div>
+
+                            <div class="form-group">
+                                <label asp-for="OriginalAuditDate">
+                                    Original Audit Date
+                                    <span class="required">*</span>
+                                </label>
+                                <input asp-for="OriginalAuditDate" asp-format="{0:yyyy-MM-ddTHH:mm}" type="datetime-local" required />
+                                <span asp-validation-for="OriginalAuditDate" class="form-group-error"></span>
+                            </div>
+
+                            <div class="form-group">
+                                <label asp-for="AcceptanceDate">Acceptance Date</label>
+                                <input asp-for="AcceptanceDate" asp-format="{0:yyyy-MM-ddTHH:mm}" type="datetime-local" />
+                                <span asp-validation-for="AcceptanceDate" class="form-group-error"></span>
+                            </div>
+
+                            <div class="form-group">
+                                <label asp-for="SubmissionDate">Submission Date</label>
+                                <input asp-for="SubmissionDate" asp-format="{0:yyyy-MM-ddTHH:mm}" type="datetime-local" />
+                                <span asp-validation-for="SubmissionDate" class="form-group-error"></span>
+                            </div>
+
+                            <div class="form-group">
+                                <label asp-for="RejectionReason">Rejection Reason</label>
+                                <input asp-for="RejectionReason" type="text" />
+                                <span asp-validation-for="RejectionReason" class="form-group-error"></span>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+
+            <div class="form-main-footer">
+                <a asp-action="Index" class="btn-cancel">
+                    <i class="fas fa-times"></i>
+                    Cancel
+                </a>
+                <button form="createExecutionForm" type="submit" class="btn-submit">
+                    <i class="fas fa-plus"></i>
+                    Create Execution
+                </button>
+            </div>
+        </div>
+
+        <div class="form-sidebar">
+            <div class="form-sidebar-card">
+                <h3>
+                    <i class="fas fa-info-circle"></i>
+                    Information
+                </h3>
+                <p>
+                    Audit executions track the lifecycle of a scheduled audit from acceptance through submission. The normal path is Start → Accept/Reject → Submit → Finalize.
+                </p>
+            </div>
+
+            <div class="form-sidebar-card form-sidebar-help">
+                <h3>
+                    <i class="fas fa-question-circle"></i>
+                    Need Help?
+                </h3>
+                <p>
+                    Fields marked with <span class="required">*</span> are required.
+                </p>
+            </div>
+        </div>
+    </div>
 </div>
 
 @section Scripts {
     @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const form = document.getElementById('createExecutionForm');
+            const inputs = form.querySelectorAll('input, textarea, select');
+            inputs.forEach(input => {
+                const errorSpan = input.parentElement.querySelector('.form-group-error');
+                if (errorSpan && errorSpan.textContent.trim()) {
+                    input.closest('.form-group').classList.add('has-error');
+                }
+            });
+            inputs.forEach(input => {
+                input.addEventListener('input', function () {
+                    this.closest('.form-group').classList.remove('has-error');
+                });
+                input.addEventListener('change', function () {
+                    this.closest('.form-group').classList.remove('has-error');
+                });
+            });
+        });
+    </script>
 }

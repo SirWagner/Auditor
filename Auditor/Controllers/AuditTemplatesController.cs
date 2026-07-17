@@ -9,6 +9,7 @@ using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Claims;
 using System.Threading.Tasks;
 
 namespace Auditor.Controllers
@@ -105,15 +106,19 @@ namespace Auditor.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(CreateAuditTemplateRequest AuditTemplate)
         {
+            if (!TryGetCurrentUserId(out var userId))
+            {
+                ModelState.AddModelError("", "User information could not be retrieved.");
+                return await Create();
+            }
+
             try
             {
-                //TODO => Grab the current user to know who created tje AuditTemplate
-                var randomUser = await _appUserService.GetAll();
                 var Questions = AuditTemplate.Items
                                 .Select(item=>new AuditTemplateItemsDTO(item.QuestionBankId,item.Mandatory, item.Sequence)).ToList();
                 var AuditTemplateDTO = new AuditTemplateCreateDTO(AuditTemplate.Name,
-                                                           AuditTemplate.Description, AuditTemplate.Version, 
-                    AuditTemplate.IsActive, randomUser.First().Id, Questions);
+                                                           AuditTemplate.Description, AuditTemplate.Version,
+                    AuditTemplate.IsActive, userId, Questions);
 
                 await _auditTemplateService.CreateAsync(AuditTemplateDTO);
 
@@ -185,15 +190,19 @@ namespace Auditor.Controllers
             //if (!ModelState.IsValid)
             //    return View(await _auditTemplateService.GetEditViewModelAsync(model.Id));
 
+            if (!TryGetCurrentUserId(out var userId))
+            {
+                ModelState.AddModelError("", "User information could not be retrieved.");
+                return await Edit(AuditTemplate.Id);
+            }
+
             try
             {
-                //TODO => Grab the current user to know who created tje AuditTemplate
-                var randomUser = await _appUserService.GetAll();
                 var Questions = AuditTemplate.Items
                                 .Select(item => new AuditTemplateEditItemsDTO(item.QuestionBankId, item.Mandatory, item.Sequence)).ToList();
                 var AuditTemplateDTO = new AuditTemplateEditDTO(AuditTemplate.Id, AuditTemplate.Name,
                                                            AuditTemplate.Description, AuditTemplate.Version,
-                    AuditTemplate.IsActive, randomUser.First().Id, Questions);
+                    AuditTemplate.IsActive, userId, Questions);
 
                 await _auditTemplateService.UpdateAsync(AuditTemplateDTO);
 
@@ -210,8 +219,61 @@ namespace Auditor.Controllers
             return RedirectToAction(nameof(Index));
         }
 
+        // GET: AuditTemplates/Delete/5
+        public async Task<IActionResult> Delete(long id)
+        {
+            var template = await _auditTemplateService.GetById(id);
 
+            if (template == null)
+                return NotFound();
 
+            var vm = new AuditTemplateDeleteViewModel
+            {
+                Id = id,
+                Name = template.Name,
+                Description = template.Description,
+                Version = template.Version,
+                IsActive = template.IsActive,
+                CreatedByName = template.UserDisplayName,
+                QuestionCount = template.ItemsDetails.Count
+            };
+
+            return View(vm);
+        }
+
+        // POST: AuditTemplates/Delete/5
+        [HttpPost, ActionName("Delete")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> DeleteConfirmed(long id)
+        {
+            var deleted = await _auditTemplateService.DeleteAsync(id);
+
+            if (!deleted)
+            {
+                TempData["Error"] = "This template cannot be deleted because it is referenced by one or more audit schedules.";
+                return RedirectToAction(nameof(Delete), new { id });
+            }
+
+            return RedirectToAction(nameof(Index));
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ToggleActive(long id)
+        {
+            if (!TryGetCurrentUserId(out var userId))
+                return RedirectToAction(nameof(Index));
+
+            await _auditTemplateService.ToggleActiveAsync(id, userId);
+
+            return RedirectToAction(nameof(Index));
+        }
+
+        private bool TryGetCurrentUserId(out long userId)
+        {
+            var claim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            return long.TryParse(claim, out userId);
+        }
     }
 }
 

@@ -77,6 +77,17 @@
                 </ul>
             }
 
+            @if (response.AuditResponseAttachments.Any())
+            {
+                <p><strong>Evidence:</strong></p>
+                <ul>
+                    @foreach (var file in response.AuditResponseAttachments)
+                    {
+                        <li><a href="@file.FileUrl" target="_blank">@file.FileName</a></li>
+                    }
+                </ul>
+            }
+
         </div>
     </div>
 }
