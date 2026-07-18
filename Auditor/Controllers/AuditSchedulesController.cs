@@ -61,6 +61,7 @@ namespace Auditor.Controllers
                 .Include(a => a.Scheduler)
                 .Include(a => a.Site)
                 .Include(a => a.Template)
+                .Include(a => a.Auditors)
                 .FirstOrDefaultAsync(m => m.Id == id);
             if (auditSchedule == null)
             {
@@ -73,17 +74,10 @@ namespace Auditor.Controllers
         // GET: AuditSchedules/Create
         public IActionResult Create()
         {
-            var model = new CreateAuditScheduleInfo(
-                SchedulerId: null,
-                SiteId: null,
-                TemplateId: null,
-                DueDate: null,
-                new SelectList(_context.AppUsers, "Id", "DisplayName").ToList(),
-                new SelectList(_context.AuditSites, "Id", "Name").ToList(),
-                new SelectList(_context.AuditTemplates, "Id", "Name").ToList()
-            );
-
-            return View(model);
+            ViewData["SchedulerId"] = new SelectList(_context.AppUsers, "Id", "Id");
+            ViewData["SiteId"] = new SelectList(_context.AuditSites, "Id", "Name");
+            ViewData["TemplateId"] = new SelectList(_context.AuditTemplates, "Id", "Name");
+            return View();
         }
 
         // POST: AuditSchedules/Create
@@ -91,11 +85,18 @@ namespace Auditor.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create(CreateAuditScheduleRequest AuditSchedule)
+        public async Task<IActionResult> Create([Bind("Id,TemplateId,SiteId,SchedulerId,ScheduledDate,DueDate,Status,ModificationReason,CancellationReason,CreatedDate")] AuditSchedule auditSchedule)
         {
-            var schedule = new AuditScheduleCreateDTO(AuditSchedule.TemplateId, AuditSchedule.SiteId, AuditSchedule.SchedulerId, DateTime.UtcNow, AuditSchedule.DueDate);
-            var result = await _auditScheduleService.Create(schedule);
-            return RedirectToAction(nameof(Index));
+            if (ModelState.IsValid)
+            {
+                _context.Add(auditSchedule);
+                await _context.SaveChangesAsync();
+                return RedirectToAction(nameof(Index));
+            }
+            ViewData["SchedulerId"] = new SelectList(_context.AppUsers, "Id", "Id", auditSchedule.SchedulerId);
+            ViewData["SiteId"] = new SelectList(_context.AuditSites, "Id", "Name", auditSchedule.SiteId);
+            ViewData["TemplateId"] = new SelectList(_context.AuditTemplates, "Id", "Name", auditSchedule.TemplateId);
+            return View(auditSchedule);
         }
 
         // GET: AuditSchedules/Edit/5
@@ -106,7 +107,9 @@ namespace Auditor.Controllers
                 return NotFound();
             }
 
-            var auditSchedule = await _context.AuditSchedules.FindAsync(id);
+            var auditSchedule = await _context.AuditSchedules
+                .Include(a => a.Auditors)
+                .FirstOrDefaultAsync(a => a.Id == id);
             if (auditSchedule == null)
             {
                 return NotFound();
@@ -114,6 +117,7 @@ namespace Auditor.Controllers
             ViewData["SchedulerId"] = new SelectList(_context.AppUsers, "Id", "Id", auditSchedule.SchedulerId);
             ViewData["SiteId"] = new SelectList(_context.AuditSites, "Id", "Name", auditSchedule.SiteId);
             ViewData["TemplateId"] = new SelectList(_context.AuditTemplates, "Id", "Name", auditSchedule.TemplateId);
+            ViewData["Auditors"] = new MultiSelectList(_context.AppUsers, "Id", "DisplayName", auditSchedule.Auditors.Select(a => a.Id));
             return View(auditSchedule);
         }
 
@@ -122,7 +126,7 @@ namespace Auditor.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(long id, [Bind("Id,TemplateId,SiteId,SchedulerId,ScheduledDate,DueDate,Status,ModificationReason,CancellationReason,CreatedDate")] AuditSchedule auditSchedule)
+        public async Task<IActionResult> Edit(long id, [Bind("Id,TemplateId,SiteId,SchedulerId,ScheduledDate,DueDate,Status,ModificationReason,CancellationReason,CreatedDate")] AuditSchedule auditSchedule, List<long> selectedAuditorIds)
         {
             if (id != auditSchedule.Id)
             {
@@ -134,6 +138,26 @@ namespace Auditor.Controllers
                 try
                 {
                     _context.Update(auditSchedule);
+
+                    var existing = await _context.AuditSchedules
+                        .Include(s => s.Auditors)
+                        .FirstAsync(s => s.Id == id);
+
+                    selectedAuditorIds ??= new List<long>();
+
+                    var toRemove = existing.Auditors.Where(a => !selectedAuditorIds.Contains(a.Id)).ToList();
+                    foreach (var auditor in toRemove)
+                        existing.Auditors.Remove(auditor);
+
+                    var existingIds = existing.Auditors.Select(a => a.Id).ToList();
+                    var toAddIds = selectedAuditorIds.Except(existingIds).ToList();
+                    if (toAddIds.Count > 0)
+                    {
+                        var toAdd = await _context.AppUsers.Where(u => toAddIds.Contains(u.Id)).ToListAsync();
+                        foreach (var auditor in toAdd)
+                            existing.Auditors.Add(auditor);
+                    }
+
                     await _context.SaveChangesAsync();
                 }
                 catch (DbUpdateConcurrencyException)
@@ -152,6 +176,7 @@ namespace Auditor.Controllers
             ViewData["SchedulerId"] = new SelectList(_context.AppUsers, "Id", "Id", auditSchedule.SchedulerId);
             ViewData["SiteId"] = new SelectList(_context.AuditSites, "Id", "Name", auditSchedule.SiteId);
             ViewData["TemplateId"] = new SelectList(_context.AuditTemplates, "Id", "Name", auditSchedule.TemplateId);
+            ViewData["Auditors"] = new MultiSelectList(_context.AppUsers, "Id", "DisplayName", selectedAuditorIds);
             return View(auditSchedule);
         }
 
@@ -177,18 +202,50 @@ namespace Auditor.Controllers
         }
 
         // POST: AuditSchedules/Delete/5
+        // Hard delete is only allowed for schedules that haven't progressed past the initial
+        // "SCHEDULED" state and have no executions yet (true accidental-record removal).
+        // Anything further along must go through Cancel so the lifecycle is preserved.
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(long id)
         {
-            var auditSchedule = await _context.AuditSchedules.FindAsync(id);
-            if (auditSchedule != null)
+            var auditSchedule = await _context.AuditSchedules
+                .Include(s => s.AuditExecutions)
+                .FirstOrDefaultAsync(s => s.Id == id);
+
+            if (auditSchedule == null)
+                return RedirectToAction(nameof(Index));
+
+            if (auditSchedule.Status != "SCHEDULED" || auditSchedule.AuditExecutions.Count > 0)
             {
-                _context.AuditSchedules.Remove(auditSchedule);
+                TempData["Error"] = "This schedule can no longer be deleted directly. Use Cancel instead.";
+                return RedirectToAction(nameof(Details), new { id });
             }
 
+            _context.AuditSchedules.Remove(auditSchedule);
             await _context.SaveChangesAsync();
             return RedirectToAction(nameof(Index));
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Cancel(long id, string reason)
+        {
+            if (string.IsNullOrWhiteSpace(reason))
+            {
+                TempData["Error"] = "A cancellation reason is required.";
+                return RedirectToAction(nameof(Details), new { id });
+            }
+
+            var auditSchedule = await _context.AuditSchedules.FirstOrDefaultAsync(s => s.Id == id);
+            if (auditSchedule == null)
+                return NotFound();
+
+            auditSchedule.Status = "CANCELLED";
+            auditSchedule.CancellationReason = reason;
+            await _context.SaveChangesAsync();
+
+            return RedirectToAction(nameof(Details), new { id });
         }
 
         private bool AuditScheduleExists(long id)

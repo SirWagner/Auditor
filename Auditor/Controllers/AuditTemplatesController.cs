@@ -106,12 +106,12 @@ namespace Auditor.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(CreateAuditTemplateRequest AuditTemplate)
         {
-            if (!TryGetCurrentUserId(out var userId))
-            {
-                ModelState.AddModelError("", "User information could not be retrieved.");
-                return await Create();
-            }
-
+            //if (!TryGetCurrentUserId(out var userId))
+            //{
+            //    ModelState.AddModelError("", "User information could not be retrieved.");
+            //    return await Create();
+            //}
+            var userId = 1;//TODO change this to grab current user
             try
             {
                 var Questions = AuditTemplate.Items
@@ -151,7 +151,7 @@ namespace Auditor.Controllers
                     Version = template.Version,
                     IsActive = template.IsActive,
                 },
-                AuditTemplateItemViewModel= template.ItemsDetails.Select(
+                AuditTemplateItems= template.ItemsDetails.Select(
                     selectedQuestion =>new AuditTemplateItemViewModel()
                     {
                         Mandatory= selectedQuestion.Mandatory,
@@ -168,7 +168,7 @@ namespace Auditor.Controllers
                     })
                     .ToList(),
                 QuestionBank = QuestionBanks
-                   .Select(q => new AuditTemplateEditQuestionBankViewModel
+                   .Select(q => new QuestionBankListViewModel
                    {
                        Id = q.Id,
                        Text = q.QuestionText,

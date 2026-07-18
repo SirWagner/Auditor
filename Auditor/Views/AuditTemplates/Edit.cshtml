@@ -1,129 +1,12 @@
-﻿@model Auditor.ViewModels.AuditTemplate.AuditTemplateEditViewModel
+﻿@using Auditor.ViewModels.AuditTemplate
+
+@model AuditTemplateEditViewModel
 
 @{
     ViewData["Title"] = "Edit Audit Template";
-    Layout = "~/Views/Shared/_Layout.cshtml";
 }
-<style>
-    /* Stepper Styles */
-    .stepper-wrapper {
-        display: flex;
-        justify-content: space-between;
-        max-width: 600px;
-        margin: 0 auto;
-    }
 
-    .stepper-item {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        flex: 1;
-        position: relative;
-        opacity: 0.4;
-    }
-
-        .stepper-item.active {
-            opacity: 1;
-            font-weight: bold;
-        }
-
-        .stepper-item:not(:last-child)::after {
-            content: '';
-            position: absolute;
-            top: 15px;
-            left: 60%;
-            width: 80%;
-            height: 2px;
-            background: #e0e0e0;
-        }
-
-    .step-counter {
-        width: 30px;
-        height: 30px;
-        background: #007bff;
-        color: white;
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        margin-bottom: 5px;
-    }
-
-    .d-none {
-        display: none !important;
-    }
-</style>
-
-<div class="list-container">
-    <div class="list-header mb-4">
-        <div class="list-header-content">
-            <h1>🛠️ Create Audit Template</h1>
-            <p class="list-header-subtitle">Step-by-step template configuration</p>
-        </div>
-        <a asp-action="Index" class="action-btn btn-view" style="text-decoration: none;">← Back</a>
-    </div>
-
-    <!-- Step Progress Indicator -->
-    <div class="stepper-wrapper mb-5">
-        <div class="stepper-item active" id="step-1-indicator">
-            <div class="step-counter">1</div>
-            <div class="step-name">Information</div>
-        </div>
-        <div class="stepper-item" id="step-2-indicator">
-            <div class="step-counter">2</div>
-            <div class="step-name">Questions</div>
-        </div>
-        <div class="stepper-item" id="step-3-indicator">
-            <div class="step-counter">3</div>
-            <div class="step-name">Review</div>
-        </div>
-    </div>
-
-    <form asp-action="Edit" method="post" id="auditTemplateForm">
-        @Html.AntiForgeryToken()
-        <!-- STEP 1: Template Info -->
-        <div class="form-step-section" id="step-1">
-            <div class="list-table-wrapper" style="padding: 2rem;">
-                <input hidden name="Id" value="@Model.Id" />
-                <partial name="_TemplateInfoSection" model="Model.AuditTemplateInfoViewModel" />
-                <div class="mt-4 text-end">
-                    <button type="button" class="btn-list-primary next-step">Continue to Questions →</button>
-                </div>
-            </div>
-        </div>
-
-        <!-- STEP 2: Questions -->
-        <div class="form-step-section d-none" id="step-2">
-            <div class="list-table-wrapper" style="padding: 2rem;">
-                <partial name="_QuestionsSection" model="Model" />
-                <div class="mt-4 d-flex justify-content-between">
-                    <button type="button" class="action-btn btn-view prev-step">← Previous</button>
-                    <button type="button" class="btn-list-primary next-step" id="btn-to-review">Review Details →</button>
-                </div>
-            </div>
-        </div>
-
-        <!-- STEP 3: Review & Summary -->
-        <div class="form-step-section d-none" id="step-3">
-            <div class="list-table-wrapper" style="padding: 2rem;">
-                <h3 class="empty-state-title" style="text-align:left">Review Template</h3>
-                <hr />
-                <div id="review-summary" class="row g-3 mb-4">
-                    <!-- Populated via JS -->
-                </div>
-
-                <div class="mt-4 d-flex justify-content-between">
-                    <button type="button" class="action-btn btn-view prev-step">Edit Details</button>
-                    <button type="submit" class="btn-list-primary" style="background-color: #28a745; border:none;">
-                        Confirm & Save Template
-                    </button>
-                </div>
-            </div>
-        </div>
-    </form>
-</div>
-
-<partial name="_QuestionBankModal" model="Model" />
+<partial name="_AuditTemplateWizard" model="Model"/>
 
 @section Scripts {
     @{
@@ -133,8 +16,6 @@
     <script>
         window.__AUDIT_TEMPLATE_DATA__ = {
             questionBank: @Html.Raw(Json.Serialize(Model.QuestionBank)),
-            addedQuestionsIds:@Html.Raw(Json.Serialize(Model.AuditTemplateItemViewModel.Select(item=>item.QuestionBankId))),
-
         };
     </script>
 
