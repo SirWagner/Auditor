@@ -1,31 +1,82 @@
 ﻿@model Auditor.Models.QuestionCategory
 
 @{
-    ViewData["Title"] = "Details";
+    ViewData["Title"] = "Question Category Details";
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
-<h1>Details</h1>
+<link rel="stylesheet" href="~/css/layout-details.css" asp-append-version="true" />
 
-<div>
-    <h4>QuestionCategory</h4>
-    <hr />
-    <dl class="row">
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Name)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Name)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Description)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Description)
-        </dd>
-    </dl>
-</div>
-<div>
-    <a asp-action="Edit" asp-route-id="@Model?.Id">Edit</a> |
-    <a asp-action="Index">Back to List</a>
+<div class="detail-container">
+    <!-- Breadcrumb -->
+    <div class="detail-breadcrumb">
+        <a asp-action="Index">Question Categories</a>
+        <span class="mx-1">/</span>
+        <span>Details</span>
+    </div>
+
+    <!-- HERO -->
+    <div class="detail-hero">
+        <div class="detail-hero-top">
+            <div>
+                <div class="detail-hero-eyebrow">
+                    <i class="bi bi-folder"></i> Question Category
+                </div>
+                <h1 class="detail-hero-title">@Model.Name</h1>
+            </div>
+
+            <div class="detail-hero-actions">
+                <a asp-action="Edit" asp-route-id="@Model.Id" class="btn-hero-primary">
+                    <i class="bi bi-pencil-square"></i> Edit
+                </a>
+                <a asp-action="Index" class="btn-hero-ghost">
+                    <i class="bi bi-arrow-left"></i> Back to List
+                </a>
+            </div>
+        </div>
+
+        <div class="detail-hero-footer">
+            <span class="detail-badge">
+                <i class="bi bi-tag"></i> Audit Question Category
+            </span>
+        </div>
+    </div>
+
+    <!-- CONTENT -->
+    <div class="row">
+        <!-- Main Information -->
+        <div class="col-lg-8">
+            <div class="detail-card">
+                <div class="detail-card-title">
+                    <i class="bi bi-file-earmark-text"></i> Description
+                </div>
+                <p class="detail-card-text">
+                    @(string.IsNullOrWhiteSpace(Model.Description)
+                        ? "No description has been provided for this category."
+                        : Model.Description)
+                </p>
+            </div>
+        </div>
+
+        <!-- Metadata -->
+        <div class="col-lg-4">
+            <div class="detail-card">
+                <div class="detail-card-title">
+                    <i class="bi bi-info-circle"></i> Details
+                </div>
+
+                <div class="detail-meta-list">
+                    <div class="detail-meta-item">
+                        <span class="detail-meta-label">Category Name</span>
+                        <span class="detail-meta-value">@Model.Name</span>
+                    </div>
+
+                    <div class="detail-meta-item">
+                        <span class="detail-meta-label">Identifier</span>
+                        <span class="detail-meta-value">#@Model.Id</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>

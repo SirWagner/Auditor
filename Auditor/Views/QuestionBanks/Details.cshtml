@@ -1,67 +1,148 @@
 ﻿@model Auditor.Models.QuestionBank
 
 @{
-    ViewData["Title"] = "Details";
+    ViewData["Title"] = "Question Bank Details";
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
+<link rel="stylesheet" href="~/css/layout-details.css" asp-append-version="true" />
 
-<h1>Details</h1>
+<div class="detail-container">
 
-<div>
-    <h4>QuestionBank</h4>
-    <hr />
-    <dl class="row">
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.QuestionText)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.QuestionText)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.ServiceStandardRecommendation)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.ServiceStandardRecommendation)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.ResponsibleContractor)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.ResponsibleContractor)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.IsActive)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.IsActive)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.CreatedDate)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.CreatedDate)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Category)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Category.Name)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.CreatedByNavigation)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.CreatedByNavigation.Id)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.QuestionType)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.QuestionType.Name)
-        </dd>
-    </dl>
-</div>
-<div>
-    <a asp-action="Edit" asp-route-id="@Model?.Id">Edit</a> |
-    <a asp-action="Index">Back to List</a>
+    <!-- Breadcrumb -->
+    <div class="detail-breadcrumb">
+        <a asp-action="Index">Question Bank</a>
+        <span class="mx-1">/</span>
+        <span>Details</span>
+    </div>
+
+    <!-- ============================
+         HERO
+    ============================= -->
+    <div class="detail-hero">
+
+        <div class="detail-hero-top">
+
+            <div>
+                <div class="detail-hero-eyebrow">
+                    <i class="bi bi-patch-question"></i> Question Bank Item
+                </div>
+                <h1 class="detail-hero-title">@Model.QuestionText</h1>
+            </div>
+
+            <div class="detail-hero-actions">
+                <a asp-action="Edit" asp-route-id="@Model.Id" class="btn-hero-primary">
+                    <i class="bi bi-pencil-square"></i> Edit
+                </a>
+                <a asp-action="Index" class="btn-hero-ghost">
+                    <i class="bi bi-arrow-left"></i> Back to List
+                </a>
+            </div>
+
+        </div>
+
+        <div class="detail-hero-footer">
+
+            <span class="detail-badge @(Model.IsActive ? "is-active" : "is-inactive")">
+                <i class="bi @(Model.IsActive ? "bi-check-circle-fill" : "bi-slash-circle")"></i>
+                @(Model.IsActive ? "Active" : "Inactive")
+            </span>
+
+            @if (Model.Category != null)
+            {
+                <span class="detail-badge">
+                    <i class="bi bi-tag"></i> @Model.Category.Name
+                </span>
+            }
+
+            @if (Model.QuestionType != null)
+            {
+                <span class="detail-badge">
+                    <i class="bi bi-ui-checks"></i> @Model.QuestionType.Name
+                </span>
+            }
+
+            <span class="detail-hero-stat">
+                <i class="bi bi-calendar3"></i>
+                Created @Model.CreatedDate.ToString("MMM dd, yyyy")
+            </span>
+
+        </div>
+
+    </div>
+
+    <!-- ============================
+         CONTENT
+    ============================= -->
+    <div class="row">
+
+        <!-- Primary content: the recommendation is what an auditor actually acts on -->
+        <div class="col-lg-8">
+
+            <div class="detail-card">
+                <div class="detail-card-title">
+                    <i class="bi bi-file-earmark-text"></i> Service Standard Recommendation
+                </div>
+                <p class="detail-card-text">
+                    @(string.IsNullOrWhiteSpace(Model.ServiceStandardRecommendation)
+                        ? "No recommendation has been provided for this question."
+                        : Model.ServiceStandardRecommendation)
+                </p>
+            </div>
+
+        </div>
+
+        <!-- Secondary content: metadata, subordinate but accessible -->
+        <div class="col-lg-4">
+
+            <div class="detail-card">
+                <div class="detail-card-title">
+                    <i class="bi bi-info-circle"></i> Details
+                </div>
+
+                <div class="detail-meta-list">
+
+                    <div class="detail-meta-item">
+                        <span class="detail-meta-label">Responsible Contractor</span>
+                        <span class="detail-meta-value">
+                            @(Model.ResponsibleContractor ?? "—")
+                        </span>
+                    </div>
+
+                    <div class="detail-meta-item">
+                        <span class="detail-meta-label">Question Type</span>
+                        <span class="detail-meta-value">
+                            @(Model.QuestionType?.Name ?? "—")
+                        </span>
+                    </div>
+
+                    <div class="detail-meta-item">
+                        <span class="detail-meta-label">Category</span>
+                        <span class="detail-meta-value">
+                            @(Model.Category?.Name ?? "—")
+                        </span>
+                    </div>
+
+                    <div class="detail-meta-item">
+                        <span class="detail-meta-label">Created By</span>
+                        <span class="detail-meta-value">
+                            @* Swap Id for a display name property (e.g. FullName/UserName)
+                               once available on the navigation entity. *@
+                            @(Model.CreatedByNavigation?.Id.ToString() ?? "—")
+                        </span>
+                    </div>
+
+                    <div class="detail-meta-item">
+                        <span class="detail-meta-label">Created Date</span>
+                        <span class="detail-meta-value">
+                            @Model.CreatedDate.ToString("MMM dd, yyyy 'at' HH:mm")
+                        </span>
+                    </div>
+
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+
 </div>
