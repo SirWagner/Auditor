@@ -1,21 +1,26 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+﻿using Auditor.DTO.Questionbanks;
+using Auditor.Models;
+using Auditor.Services.Interfaces;
+using Auditor.ViewModels.QuestionBank;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
-using Auditor.Models;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace Auditor.Controllers
 {
     public class QuestionBanksController : Controller
     {
         private readonly AuditorContext _context;
+        private readonly IQuestionBankService _questionBankService;
 
-        public QuestionBanksController(AuditorContext context)
+        public QuestionBanksController(AuditorContext context, IQuestionBankService questionBankService)
         {
             _context = context;
+            this._questionBankService = questionBankService;
         }
 
         // GET: QuestionBanks
@@ -76,36 +81,51 @@ namespace Auditor.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("Id,QuestionText,CategoryId,QuestionTypeId,ServiceStandardRecommendation,ResponsibleContractor,IsActive,CreatedBy,CreatedDate")] QuestionBank questionBank)
+        public async Task<IActionResult> Create(QuestionBankCreateViewModel model)
         {
-            if (ModelState.IsValid)
-            {
-                _context.Add(questionBank);
-                await _context.SaveChangesAsync();
 
-                // Detect AJAX request
-                if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
+
+            if (!ModelState.IsValid)
+            {
+                Redirect(nameof(Create));
+            }
+
+
+            var dto = new CreateQuestionBankDTO
+            {
+                QuestionText = model.QuestionText,
+
+                CategoryId = model.CategoryId,
+
+                QuestionTypeId = model.QuestionTypeId,
+
+                ServiceStandardRecommendation =
+                    model.ServiceStandardRecommendation,
+
+                ResponsibleContractor =
+                    model.ResponsibleContractor,
+
+                IsActive = model.IsActive,
+
+                CreatedBy = model.CreatedBy,
+
+
+                ChecklistItems = model.ChecklistItems
+                .Select(item => new CreateChecklistItemDTO
                 {
-                    // Return success message instead of redirect
-                    return Json(new
-                    {
-                        success = true,
-                        message = "Audit question has been created successfully!"
-                    });
-                }
-            }
+                    Text = item.Text,
 
-            // Return validation errors for AJAX
-            if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
-            {
-                return BadRequest(ModelState);
-            }
+                    Sequence = item.Sequence
 
-            ViewData["CategoryId"] = new SelectList(_context.QuestionCategories, "Id", "Name", questionBank.CategoryId);
-            ViewData["CreatedBy"] = new SelectList(_context.AppUsers, "Id", "Id", questionBank.CreatedBy);
-            ViewData["QuestionTypeId"] = new SelectList(_context.QuestionTypes, "Id", "Name", questionBank.QuestionTypeId);
+                })
+                .ToList()
+            };
 
-            return View(questionBank);
+
+            await _questionBankService.Create(dto);
+
+
+            return RedirectToAction(nameof(Index));
         }
 
         // GET: QuestionBanks/Edit/5

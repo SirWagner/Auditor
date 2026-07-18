@@ -1,75 +1,91 @@
-﻿document.addEventListener("DOMContentLoaded", () => {
-    const form = document.getElementById("questionCreateForm");
-    if (!form) return;
+﻿let checklistIndex = 0;
 
-    const submitButton = form.querySelector("button[type='submit']");
 
-    form.addEventListener("submit", async event => {
-        event.preventDefault();
+$(document).ready(function () {
 
-        if (typeof $ !== "undefined" && !$(form).valid()) {
-            return;
+
+    $('#QuestionTypeId').change(function () {
+
+
+        const selectedType = $(this).val();
+
+
+        if (selectedType == "7") {
+            $('#checklist-section').show();
+        }
+        else {
+            $('#checklist-section').hide();
         }
 
-        submitButton.disabled = true;
-        submitButton.innerHTML = `
-            <i class="fas fa-spinner fa-spin"></i>
-            Creating...
-        `;
 
-        try {
-            const response = await fetch(form.action, {
-                method: "POST",
-                body: new FormData(form),
-                headers: {
-                    "X-Requested-With": "XMLHttpRequest"
-                }
-            });
-
-            const result = await response.json();
-
-            if (result.success) {
-                await Swal.fire({
-                    title: "Question Created",
-                    text: result.message,
-                    icon: "success"
-                });
-
-                form.reset();
-            } else {
-                showValidationErrors(result);
-
-                Swal.fire({
-                    title: "Validation Error",
-                    text: "Please review the fields.",
-                    icon: "error"
-                });
-            }
-        } catch (error) {
-            console.error(error);
-            Swal.fire("Error", "Unexpected error occurred.", "error");
-        } finally {
-            resetButton();
-        }
     });
 
-    function resetButton() {
-        submitButton.disabled = false;
-        submitButton.innerHTML = `
-            <i class="fas fa-check-circle"></i>
-            Create Question
+
+
+    $('#add-checklist-item').click(function () {
+
+
+        let html = `
+
+        <div class="row mb-2 checklist-item">
+
+
+            <div class="col-md-10">
+
+                <input 
+                    class="form-control"
+                    name="ChecklistItems[${checklistIndex}].Text"
+                    placeholder="Checklist item"/>
+
+            </div>
+
+
+            <div class="col-md-2">
+
+                <button 
+                    type="button"
+                    class="btn btn-danger remove-item">
+
+                    Remove
+
+                </button>
+
+            </div>
+
+
+            <input 
+                type="hidden"
+                name="ChecklistItems[${checklistIndex}].Sequence"
+                value="${checklistIndex + 1}" />
+
+
+        </div>
+
+
         `;
-    }
 
-    function showValidationErrors(errors) {
-        document.querySelectorAll("[data-valmsg-for]").forEach(x => x.textContent = "");
 
-        Object.keys(errors).forEach(key => {
-            const element = document.querySelector(`[data-valmsg-for="${key}"]`);
+        $('#checklist-items').append(html);
 
-            if (element) {
-                element.textContent = errors[key].errors[0].errorMessage;
-            }
-        });
-    }
+
+        checklistIndex++;
+
+
+    });
+
+
+
+    $(document).on(
+        'click',
+        '.remove-item',
+        function () {
+
+            $(this)
+                .closest('.checklist-item')
+                .remove();
+
+        }
+    );
+
+
 });
