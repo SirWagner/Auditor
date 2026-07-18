@@ -78,28 +78,40 @@
                                 <i class="typcn typcn-plane-outline"></i> Airport
                             </a>
                             <nav class="az-menu-sub">
-                                <a asp-area="" asp-controller="Airports" asp-action="Create" class="nav-link">
-                                    <i class="typcn typcn-plus"></i> New Airport
-                                </a>
                                 <a asp-area="" asp-controller="Airports" asp-action="Index" class="nav-link">
                                     <i class="typcn typcn-th-list"></i> Airport List
                                 </a>
-                            </nav>
-                        </li>
-                        <li class="nav-item">
-                            <a href="#" class="nav-link with-sub">
-                                <i class="typcn typcn-plane-outline"></i> Audit Sites
-                            </a>
-                            <nav class="az-menu-sub">
-                                <a asp-area="" asp-controller="AuditSites" asp-action="Create" class="nav-link">
-                                    <i class="typcn typcn-plus"></i> New Site
+                                <a asp-area="" asp-controller="Airports" asp-action="Create" class="nav-link">
+                                    <i class="typcn typcn-plus"></i> New Airport
                                 </a>
                                 <a asp-area="" asp-controller="AuditSites" asp-action="Index" class="nav-link">
-                                    <i class="typcn typcn-th-list"></i> Sites List
+                                    <i class="typcn typcn-th-list"></i> Audit Sites List
+                                </a>
+                                <a asp-area="" asp-controller="AuditSites" asp-action="Create" class="nav-link">
+                                    <i class="typcn typcn-plus"></i> Audit New Site
                                 </a>
                             </nav>
                         </li>
-                        
+                       
+                        <li class="nav-item">
+                            <a href="#" class="nav-link with-sub">
+                                <i class="typcn typcn-clipboard"></i> Question Management
+                            </a>
+                            <nav class="az-menu-sub">
+                                <a asp-area="" asp-controller="QuestionBanks" asp-action="Index" class="nav-link">
+                                    <i class="typcn typcn-document-add"></i> Questions List
+                                </a>
+                                <a asp-area="" asp-controller="QuestionBanks" asp-action="Create" class="nav-link">
+                                    <i class="typcn typcn-document-add"></i> Add Question
+                                </a>
+                                <a asp-area="" asp-controller="QuestionCategories" asp-action="Index" class="nav-link">
+                                    <i class="typcn typcn-folder"></i> Categories
+                                </a>
+                                <a asp-area="" asp-controller="QuestionCategories" asp-action="Create" class="nav-link">
+                                    <i class="typcn typcn-folder"></i> Add new Category
+                                </a>
+                            </nav>
+                        </li>
                         <li class="nav-item">
                             <a href="#" class="nav-link with-sub">
                                 <i class="typcn typcn-clipboard"></i> Audit Templates
