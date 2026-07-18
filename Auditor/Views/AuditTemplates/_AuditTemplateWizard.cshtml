@@ -2,7 +2,7 @@
 @model AuditTemplateFormViewModel
 
 @{
-    ViewData["Title"] = "Create Audit Template";
+    // ViewData["Title"] = "Create or Edit Audit Template";
     // Layout = "~/Views/Shared/_Layout.cshtml";
 }
 <style>
@@ -58,7 +58,7 @@
 <div class="list-container">
     <div class="list-header mb-4">
         <div class="list-header-content">
-            <h1>🛠️ Create Audit Template</h1>
+            <h1>🛠️ @ViewData["Title"]</h1>
             <p class="list-header-subtitle">Step-by-step template configuration</p>
         </div>
         <a asp-action="Index" class="action-btn btn-view" style="text-decoration: none;">← Back</a>

@@ -144,6 +144,7 @@ namespace Auditor.Controllers
 
             var vm = new AuditTemplateEditViewModel
             {
+                Id=id,
                 AuditTemplateInfoViewModel = new AuditTemplateInfoViewModel()
                 {
                     Name = template.Name,
@@ -190,11 +191,12 @@ namespace Auditor.Controllers
             //if (!ModelState.IsValid)
             //    return View(await _auditTemplateService.GetEditViewModelAsync(model.Id));
 
-            if (!TryGetCurrentUserId(out var userId))
-            {
-                ModelState.AddModelError("", "User information could not be retrieved.");
-                return await Edit(AuditTemplate.Id);
-            }
+            //if (!TryGetCurrentUserId(out var userId))
+            //{
+            //    ModelState.AddModelError("", "User information could not be retrieved.");
+            //    return await Edit(AuditTemplate.Id);
+            //}
+            var userId = 1;//TODO change this to grab current user
 
             try
             {
