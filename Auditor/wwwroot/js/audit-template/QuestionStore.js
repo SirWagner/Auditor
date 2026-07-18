@@ -1,11 +1,11 @@
 ﻿export default class QuestionStore {
     constructor(questionBank = [], addedQuestionsId = new Set()) {
+
         this.availableQuestions = questionBank;
 
         this.addedQuestionIds = addedQuestionsId;
 
-        // This becomes the ONLY index source of truth
-        this.nextQuestionIndex = addedQuestionsId?.length ?? 0;
+        this.nextQuestionIndex = addedQuestionsId.size;
     }
 
     /* -----------------------------
@@ -13,15 +13,15 @@
      * ----------------------------- */
 
     addQuestion(questionId) {
-        this.addedQuestionIds.add(questionId);
+        this.addedQuestionIds.add(Number(questionId));
     }
 
     removeQuestion(questionId) {
-        this.addedQuestionIds.delete(questionId);
+        this.addedQuestionIds.delete(Number(questionId));
     }
 
     hasQuestion(questionId) {
-        return this.addedQuestionIds.has(questionId);
+        return this.addedQuestionIds.has(Number(questionId));
     }
 
     getAddedQuestionIds() {

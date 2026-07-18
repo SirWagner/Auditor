@@ -156,9 +156,10 @@ namespace Auditor.Controllers
                     selectedQuestion =>new AuditTemplateItemViewModel()
                     {
                         Mandatory= selectedQuestion.Mandatory,
-                        QuestionBankId = selectedQuestion.Id, 
+                        Id = selectedQuestion.Id, 
                         QuestionText = selectedQuestion.QuestionText,
-                        Sequence = selectedQuestion.Sequence
+                        Sequence = selectedQuestion.Sequence,
+                        Type = selectedQuestion.Type,
                     }
                     ).ToList(),
                 Users = Users

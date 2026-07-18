@@ -54,7 +54,14 @@
      * QUESTION CARD RENDERING
      * ----------------------------- */
 
-    renderQuestionCard(questionId, text, type, index) {
+    renderQuestionCard(
+        questionId,
+        text,
+        type,
+        index,
+        mandatory = false,
+        sequence = null
+    ) {
         const container = this.dom.questionContainer;
         if (!container) return;
 
@@ -67,59 +74,110 @@
             questionId,
             text,
             type,
-            index
+            index,
+            mandatory,
+            sequence
         });
 
         container.appendChild(card);
     }
 
-    buildQuestionCardHtml({ questionId, text, type, index }) {
+    buildQuestionCardHtml({
+        questionId,
+        text,
+        type,
+        index,
+        mandatory,
+        sequence
+    }) {
+
+        const mandatoryId = `question-${questionId}-mandatory`;
+        const sequenceId = `question-${questionId}-sequence`;
+
         return `
-            <div class="card-body">
+        <div class="card-body">
 
-                <div class="d-flex justify-content-between">
-                    <div>
-                        <div class="fw-semibold">
-                            ${this.escapeHtml(text)}
-                        </div>
+            <div class="d-flex justify-content-between align-items-start">
 
-                        <span class="badge bg-light text-primary">
-                            ${this.escapeHtml(type)}
-                        </span>
+                <div>
+                    <div class="fw-semibold">
+                        ${this.escapeHtml(text)}
                     </div>
 
-                    <button class="btn btn-sm btn-outline-danger"
-                            data-action="deleteQuestion">
-                        <i class="fas fa-trash"></i>
-                    </button>
+                    <span class="badge bg-light text-primary mt-1">
+                        ${this.escapeHtml(type)}
+                    </span>
                 </div>
 
-                <input type="hidden"
-                       name="Items[${index}].QuestionBankId"
-                       value="${questionId}" />
 
-                <input type="hidden"
-                       name="Items[${index}].QuestionType"
-                       value="${type}" />
+                <button type="button"
+                        class="btn btn-sm btn-outline-danger"
+                        data-action="deleteQuestion"
+                        aria-label="Remove question">
+                    <i class="fas fa-trash"></i>
+                </button>
 
-                <div class="row mt-3">
+            </div>
 
-                    <div class="col-md-6">
-                        <input type="checkbox"
-                               name="Items[${index}].Mandatory" />
-                        <label>Mandatory</label>
+
+            <!-- Hidden fields -->
+
+            <input type="hidden"
+                   name="Items[${index}].QuestionBankId"
+                   value="${questionId}" />
+
+            <input type="hidden"
+                   name="Items[${index}].QuestionType"
+                   value="${type}" />
+
+
+            <div class="row mt-3">
+
+                <div class="col-md-6">
+
+                    <div class="form-check">
+
+                       <input class="form-check-input"
+                               type="checkbox"
+                               id="${mandatoryId}"
+                               name="Items[${index}].Mandatory"
+                               value="true"
+                               ${mandatory ? "checked" : ""} />
+
+                        <input type="hidden"
+                               name="Items[${index}].Mandatory"
+                               value="false" />
+
+                        <label class="form-check-label"
+                               for="${mandatoryId}">
+                            Mandatory
+                        </label>
+
                     </div>
 
-                    <div class="col-md-6">
-                        <input type="number"
-                               name="Items[${index}].Sequence"
-                               value="${index + 1}" />
-                    </div>
+                </div>
+
+
+                <div class="col-md-6">
+
+                    <label class="form-label"
+                           for="${sequenceId}">
+                        Sequence
+                    </label>
+
+                    <input class="form-control"
+                           type="number"
+                           id="${sequenceId}"
+                           name="Items[${index}].Sequence"
+                           value="${sequence ?? index + 1}"
+                           min="1" />
 
                 </div>
 
             </div>
-        `;
+
+        </div>
+    `;
     }
 
     /* -----------------------------

@@ -3,8 +3,19 @@ import QuestionView from "./QuestionView.js";
 import QuestionService from "./QuestionService.js";
 
 export default class QuestionManager {
-    constructor({ questionBank, addedQuestionsId }) {
-        this.store = new QuestionStore(questionBank, addedQuestionsId);
+    constructor({
+        questionBank,
+        addedQuestionsId,
+        existingQuestions = []
+    }) {
+
+        this.existingQuestions = existingQuestions;
+
+        this.store = new QuestionStore(
+            questionBank,
+            addedQuestionsId
+        );
+
         this.view = new QuestionView();
         this.service = new QuestionService(this.store);
 
@@ -21,13 +32,27 @@ export default class QuestionManager {
     }
 
     renderInitialState() {
+
         this.view.renderQuestionBankList(
             this.store.getAvailableQuestions(),
             (id) => this.store.hasQuestion(id)
         );
 
-        this.view.updateCounter(this.store.getQuestionCount());
-        this.view.toggleContainerState(this.store.getQuestionCount() > 0);
+
+        this.existingQuestions.forEach(question => {
+
+            this.handleAddQuestion(
+                question.id,
+                question.text,
+                question.type,
+                question.mandatory,
+                question.sequence
+            );
+
+        });
+
+
+        this.syncUi();
     }
 
     /* -----------------------------
@@ -74,7 +99,13 @@ export default class QuestionManager {
         });
     }
 
-    handleAddQuestion(questionId, questionText, questionType) {
+    handleAddQuestion(
+        questionId,
+        questionText,
+        questionType,
+        mandatory = false,
+        sequence = null
+    ) {
         const index = this.store.getNextQuestionIndex();
 
         this.store.addQuestion(questionId);
@@ -83,7 +114,9 @@ export default class QuestionManager {
             questionId,
             questionText,
             questionType,
-            index
+            index,
+            mandatory,
+            sequence
         );
 
         this.syncUi();

@@ -124,7 +124,7 @@ namespace Auditor.Services
             if (template == null)
                 return null;
 
-            var Questions = template.AuditTemplateItems.Select(item=>new AuditTemplateItemsDetailsDTO(item.Id, item.Mandatory, item.Sequence,
+            var Questions = template.AuditTemplateItems.Select(item=>new AuditTemplateItemsQuestionDetailsDTO(item.QuestionBankId, item.Mandatory, item.Sequence,
                 item.QuestionBank.QuestionText, item.QuestionBank.QuestionType.Name,item.QuestionBank.Category.Name)).ToList();
 
             var AuditTemplateDetails = new AuditTemplateDetailsDTO(template.Name, template.Description, template.Version,

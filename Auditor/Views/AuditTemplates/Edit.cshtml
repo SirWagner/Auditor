@@ -16,6 +16,10 @@
     <script>
         window.__AUDIT_TEMPLATE_DATA__ = {
             questionBank: @Html.Raw(Json.Serialize(Model.QuestionBank)),
+            existingQuestions: @Html.Raw(Json.Serialize(Model.AuditTemplateItems)),
+            addedQuestionsIds: @Html.Raw(Json.Serialize(
+                            Model.AuditTemplateItems.Select(x => x.Id)
+                    ))
         };
     </script>
 
