@@ -81,6 +81,21 @@ namespace Auditor.Services
 
             await _context.SaveChangesAsync();
         }
+        public async Task<bool> ToggleActiveAsync(long id, long modifiedByUserId)
+        {
+            var template = await _context.QuestionBanks.FirstOrDefaultAsync(t => t.Id == id);
+
+            if (template == null)
+                return false;
+
+            template.IsActive = !template.IsActive;
+            //template.Update = modifiedByUserId;
+            //template.ModifiedDate = DateTime.UtcNow;
+
+            await _context.SaveChangesAsync();
+
+            return true;
+        }
 
 
     }

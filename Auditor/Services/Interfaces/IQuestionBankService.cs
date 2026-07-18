@@ -6,6 +6,8 @@ namespace Auditor.Services.Interfaces
     {
         public Task<List<QuestionBankInfoDTO>> GetAll();
         Task Create(CreateQuestionBankDTO dto);
+        Task<bool> ToggleActiveAsync(long id, long modifiedByUserId);
+
 
     }
 }

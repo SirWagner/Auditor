@@ -6,233 +6,97 @@
 }
 
 <div class="list-container">
-
     <div class="list-header">
-
         <div class="list-header-content">
-
             <h1>📝 Question Bank</h1>
-
-            <p class="list-header-subtitle">
-                Create and manage standardized airport audit questions
-            </p>
-
+            <p class="list-header-subtitle">Create and manage standardized airport audit questions</p>
         </div>
-
 
         <a asp-action="Create" class="btn-list-primary">
             <span>+</span> Create New Question
         </a>
-
     </div>
-
 
     @if (Model.Any())
     {
         <div class="list-table-wrapper">
-
             <table class="list-table table question-table">
-
                 <thead>
-
                     <tr>
-
-                        <th style="width:25%;">
-                            Question
-                        </th>
-
-                        <th style="width:10%;">
-                            Type
-                        </th>
-
-                        <th style="width:15%;">
-                            Category
-                        </th>
-
-                        <th style="width:10%;">
-                            Status
-                        </th>
-
-                        <th style="width:15%;">
-                            Responsible
-                        </th>
-
-                        <th style="width:10%;">
-                            Created Date
-                        </th>
-
-                        <th style="width:15%;">
-                            Actions
-                        </th>
-
+                        <th style="width:25%;">Question</th>
+                        <th style="width:10%;">Type</th>
+                        <th style="width:15%;">Category</th>
+                        <th style="width:10%;">Status</th>
+                        <th style="width:15%;">Responsible</th>
+                        <th style="width:10%;">Created Date</th>
+                        <th style="width:15%;">Actions</th>
                     </tr>
-
                 </thead>
 
-
                 <tbody>
-
                     @foreach (var item in Model)
                     {
-
                         <tr>
-
                             <td>
-
-                                <div class="cell-name">
-
-                                    @item.QuestionText
-
-                                </div>
-
+                                <div class="cell-name">@item.QuestionText</div>
                             </td>
 
-
                             <td>
-
-                                <span class="cell-code">
-
-                                    @item.QuestionType.Name
-
-                                </span>
-
+                                <span class="cell-code">@item.QuestionType.Name</span>
                             </td>
 
-
                             <td>
-
-                                <div class="cell-secondary">
-
-                                    @item.Category.Name
-
-                                </div>
-
+                                <div class="cell-secondary">@item.Category.Name</div>
                             </td>
 
-
                             <td>
-
                                 @if (item.IsActive)
                                 {
-                                    <span class="status-badge status-active">
-                                        Active
-                                    </span>
+                                    <span class="status-badge status-active">Active</span>
                                 }
                                 else
                                 {
-                                    <span class="status-badge status-inactive">
-                                        Inactive
-                                    </span>
+                                    <span class="status-badge status-inactive">Inactive</span>
                                 }
-
                             </td>
 
-
                             <td>
-
-                                <div class="cell-secondary">
-
-                                    @item.ResponsibleContractor
-
-                                </div>
-
+                                <div class="cell-secondary">@item.ResponsibleContractor</div>
                             </td>
 
-
                             <td>
-
-                                <div class="cell-secondary">
-
-                                    @item.CreatedDate.ToString("MMM dd, yyyy")
-
-                                </div>
-
+                                <div class="cell-secondary">@item.CreatedDate.ToString("MMM dd, yyyy")</div>
                             </td>
 
-
                             <td>
-
                                 <div class="list-actions">
-
-
-                                    <a asp-action="Edit"
-                                       asp-route-id="@item.Id"
-                                       class="action-btn btn-edit">
-
-                                        Edit
-
-                                    </a>
-
-
-                                    <a asp-action="Details"
-                                       asp-route-id="@item.Id"
-                                       class="action-btn btn-view">
-
-                                        View
-
-                                    </a>
-
-
-                                    <a asp-action="Delete"
-                                       asp-route-id="@item.Id"
-                                       class="action-btn btn-delete">
-
-                                        Delete
-
-                                    </a>
-
-
+                                    <a asp-action="Edit" asp-route-id="@item.Id" class="action-btn btn-edit">Edit</a>
+                                    <form asp-action="ToggleActive" asp-route-id="@item.Id" method="post">
+                                        @Html.AntiForgeryToken()
+                                        <button type="submit" class="action-btn btn-toggle">@(item.IsActive ? "Deactivate" : "Activate")</button>
+                                    </form>
+                                    <a asp-action="Details" asp-route-id="@item.Id" class="action-btn btn-view">View</a>
+                                    <a asp-action="Delete" asp-route-id="@item.Id" class="action-btn btn-delete">Delete</a>
                                 </div>
-
                             </td>
-
-
                         </tr>
-
                     }
-
                 </tbody>
-
-
             </table>
-
         </div>
-
     }
     else
     {
-
         <div class="list-table-wrapper">
-
             <div class="list-empty-state">
-
-                <div class="empty-state-icon">
-                    📋
-                </div>
-
-
-                <h2 class="empty-state-title">
-                    No Questions Found
-                </h2>
-
-
-                <p class="list-empty-text">
-                    Create your first audit question to start building audit templates.
-                </p>
-
+                <div class="empty-state-icon">📋</div>
+                <h2 class="empty-state-title">No Questions Found</h2>
+                <p class="list-empty-text">Create your first audit question to start building audit templates.</p>
 
                 <a asp-action="Create" class="btn-list-primary">
-
-                    <span>+</span>
-                    Create First Question
-
+                    <span>+</span> Create First Question
                 </a>
-
-
             </div>
-
         </div>
-
     }
-
 </div>

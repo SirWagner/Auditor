@@ -1,5 +1,6 @@
 ﻿using Auditor.DTO.Questionbanks;
 using Auditor.Models;
+using Auditor.Services;
 using Auditor.Services.Interfaces;
 using Auditor.ViewModels.QuestionBank;
 using Microsoft.AspNetCore.Mvc;
@@ -224,6 +225,19 @@ namespace Auditor.Controllers
         private bool QuestionBankExists(long id)
         {
             return _context.QuestionBanks.Any(e => e.Id == id);
+        }
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ToggleActive(long id)
+        {
+            //if (!TryGetCurrentUserId(out var userId))
+            //    return RedirectToAction(nameof(Index));
+            var userId = 1;
+            // TODO - Grab the current user
+
+            await _questionBankService.ToggleActiveAsync(id, userId);
+
+            return RedirectToAction(nameof(Index));
         }
     }
 }
