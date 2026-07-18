@@ -17,10 +17,10 @@
         public int CreatedBy { get; set; }
 
 
-        public List<CreateChecklistItemDTO> ChecklistItems { get; set; }
+        public List<CreateQuestionOptionDTO> Options { get; set; }
             = new();
     }
-    public class CreateChecklistItemDTO
+    public class CreateQuestionOptionDTO
     {
         public string Text { get; set; } = string.Empty;
 

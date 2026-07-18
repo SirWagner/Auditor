@@ -62,10 +62,10 @@ namespace Auditor.Services
             };
 
 
-            if (questionType.Name == "CHECKLIST")
+            if (questionType.Name == "CHECKLIST" || questionType.Name == "MULTIPLE_CHOICE")
             {
                 questionBank.QuestionBankOptions =
-                    dto.ChecklistItems
+                    dto.Options
                     .Select(item => new QuestionBankOption
                     {
                         OptionText = item.Text,

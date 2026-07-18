@@ -19,7 +19,7 @@
         public DateTime CreatedDate { get; set; }
 
 
-        public List<ChecklistItemViewModel> ChecklistItems { get; set; }
+        public List<QuestionOptionViewModel> Options { get; set; }
             = new();
     }
 }

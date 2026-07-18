@@ -1,6 +1,6 @@
 ﻿namespace Auditor.ViewModels.QuestionBank
 {
-    public class ChecklistItemViewModel
+    public class QuestionOptionViewModel
     {
         public string Text { get; set; } = string.Empty;
 

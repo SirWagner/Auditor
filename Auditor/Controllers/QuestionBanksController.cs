@@ -110,8 +110,8 @@ namespace Auditor.Controllers
                 CreatedBy = model.CreatedBy,
 
 
-                ChecklistItems = model.ChecklistItems
-                .Select(item => new CreateChecklistItemDTO
+                Options = model.Options
+                .Select(item => new CreateQuestionOptionDTO
                 {
                     Text = item.Text,
 
