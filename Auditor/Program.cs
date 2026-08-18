@@ -53,6 +53,7 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
 // Application Services
 builder.Services.AddScoped<IAuditTemplateService, AuditTemplateService>();
 builder.Services.AddScoped<IAppUserService, AppUserService>();
+builder.Services.AddScoped<IDashboardService, DashboardService>();
 builder.Services.AddScoped<IQuestionBankService, QuestionBankService>();
 builder.Services.AddScoped<IAuditScheduleService, AuditScheduleService>();
 
