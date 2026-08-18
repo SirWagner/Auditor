@@ -1,50 +1,153 @@
-@model CreateAuditScheduleInfo
+@model Auditor.DTO.AuditSchedule.CreateAuditScheduleInfo
+
 @using Auditor.DTO.AuditSchedule
+
 @{
-    ViewData["Title"] = "Create";
+    ViewData["Title"] = "Create Audit Schedule";
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
-<h1>Create</h1>
+<div class="form-page-container">
+    <!-- Breadcrumb -->
+    <div class="form-page-breadcrumb">
+        <a asp-controller="Template" asp-action="Dashboard">Dashboard</a>
+        <span>›</span>
+        <a asp-action="Index">Audit Schedules</a>
+        <span>›</span>
+        <span>Create New</span>
+    </div>
 
-<h4>AuditSchedule</h4>
-<hr />
-<div class="row">
-    <div class="col-md-4">
-        <form asp-action="Create">
-            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-            <div class="form-group">
-                <label asp-for="TemplateId" class="control-label"></label>
-                <select asp-for="TemplateId" class ="form-control" asp-items="ViewBag.TemplateId"></select>
-            </div>
-            <div class="form-group">
-                <label asp-for="SiteId" class="control-label"></label>
-                <select asp-for="SiteId" class ="form-control" asp-items="ViewBag.SiteId"></select>
-            </div>
-            <div class="form-group">
-                <label asp-for="SchedulerId" class="control-label"></label>
-                <select asp-for="SchedulerId" class ="form-control" asp-items="ViewBag.SchedulerId"></select>
+    <!-- Title -->
+    <div class="form-page-title-section">
+        <div class="form-page-title-content">
+            <h1>Create Audit Schedule</h1>
+            <p>Schedule an audit execution using an approved template and assigned site.</p>
+        </div>
+
+        <div class="form-page-meta">
+            <span class="form-meta-badge">New Entry</span>
+        </div>
+    </div>
+
+    <div class="form-wrapper">
+        <!-- MAIN -->
+        <div class="form-main">
+            <div class="form-main-header">
+                <h2>
+                    <i class="fas fa-calendar-check"></i> Schedule Details
+                </h2>
             </div>
 
-            <div class="form-group">
-                <label asp-for="DueDate" class="control-label"></label>
-                <input asp-for="DueDate" class="form-control" />
-                <span asp-validation-for="DueDate" class="text-danger"></span>
+            <div class="form-main-content">
+                <form asp-action="Create" method="post" id="createAuditScheduleForm">
+                    @if (!ViewData.ModelState.IsValid)
+                    {
+                        <div class="validation-alert">
+                            <h3>
+                                <i class="fas fa-times-circle"></i> Form Validation Errors
+                            </h3>
+                            <ul>
+                                @foreach (var modelState in ViewData.ModelState.Values)
+                                {
+                                    @foreach (var error in modelState.Errors)
+                                    {
+                                        <li>@error.ErrorMessage</li>
+                                    }
+                                }
+                            </ul>
+                        </div>
+                    }
+
+                    <!-- Audit Configuration -->
+                    <div class="form-section">
+                        <h3 class="form-section-title">Audit Configuration</h3>
+
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label asp-for="TemplateId">
+                                    Audit Template <span class="required">*</span>
+                                </label>
+                                <select asp-for="TemplateId" asp-items="ViewBag.TemplateId">
+                                    <option value="">Select template</option>
+                                </select>
+                                <span asp-validation-for="TemplateId" class="form-group-error"></span>
+                                <div class="form-group-hint">Select the approved audit template to execute.</div>
+                            </div>
+
+                            <div class="form-group">
+                                <label asp-for="SiteId">
+                                    Audit Site <span class="required">*</span>
+                                </label>
+                                <select asp-for="SiteId" asp-items="ViewBag.SiteId">
+                                    <option value="">Select site</option>
+                                </select>
+                                <span asp-validation-for="SiteId" class="form-group-error"></span>
+                                <div class="form-group-hint">Location where the audit will be performed.</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Scheduling -->
+                    <div class="form-section">
+                        <h3 class="form-section-title">Scheduling Information</h3>
+
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label asp-for="SchedulerId">
+                                    Assigned Scheduler <span class="required">*</span>
+                                </label>
+                                <select asp-for="SchedulerId" asp-items="ViewBag.SchedulerId">
+                                    <option value="">Select scheduler</option>
+                                </select>
+                                <span asp-validation-for="SchedulerId" class="form-group-error"></span>
+                                <div class="form-group-hint">Person responsible for managing this audit.</div>
+                            </div>
+
+                            <div class="form-group">
+                                <label asp-for="DueDate">
+                                    Due Date <span class="required">*</span>
+                                </label>
+                                <input asp-for="DueDate" type="date" />
+                                <span asp-validation-for="DueDate" class="form-group-error"></span>
+                                <div class="form-group-hint">Expected completion date for the audit.</div>
+                            </div>
+                        </div>
+                    </div>
+                </form>
             </div>
-           
-            <div class="form-group">
-                <input type="submit" value="Create" class="btn btn-primary" />
+
+            <div class="form-main-footer">
+                <a asp-action="Index" class="btn-cancel">
+                    <i class="fas fa-times"></i> Cancel
+                </a>
+
+                <button form="createAuditScheduleForm" type="submit" class="btn-submit">
+                    <i class="fas fa-calendar-plus"></i> Create Schedule
+                </button>
             </div>
-        </form>
+        </div>
+
+        <!-- SIDEBAR -->
+        <div class="form-sidebar">
+            <div class="form-sidebar-card">
+                <h3>
+                    <i class="fas fa-info-circle"></i> Information
+                </h3>
+                <p>Audit schedules define when and where inspections will take place. They connect approved templates with operational sites.</p>
+            </div>
+
+            <div class="form-sidebar-card form-sidebar-help">
+                <h3>
+                    <i class="fas fa-lightbulb"></i> Recommendations
+                </h3>
+                <p>Ensure the selected template is reviewed and the assigned scheduler has availability before creating the audit.</p>
+            </div>
+        </div>
     </div>
 </div>
 
-<div>
-    <a asp-action="Index">Back to List</a>
-</div>
-
-
-</div>
 @section Scripts {
-    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
 }
