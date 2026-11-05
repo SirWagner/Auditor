@@ -5,41 +5,21 @@ using System.Diagnostics;
 
 namespace Auditor.Controllers
 {
-    //[Authorize]
     public class HomeController : Controller
     {
-        private readonly ILogger<HomeController> _logger;
-
-        public HomeController(ILogger<HomeController> logger)
-        {
-            _logger = logger;
-        }
-
-        public IActionResult Index()
-        {
-            return View();
-        }
-
-        public IActionResult Privacy()
-        {
-            return View();
-        }
+        // Old links (/Home, /Template/Dashboard) land on the dashboard.
+        [HttpGet("/Home")]
+        [HttpGet("/Home/Index")]
+        [HttpGet("/Template/Dashboard")]
+        public IActionResult Index() => RedirectToAction("Index", "Dashboard");
 
         [AllowAnonymous]
         [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
-        public IActionResult Error()
+        [Route("/error")]
+        public IActionResult Error(int? statusCode = null)
         {
+            ViewBag.StatusCode = statusCode;
             return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
         }
-
-
-        public IActionResult Dashboard()
-        {
-            return View();
-        }
     }
-
-
-
-
 }

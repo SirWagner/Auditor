@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Auditor.Controllers
 {
+    [Microsoft.AspNetCore.Authorization.Authorize(Roles = Auditor.Security.Roles.AdminOrManager)]
     public class ScheduleChangeRequestsController : Controller
     {
         private readonly AuditorContext _context;

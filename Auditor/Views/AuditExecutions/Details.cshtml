@@ -1,160 +1,122 @@
 ﻿@model Auditor.Models.AuditExecution
-
+@using Auditor.Models.Lookups
+@using Auditor.ViewModels.AuditExecution
 @{
-    ViewData["Title"] = "Audit Execution Details";
-    Layout = "~/Views/Shared/_LayoutExec.cshtml";
+    var render = (AuditExecutionRenderViewModel)ViewBag.Render;
+    var canReview = ViewBag.CanReview as bool? ?? false;
+    var result = Model.AuditExecutionResult;
+    var isOwner = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value == Model.AuditorId.ToString();
+    ViewData["Title"] = render.AuditName;
+    ViewData["ReadOnly"] = true;
 }
 
-<h2>Audit Execution Details</h2>
-
-<hr />
-
-<!-- 🔵 FINALIZE BUTTON -->
-@if (Model.Status == "COMPLETED")
-{
-    <div class="mb-3">
-        <button class="btn btn-success"
-                onclick="finalizeAudit(@Model.Id)">
-            Finalize Audit
-        </button>
+<div class="exec-container" style="padding-bottom:40px;">
+    <div class="details-breadcrumb">
+        <a asp-controller="Dashboard" asp-action="Index">Dashboard</a>
+        <span>›</span>
+        <a asp-action="Index">Audit Executions</a>
+        <span>›</span>
+        <span>#@Model.Id</span>
     </div>
-}
 
-<!-- EXECUTION SUMMARY -->
-<div class="card mb-4">
-    <div class="card-body">
-
-        <h5>Execution Summary</h5>
-
-        <p><strong>Status:</strong> @Model.Status</p>
-        <p><strong>Original Audit Date:</strong> @Model.OriginalAuditDate</p>
-        <p><strong>Acceptance Date:</strong> @Model.AcceptanceDate</p>
-        <p><strong>Submission Date:</strong> @Model.SubmissionDate</p>
-        <p><strong>Rejection Reason:</strong> @Model.RejectionReason</p>
-
-        <p><strong>Site:</strong> @Model.Schedule?.Site?.Name</p>
-        <p><strong>Template:</strong> @Model.Schedule?.Template?.Name</p>
-
-    </div>
-</div>
-
-<!-- RESPONSES -->
-<h4>Responses</h4>
-
-@foreach (var response in Model.AuditResponses)
-{
-    <div class="card mb-3">
-        <div class="card-body">
-
-            <p>
-                <strong>Question:</strong>
-                @response.TemplateItem?.QuestionBank?.QuestionText
-            </p>
-
-            <p>
-                <strong>Compliant:</strong>
-                @response.Compliant
-            </p>
-
-            <p>
-                <strong>Comment:</strong>
-                @response.Comment
-            </p>
-
-            <p>
-                <strong>Selected Option:</strong>
-                @response.SelectedOption?.OptionText
-            </p>
-
-            @if (response.Reasons.Any())
+    <div class="exec-header">
+        <div>
+            <h1>@render.AuditName</h1>
+            <div class="exec-meta">
+                <span><i class="typcn typcn-location-outline"></i> @render.SiteName</span>
+                @if (!string.IsNullOrEmpty(render.AirportName))
+                {
+                    <span><i class="typcn typcn-plane-outline"></i> @render.AirportName</span>
+                }
+                <span><i class="typcn typcn-user-outline"></i> @render.AuditorName</span>
+                <span><i class="far fa-calendar"></i> Scheduled @render.ScheduledDate.ToString("dd MMM yyyy HH:mm")</span>
+                @if (Model.SubmissionDate != null)
+                {
+                    <span><i class="fas fa-paper-plane"></i> Submitted @Model.SubmissionDate.Value.ToLocalTime().ToString("dd MMM yyyy HH:mm")</span>
+                }
+            </div>
+        </div>
+        <div style="display:flex;gap:8px;align-items:center;">
+            <span class="status-pill @ExecutionStatuses.PillClass(Model.Status)">@ExecutionStatuses.Label(Model.Status)</span>
+            @if (isOwner && Model.Status is ExecutionStatuses.InProgress or ExecutionStatuses.Rejected)
             {
-                <p><strong>Reasons:</strong></p>
-                <ul>
-                    @foreach (var reason in response.Reasons)
-                    {
-                        <li>@reason.ReasonText</li>
-                    }
-                </ul>
+                <a asp-action="Execute" asp-route-executionId="@Model.Id" class="btn-details-primary"><i class="fas fa-edit"></i> Continue</a>
             }
-
-            @if (response.AuditResponseAttachments.Any())
+            @if (isOwner && Model.Status == ExecutionStatuses.PendingAcceptance)
             {
-                <p><strong>Evidence:</strong></p>
-                <ul>
-                    @foreach (var file in response.AuditResponseAttachments)
-                    {
-                        <li><a href="@file.FileUrl" target="_blank">@file.FileName</a></li>
-                    }
-                </ul>
+                <a asp-action="Accept" asp-route-executionId="@Model.Id" class="btn-details-primary"><i class="fas fa-check"></i> Accept</a>
             }
-
         </div>
     </div>
-}
 
-<!-- ATTACHMENTS -->
-@if (Model.AuditAttachments.Any())
-{
-    <h4>Attachments</h4>
+    <partial name="_PageAlerts" />
 
-    <ul>
-        @foreach (var file in Model.AuditAttachments)
-        {
-            <li>
-                <a href="@file.FileUrl" target="_blank">
-                    @file.FileName
-                </a>
-            </li>
-        }
-    </ul>
-}
+    @if (!string.IsNullOrEmpty(Model.RejectionReason))
+    {
+        <div class="page-alert page-alert-error" role="alert">
+            <i class="fas fa-info-circle"></i>
+            <span><strong>@(Model.Status == ExecutionStatuses.Declined ? "Declined:" : "Returned for changes:")</strong> @Model.RejectionReason</span>
+        </div>
+    }
 
-<div class="mt-3">
-    <a asp-action="Index" class="btn btn-secondary">
-        Back to List
-    </a>
+    @if (result != null)
+    {
+        <div class="dashboard-stats-grid" style="margin-bottom:20px;">
+            <div class="stat-tile @(result.ScorePercentage < 80 ? "stat-tile-warning" : "")">
+                <div class="stat-tile-value">@result.ScorePercentage.ToString("0.#")%</div>
+                <div class="stat-tile-label">Compliance score</div>
+            </div>
+            <div class="stat-tile">
+                <div class="stat-tile-value">@result.CompliantCount</div>
+                <div class="stat-tile-label">Compliant</div>
+            </div>
+            <div class="stat-tile @(result.NonCompliantCount > 0 ? "stat-tile-warning" : "")">
+                <div class="stat-tile-value">@result.NonCompliantCount</div>
+                <div class="stat-tile-label">Not compliant</div>
+            </div>
+            <div class="stat-tile">
+                <div class="stat-tile-value">@(result.NotApplicableCount ?? 0)</div>
+                <div class="stat-tile-label">Not applicable</div>
+            </div>
+        </div>
+    }
+
+    @if (canReview)
+    {
+        <div class="details-info-card">
+            <div class="details-info-card-header">
+                <i class="fas fa-clipboard-check"></i>
+                <h2>Review</h2>
+            </div>
+            <div class="details-info-card-body">
+                <form asp-action="Review" asp-route-id="@Model.Id" method="post" style="display:inline;">
+                    <input type="hidden" name="decision" value="close" />
+                    <button type="submit" class="btn-submit"><i class="fas fa-check"></i> Approve and Close</button>
+                </form>
+                <form asp-action="Review" asp-route-id="@Model.Id" method="post" class="list-filters" style="margin-top:14px;">
+                    <input type="hidden" name="decision" value="return" />
+                    <input type="text" name="reason" class="form-control" placeholder="What should the auditor change?" required style="max-width:460px;" aria-label="Reason for returning" />
+                    <button type="submit" class="action-btn btn-delete">Return for Changes</button>
+                </form>
+            </div>
+        </div>
+    }
+
+    <div style="display:flex;justify-content:flex-end;margin:8px 0 4px;">
+        <label style="font-size:13px;cursor:pointer;">
+            <input type="checkbox" id="onlyIssues" /> Show only non-compliant answers
+        </label>
+    </div>
+
+    <partial name="_SectionedQuestions" model="render" view-data="ViewData" />
 </div>
 
 @section Scripts {
-
+    <script src="~/js/audit-sections.js" asp-append-version="true"></script>
     <script>
-
-        function finalizeAudit(id) {
-
-            Swal.fire({
-                title: 'Finalize Audit?',
-                text: "This will close the audit permanently.",
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonText: 'Yes, finalize it'
-            }).then((result) => {
-
-                if (!result.isConfirmed) return;
-
-                fetch('/AuditExecution/Finalize', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ id: id })
-                })
-                    .then(res => res.json())
-                    .then(data => {
-
-                        if (data.success) {
-
-                            Swal.fire('Finalized!', '', 'success')
-                                .then(() => location.reload());
-
-                        } else {
-
-                            Swal.fire('Error', data.message, 'error');
-                        }
-
-                    });
-
-            });
-        }
-
+        // Hides compliant answers; tabs and groups left empty are hidden too.
+        document.getElementById('onlyIssues')?.addEventListener('change', function () {
+            window.auditSections?.filter(this.checked ? q => q.classList.contains('non-compliant') : null);
+        });
     </script>
 }

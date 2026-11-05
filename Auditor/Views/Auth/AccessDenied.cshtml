@@ -1,0 +1,16 @@
+@{
+    ViewData["Title"] = "Access Denied";
+}
+
+<div class="list-container">
+    <div class="list-table-wrapper">
+        <div class="list-empty-state">
+            <div class="empty-state-icon">🔒</div>
+            <h2 class="empty-state-title">You don't have access to this page</h2>
+            <p class="empty-state-text">
+                Your role doesn't include this area. If you need it, ask an administrator to change your role.
+            </p>
+            <a asp-controller="Dashboard" asp-action="Index" class="btn-list-primary">Back to Dashboard</a>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,259 @@
+@model Auditor.ViewModels.Shared.AuditFilterPanel
+@using System.Text.Json
+@{
+    var f = Model.Filter;
+    var airportName = Model.Airports.FirstOrDefault(a => a.Id == f.AirportId);
+    var siteName = Model.Sites.FirstOrDefault(s => s.Id == f.SiteId)?.Name;
+    var templateName = Model.Templates.FirstOrDefault(t => t.Id == f.TemplateId).Name;
+    var auditorName = Model.Auditors.FirstOrDefault(a => a.Id == f.AuditorId).Name;
+    var statusLabel = Model.Statuses.FirstOrDefault(s => s.Value == f.Status).Label;
+    var areas = Model.Sites.Select(s => s.Area).Where(a => !string.IsNullOrEmpty(a)).Distinct().OrderBy(a => a).ToList();
+    var baseUrl = Url.Action(Model.Action, Model.Controller);
+    var clearUrl = Model.ClearUrl ?? baseUrl;
+
+    // One chip per active filter; each chip's × link drops just that value.
+    var chips = new List<(string Label, string Key)>();
+    if (f.AirportId != null && !Model.AirportLocked) chips.Add(($"Airport: {airportName.Code}", "AirportId"));
+    if (f.Area != null) chips.Add(($"Area: {f.Area}", "Area"));
+    if (f.Location != null) chips.Add(($"Location: {f.Location}", "Location"));
+    if (f.SiteId != null) chips.Add(($"Site: {siteName}", "SiteId"));
+    if (f.TemplateId != null) chips.Add(($"Template: {templateName}", "TemplateId"));
+    if (f.AuditorId != null) chips.Add(($"Auditor: {auditorName}", "AuditorId"));
+    if (f.From != null) chips.Add(($"From {f.From:dd MMM yyyy}", "From"));
+    if (f.To != null) chips.Add(($"To {f.To:dd MMM yyyy}", "To"));
+    if (f.Status != null) chips.Add(($"Status: {statusLabel ?? f.Status}", "Status"));
+    foreach (var x in Model.Extras.Where(x => x.Selected != null))
+    {
+        chips.Add(($"{x.Label}: {x.SelectedLabel}", x.Key));
+    }
+
+    string Without(string key)
+    {
+        var values = f.RouteValues();
+        values.Remove(key);
+        return baseUrl + (values.Count == 0 ? "" : "?" + string.Join("&", values.Select(kv => $"{kv.Key}={Uri.EscapeDataString(kv.Value)}")));
+    }
+}
+
+<div class="filter-bar">
+    <button type="button" class="filter-open" data-bs-toggle="modal" data-bs-target="#auditFilterModal">
+        <i class="fas fa-sliders-h"></i> Filters
+        @if (chips.Count > 0)
+        {
+            <span class="filter-count">@chips.Count</span>
+        }
+    </button>
+
+    @if (Model.AirportLocked && airportName.Code != null)
+    {
+        <span class="filter-chip filter-chip-locked" title="Your account is limited to this airport">
+            <i class="fas fa-lock"></i> @airportName.Code · @airportName.Name
+        </span>
+    }
+
+    @foreach (var c in chips)
+    {
+        <a class="filter-chip" href="@Without(c.Key)" title="Remove this filter">@c.Label <span aria-hidden="true">×</span></a>
+    }
+
+    @if (chips.Count > 0)
+    {
+        <a class="filter-clear" href="@clearUrl">Clear all</a>
+    }
+    else
+    {
+        <span class="filter-hint">Showing all</span>
+    }
+</div>
+
+<div class="modal fade" id="auditFilterModal" tabindex="-1" aria-labelledby="auditFilterTitle" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+        <form method="get" action="@baseUrl" class="modal-content filter-modal" id="auditFilterForm">
+            <div class="modal-header">
+                <h2 class="modal-title" id="auditFilterTitle">@Model.Title</h2>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                @foreach (var h in Model.Hidden)
+                {
+                    <input type="hidden" name="@h.Key" value="@h.Value" />
+                }
+                <div class="filter-grid">
+                    <div class="form-group">
+                        <label for="fAirport">Airport</label>
+                        @if (Model.AirportLocked)
+                        {
+                            <select id="fAirport" disabled>
+                                <option>@airportName.Code · @airportName.Name</option>
+                            </select>
+                        }
+                        else
+                        {
+                            <select id="fAirport" name="AirportId">
+                                <option value="">All airports</option>
+                                @foreach (var a in Model.Airports)
+                                {
+                                    <option value="@a.Id" selected="@(a.Id == f.AirportId)">@a.Code · @a.Name</option>
+                                }
+                            </select>
+                        }
+                    </div>
+
+                    <div class="form-group">
+                        <label for="fArea">Area</label>
+                        <select id="fArea" name="Area">
+                            <option value="">All areas</option>
+                            @foreach (var a in areas)
+                            {
+                                <option value="@a" selected="@(a == f.Area)">@a</option>
+                            }
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="fLocation">Location</label>
+                        <select id="fLocation" name="Location" data-selected="@f.Location">
+                            <option value="">All locations</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="fSite">Site</label>
+                        <select id="fSite" name="SiteId" data-selected="@f.SiteId">
+                            <option value="">All sites</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="fFrom">Scheduled from</label>
+                        <input type="date" id="fFrom" name="From" value="@f.From?.ToString("yyyy-MM-dd")" />
+                    </div>
+
+                    <div class="form-group">
+                        <label for="fTo">Scheduled to</label>
+                        <input type="date" id="fTo" name="To" value="@f.To?.ToString("yyyy-MM-dd")" />
+                    </div>
+
+                    <div class="form-group">
+                        <label for="fTemplate">Template</label>
+                        <select id="fTemplate" name="TemplateId">
+                            <option value="">All templates</option>
+                            @foreach (var t in Model.Templates)
+                            {
+                                <option value="@t.Id" selected="@(t.Id == f.TemplateId)">@t.Name</option>
+                            }
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="fStatus">Status</label>
+                        <select id="fStatus" name="Status">
+                            <option value="">All statuses</option>
+                            @foreach (var s in Model.Statuses)
+                            {
+                                <option value="@s.Value" selected="@(s.Value == f.Status)">@s.Label</option>
+                            }
+                        </select>
+                    </div>
+
+                    @foreach (var x in Model.Extras)
+                    {
+                        <div class="form-group">
+                            <label for="f@(x.Key)">@x.Label</label>
+                            <select id="f@(x.Key)" name="@x.Key">
+                                <option value="">@x.AllLabel</option>
+                                @foreach (var o in x.Options)
+                                {
+                                    <option value="@o.Value" selected="@(o.Value == x.Selected)">@o.Label</option>
+                                }
+                            </select>
+                        </div>
+                    }
+
+                    @if (Model.ShowAuditor)
+                    {
+                        <div class="form-group">
+                            <label for="fAuditor">Auditor</label>
+                            <select id="fAuditor" name="AuditorId">
+                                <option value="">All auditors</option>
+                                @foreach (var a in Model.Auditors)
+                                {
+                                    <option value="@a.Id" selected="@(a.Id == f.AuditorId)">@a.Name</option>
+                                }
+                            </select>
+                        </div>
+                    }
+                </div>
+
+                <div class="filter-presets">
+                    <span>Quick dates:</span>
+                    <button type="button" data-days="7">Last 7 days</button>
+                    <button type="button" data-days="30">Last 30 days</button>
+                    <button type="button" data-days="90">Last 90 days</button>
+                    <button type="button" data-next="7">Next 7 days</button>
+                    <button type="button" data-clear-dates>Any date</button>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <a href="@clearUrl" class="btn-cancel">Reset</a>
+                <button type="submit" class="btn-submit"><i class="fas fa-check"></i> Apply filters</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    (function () {
+        const sites = @Html.Raw(JsonSerializer.Serialize(Model.Sites.Select(s => new { id = s.Id, name = s.Name, airport = s.AirportId, area = s.Area, location = s.Location }), new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase }));
+        const lockedAirport = @(Model.AirportLocked ? f.AirportId?.ToString() ?? "null" : "null");
+        const form = document.getElementById('auditFilterForm');
+        const airport = document.getElementById('fAirport');
+        const area = document.getElementById('fArea');
+        const location = document.getElementById('fLocation');
+        const site = document.getElementById('fSite');
+
+        function matching(ignoreLocation) {
+            const a = lockedAirport ?? (airport.value ? Number(airport.value) : null);
+            return sites.filter(s =>
+                (!a || s.airport === a) &&
+                (!area.value || s.area === area.value) &&
+                (ignoreLocation || !location.value || s.location === location.value));
+        }
+
+        function fill(select, items, allLabel, selected) {
+            select.innerHTML = '';
+            select.add(new Option(allLabel, ''));
+            items.forEach(([value, label]) => select.add(new Option(label, value, false, String(value) === String(selected ?? ''))));
+        }
+
+        function refresh(initial) {
+            const locSelected = initial ? location.dataset.selected : location.value;
+            const locations = [...new Set(matching(true).map(s => s.location).filter(Boolean))].sort();
+            fill(location, locations.map(l => [l, l]), 'All locations', locSelected);
+
+            const siteSelected = initial ? site.dataset.selected : site.value;
+            fill(site, matching(false).map(s => [s.id, s.name]), 'All sites', siteSelected);
+        }
+
+        [airport, area].forEach(el => el && el.addEventListener('change', () => refresh(false)));
+        location.addEventListener('change', () => {
+            const keep = site.value;
+            fill(site, matching(false).map(s => [s.id, s.name]), 'All sites', keep);
+        });
+        refresh(true);
+
+        const iso = d => d.toISOString().slice(0, 10);
+        form.querySelectorAll('.filter-presets button').forEach(b => b.addEventListener('click', () => {
+            const from = form.querySelector('[name=From]'), to = form.querySelector('[name=To]');
+            const today = new Date();
+            if (b.dataset.days) { const d = new Date(); d.setDate(d.getDate() - Number(b.dataset.days)); from.value = iso(d); to.value = iso(today); }
+            else if (b.dataset.next) { const d = new Date(); d.setDate(d.getDate() + Number(b.dataset.next)); from.value = iso(today); to.value = iso(d); }
+            else { from.value = ''; to.value = ''; }
+        }));
+
+        // Don't send empty fields, so the URL only shows filters that are actually set.
+        form.addEventListener('submit', () => {
+            form.querySelectorAll('select, input').forEach(el => { if (!el.value) el.disabled = true; });
+        });
+    })();
+</script>

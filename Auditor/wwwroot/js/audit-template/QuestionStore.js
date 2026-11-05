@@ -1,11 +1,13 @@
 ﻿export default class QuestionStore {
-    constructor(questionBank = [], addedQuestionsId = new Set()) {
+    constructor(questionBank = []) {
 
         this.availableQuestions = questionBank;
 
-        this.addedQuestionIds = addedQuestionsId;
+        // questionId -> how many cards use it. A question can be added once per section
+        // (e.g. "Are the floors clean?" on Arrival and again on Seating).
+        this.usage = new Map();
 
-        this.nextQuestionIndex = addedQuestionsId.size;
+        this.nextQuestionIndex = 0;
     }
 
     /* -----------------------------
@@ -13,50 +15,37 @@
      * ----------------------------- */
 
     addQuestion(questionId) {
-        this.addedQuestionIds.add(Number(questionId));
+        const id = Number(questionId);
+        this.usage.set(id, (this.usage.get(id) || 0) + 1);
     }
 
     removeQuestion(questionId) {
-        this.addedQuestionIds.delete(Number(questionId));
+        const id = Number(questionId);
+        const count = (this.usage.get(id) || 0) - 1;
+        if (count > 0) this.usage.set(id, count);
+        else this.usage.delete(id);
     }
 
     hasQuestion(questionId) {
-        return this.addedQuestionIds.has(Number(questionId));
-    }
-
-    getAddedQuestionIds() {
-        return this.addedQuestionIds;
+        return this.usage.has(Number(questionId));
     }
 
     getQuestionCount() {
-        return this.addedQuestionIds.size;
+        let total = 0;
+        this.usage.forEach(count => { total += count; });
+        return total;
     }
 
     /* -----------------------------
-     * INDEX MANAGEMENT (IMPORTANT FIX)
+     * INDEX MANAGEMENT
      * ----------------------------- */
 
-    /**
-     * IMPORTANT:
-     * This guarantees sequential index generation
-     * and removes manual increment calls everywhere.
-     */
     getNextQuestionIndex() {
         return this.nextQuestionIndex++;
     }
 
-    /**
-     * Used ONLY after deletion/rebuild scenarios
-     */
     resetIndex(newIndex) {
         this.nextQuestionIndex = newIndex;
-    }
-
-    /**
-     * Rebuild index based on current UI state (safe sync)
-     */
-    syncIndexToCount(currentCount) {
-        this.nextQuestionIndex = currentCount;
     }
 
     /* -----------------------------

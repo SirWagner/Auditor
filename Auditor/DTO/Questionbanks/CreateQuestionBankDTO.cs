@@ -12,6 +12,8 @@
 
         public string? ResponsibleContractor { get; set; }
 
+        public long? ReferenceListId { get; set; }
+
         public bool IsActive { get; set; }
 
         public int CreatedBy { get; set; }

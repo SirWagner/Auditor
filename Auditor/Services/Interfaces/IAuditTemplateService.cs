@@ -5,7 +5,8 @@ namespace Auditor.Services.Interfaces
 {
     public interface IAuditTemplateService
     {
-        Task<List<AuditTemplateListViewModel>> GetAllAsync();
+        /// <param name="scopeAirportId">When set, only templates usable at this airport (its own or all-airport ones).</param>
+        Task<List<AuditTemplateListViewModel>> GetAllAsync(long? scopeAirportId = null);
         Task<AuditTemplateDetailsDTO> GetById(long id);
 
         Task CreateAsync(AuditTemplateCreateDTO auditTemplateDTO);

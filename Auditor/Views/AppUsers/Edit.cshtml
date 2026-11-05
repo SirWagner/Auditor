@@ -1,0 +1,40 @@
+@model Auditor.ViewModels.Users.AppUserFormViewModel
+@{
+    ViewData["Title"] = "Edit User";
+}
+
+<div class="form-page-container">
+    <div class="form-page-breadcrumb">
+        <a asp-controller="Dashboard" asp-action="Index">Dashboard</a>
+        <span>›</span>
+        <a asp-action="Index">Users</a>
+        <span>›</span>
+        <span>Edit</span>
+    </div>
+
+    <div class="form-page-title-section">
+        <div class="form-page-title-content">
+            <h1>Edit User</h1>
+            <p>@Model.DisplayName · @Model.EmployeeNumber</p>
+        </div>
+        <div class="form-page-meta"><span class="form-meta-badge">Editing</span></div>
+    </div>
+
+    <div class="form-wrapper">
+        <div class="form-main">
+            <div class="form-main-header">
+                <h2><i class="typcn typcn-user-outline"></i> User Details</h2>
+            </div>
+            <div class="form-main-content">
+                <form asp-action="Edit" method="post" novalidate id="userForm">
+                    <input type="hidden" asp-for="Id" />
+                    <partial name="_UserForm" model="Model" />
+                </form>
+            </div>
+            <div class="form-main-footer">
+                <a asp-action="Index" class="btn-cancel"><i class="fas fa-times"></i> Cancel</a>
+                <button form="userForm" type="submit" class="btn-submit"><i class="fas fa-save"></i> Save Changes</button>
+            </div>
+        </div>
+    </div>
+</div>

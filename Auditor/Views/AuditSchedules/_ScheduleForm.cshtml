@@ -1,0 +1,121 @@
+@model Auditor.ViewModels.AuditSchedule.AuditScheduleFormViewModel
+@{
+    var airports = ViewBag.Airports as List<Airport> ?? new();
+    var templates = ViewBag.Templates as List<Auditor.ViewModels.AuditSchedule.TemplateOption> ?? new();
+    var auditors = ViewBag.Auditors as List<AppUser> ?? new();
+}
+
+@if (!ViewData.ModelState.IsValid)
+{
+    <div class="validation-alert">
+        <h3><i class="fas fa-times-circle"></i> Fix the following before saving</h3>
+        <ul>
+            @foreach (var error in ViewData.ModelState.Values.SelectMany(v => v.Errors))
+            {
+                <li>@error.ErrorMessage</li>
+            }
+        </ul>
+    </div>
+}
+
+<div class="form-section">
+    <h3 class="form-section-title">Where</h3>
+    <div class="form-grid">
+        <div class="form-group">
+            <label asp-for="AirportId">Airport <span class="required">*</span></label>
+            <select asp-for="AirportId" id="airportSelect" required>
+                <option value="">-- Select an Airport --</option>
+                @foreach (var a in airports)
+                {
+                    <option value="@a.Id" selected="@(a.Id == Model.AirportId)">@a.Code · @a.Name</option>
+                }
+            </select>
+            <span asp-validation-for="AirportId" class="form-group-error"></span>
+        </div>
+
+        <div class="form-group">
+            <label asp-for="SiteId">Audit Site <span class="required">*</span></label>
+            <select asp-for="SiteId" id="siteSelect" data-selected="@Model.SiteId" required>
+                <option value="">-- Select an Airport first --</option>
+            </select>
+            <span asp-validation-for="SiteId" class="form-group-error"></span>
+        </div>
+    </div>
+</div>
+
+<div class="form-section">
+    <h3 class="form-section-title">What</h3>
+    <div class="form-grid full">
+        <div class="form-group">
+            <label asp-for="TemplateId">Audit Template <span class="required">*</span></label>
+            <select asp-for="TemplateId" id="templateSelect" required>
+                <option value="">-- Select a Template --</option>
+                @foreach (var t in templates)
+                {
+                    <option value="@t.Id" selected="@(t.Id == Model.TemplateId)">@t.Name (v@(t.Version), @t.Questions questions)</option>
+                }
+            </select>
+            <span asp-validation-for="TemplateId" class="form-group-error"></span>
+            <div class="form-group-hint" id="templateHint">Only templates available for the selected site are listed.</div>
+        </div>
+    </div>
+</div>
+
+<div class="form-section">
+    <h3 class="form-section-title">When</h3>
+    <div class="form-grid">
+        <div class="form-group">
+            <label asp-for="ScheduledDate">Scheduled Date &amp; Time <span class="required">*</span></label>
+            <input asp-for="ScheduledDate" type="datetime-local" required />
+            <span asp-validation-for="ScheduledDate" class="form-group-error"></span>
+        </div>
+        <div class="form-group">
+            <label asp-for="DueDate">Due Date &amp; Time <span class="required">*</span></label>
+            <input asp-for="DueDate" type="datetime-local" required />
+            <span asp-validation-for="DueDate" class="form-group-error"></span>
+            <div class="form-group-hint">Schedules not started by this time are cancelled automatically.</div>
+        </div>
+    </div>
+</div>
+
+<div class="form-section">
+    <h3 class="form-section-title">Who <span class="required">*</span></h3>
+    <p class="form-section-description">The audit appears under "My Audits" for every auditor you assign.</p>
+    @if (auditors.Count == 0)
+    {
+        <div class="page-alert page-alert-error">
+            <i class="fas fa-exclamation-circle"></i>
+            <span>There are no active users with the Auditor role. Ask an administrator to create one under Users.</span>
+        </div>
+    }
+    else
+    {
+        <div class="check-list">
+            @foreach (var u in auditors)
+            {
+                <label data-airport="@u.AirportId">
+                    <input type="checkbox" name="AuditorIds" value="@u.Id" checked="@(Model.AuditorIds.Contains(u.Id))" />
+                    <span>@u.DisplayName <small>@u.EmployeeNumber · @(u.AirportId == null ? "all airports" : "this airport")</small></span>
+                </label>
+            }
+        </div>
+    }
+    <span asp-validation-for="AuditorIds" class="form-group-error"></span>
+</div>
+
+@if (!Model.IsNew)
+{
+    <div class="form-section">
+        <h3 class="form-section-title">Reason for Change <span class="required">*</span></h3>
+        <div class="form-grid full">
+            <div class="form-group">
+                <textarea asp-for="ModificationReason" maxlength="1000" placeholder="e.g. Site closed for maintenance on the original date"></textarea>
+                <span asp-validation-for="ModificationReason" class="form-group-error"></span>
+            </div>
+        </div>
+    </div>
+}
+
+<script>
+    window.scheduleForm = { siteOptionsUrl: '@Url.Action("SiteOptions", "AuditSchedules")' };
+</script>

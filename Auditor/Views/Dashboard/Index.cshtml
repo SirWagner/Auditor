@@ -1,0 +1,431 @@
+@model Auditor.ViewModels.Dashboard.DashboardViewModel
+@using Auditor.Models.Lookups
+@using Auditor.Security
+@using Auditor.ViewModels.Dashboard
+@{
+    ViewData["Title"] = "Dashboard";
+    var f = Model.Filter;
+    var target = Model.TargetScore;
+    var isManager = User.IsInRole(Roles.Admin) || User.IsInRole(Roles.Manager);
+    var periodLabel = f.Days switch { 30 => "last 30 days", 365 => "last 12 months", _ => "last 90 days" };
+    var airport = Model.Airports.FirstOrDefault(a => a.Id == f.AirportId);
+
+    string Band(decimal? score) => score == null ? "none" : score >= target ? "good" : score >= target - 10 ? "warn" : "bad";
+    string BandLabel(decimal? score) => score == null ? "No data" : score >= target ? "On target" : score >= target - 10 ? "Below target" : "Needs attention";
+    string Pct(decimal? v) => v == null ? "—" : v.Value.ToString("0.#") + "%";
+
+    string Delta(decimal? now, decimal? before, string unit)
+    {
+        if (now == null || before == null) return "";
+        var d = now.Value - before.Value;
+        if (Math.Abs(d) < 0.05m) return "No change on the previous period";
+        return $"{(d > 0 ? "▲" : "▼")} {Math.Abs(d):0.#}{unit} on the previous period";
+    }
+    string CountDelta(int now, int before)
+    {
+        if (before == 0) return now == 0 ? "" : "None in the previous period";
+        var d = now - before;
+        return d == 0 ? "Same as the previous period" : $"{(d > 0 ? "▲" : "▼")} {Math.Abs(d)} on the previous period";
+    }
+
+    // ---- trend chart geometry ----
+    const double W = 640, H = 230, L = 44, R = 624, T = 18, B = 180;
+    var scores = Model.Trend.Where(p => p.Score != null).Select(p => (double)p.Score!.Value).ToList();
+    var floor = scores.Count == 0 ? 50 : Math.Max(0, Math.Floor((Math.Min(scores.Min(), (double)target) - 10) / 10) * 10);
+    double Y(double v) => T + (100 - v) / (100 - floor) * (B - T);
+    double X(int i) => Model.Trend.Count <= 1 ? (L + R) / 2 : L + i * (R - L) / (Model.Trend.Count - 1);
+    var segments = new List<List<(double X, double Y)>>();
+    var current = new List<(double X, double Y)>();
+    for (var i = 0; i < Model.Trend.Count; i++)
+    {
+        var s = Model.Trend[i].Score;
+        if (s == null) { if (current.Count > 0) { segments.Add(current); current = new(); } continue; }
+        current.Add((X(i), Y((double)s.Value)));
+    }
+    if (current.Count > 0) { segments.Add(current); }
+    string Fmt(double v) => v.ToString("0.#", System.Globalization.CultureInfo.InvariantCulture);
+    var pipelineTotal = Model.Pipeline.Sum(p => p.Count);
+}
+
+<div class="dash">
+    <div class="dash-head">
+        <div>
+            <h1>@(Model.PersonalScope ? "My Dashboard" : "Audit Performance")</h1>
+            <p class="dash-sub">
+                @(Model.PersonalScope ? "Your audits" : airport == null ? "All airports" : airport.Name), @periodLabel
+                · target @target.ToString("0")% compliance
+            </p>
+        </div>
+
+        <form method="get" class="dash-filters">
+            <div class="dash-segment" role="radiogroup" aria-label="Period">
+                @foreach (var d in DashboardFilter.PeriodOptions)
+                {
+                    <label>
+                        <input type="radio" name="days" value="@d" checked="@(f.Days == d)" onchange="this.form.submit()" />
+                        <span>@(d == 365 ? "12 months" : d + " days")</span>
+                    </label>
+                }
+            </div>
+            @if (Model.AirportLocked && airport != null)
+            {
+                <span class="filter-chip filter-chip-locked" title="Your account is limited to this airport"><i class="fas fa-lock"></i> @airport.Code · @airport.Name</span>
+            }
+            else if (!Model.PersonalScope)
+            {
+                <select name="airportId" class="form-control" aria-label="Airport" onchange="this.form.submit()">
+                    <option value="">All airports</option>
+                    @foreach (var a in Model.Airports)
+                    {
+                        <option value="@a.Id" selected="@(a.Id == f.AirportId)">@a.Code · @a.Name</option>
+                    }
+                </select>
+            }
+            <noscript><button type="submit" class="action-btn btn-view">Apply</button></noscript>
+        </form>
+    </div>
+
+    <partial name="_PageAlerts" />
+
+    @* ================= KPI tiles ================= *@
+    <div class="kpi-grid">
+        <div class="kpi kpi-hero kpi-@Band(Model.AverageScore)">
+            <div class="kpi-label">Average compliance</div>
+            <div class="kpi-value">@Pct(Model.AverageScore)</div>
+            <div class="kpi-status"><span class="band-dot"></span>@BandLabel(Model.AverageScore)</div>
+            <div class="kpi-foot">@Delta(Model.AverageScore, Model.PreviousAverageScore, " pts")</div>
+        </div>
+
+        <div class="kpi">
+            <div class="kpi-label">Audits submitted</div>
+            <div class="kpi-value">@Model.AuditsSubmitted</div>
+            <div class="kpi-foot">@CountDelta(Model.AuditsSubmitted, Model.PreviousAuditsSubmitted)</div>
+        </div>
+
+        <div class="kpi @(Model.NonCompliantFindings > 0 ? "kpi-attention" : "")">
+            <div class="kpi-label">Non-compliant findings</div>
+            <div class="kpi-value">@Model.NonCompliantFindings</div>
+            <div class="kpi-foot">across @Model.QuestionsAnswered.ToString("N0") answers</div>
+        </div>
+
+        @if (Model.PersonalScope)
+        {
+            <a class="kpi kpi-link @(Model.ReadyToStart > 0 ? "kpi-attention" : "")" asp-controller="AuditExecutions" asp-action="Index">
+                <div class="kpi-label">Ready to start</div>
+                <div class="kpi-value">@Model.ReadyToStart</div>
+                <div class="kpi-foot">Open My Audits →</div>
+            </a>
+        }
+        else
+        {
+            <a class="kpi kpi-link @(Model.AwaitingReview > 0 ? "kpi-attention" : "")" asp-controller="AuditExecutions" asp-action="Index" asp-route-status="@ExecutionStatuses.Completed">
+                <div class="kpi-label">Awaiting review</div>
+                <div class="kpi-value">@Model.AwaitingReview</div>
+                <div class="kpi-foot">Submitted audits to approve →</div>
+            </a>
+        }
+
+        <div class="kpi @(Model.OverdueSchedules > 0 ? "kpi-alert" : "")">
+            <div class="kpi-label">Overdue</div>
+            <div class="kpi-value">@Model.OverdueSchedules</div>
+            <div class="kpi-foot">past their due date</div>
+        </div>
+
+        <div class="kpi">
+            <div class="kpi-label">Due in 7 days</div>
+            <div class="kpi-value">@Model.DueThisWeek</div>
+            <div class="kpi-foot">open schedules</div>
+        </div>
+    </div>
+
+    @* ================= Trend + pipeline ================= *@
+    <div class="dash-row dash-row-wide">
+        <section class="panel">
+            <header class="panel-head">
+                <h2>Compliance trend</h2>
+                <span class="panel-hint">Average score per @(f.Days <= 31 ? "week" : "month") · <span class="legend-target"></span> target</span>
+            </header>
+            @if (scores.Count == 0)
+            {
+                <div class="panel-empty">
+                    <p>No audits were submitted in the @periodLabel.</p>
+                    @if (isManager)
+                    {
+                        <a asp-controller="AuditSchedules" asp-action="Create" class="action-btn btn-view">Schedule an audit</a>
+                    }
+                </div>
+            }
+            else
+            {
+                <svg class="trend" viewBox="0 0 @W @H" role="img" aria-label="Compliance trend">
+                    @foreach (var g in new[] { floor, floor + (100 - floor) / 2, 100.0 })
+                    {
+                        <g>
+                            <line x1="@L" x2="@R" y1="@Fmt(Y(g))" y2="@Fmt(Y(g))" class="trend-grid" />
+                            @if (Math.Abs(g - (double)target) > 3)
+                            {
+                                <g><text x="@(L - 8)" y="@Fmt(Y(g) + 4)" class="trend-axis" text-anchor="end">@Fmt(g)%</text></g>
+                            }
+                        </g>
+                    }
+                    <line x1="@L" x2="@R" y1="@Fmt(Y((double)target))" y2="@Fmt(Y((double)target))" class="trend-target" />
+                    <text x="@(L - 8)" y="@Fmt(Y((double)target) + 4)" class="trend-target-label" text-anchor="end">@target.ToString("0")%</text>
+
+                    @foreach (var seg in segments)
+                    {
+                        if (seg.Count > 1)
+                        {
+                            var pts = string.Join(" ", seg.Select(p => $"{Fmt(p.X)},{Fmt(p.Y)}"));
+                            <polygon points="@($"{Fmt(seg[0].X)},{Fmt(B)} {pts} {Fmt(seg[^1].X)},{Fmt(B)}")" class="trend-area" />
+                            <polyline points="@pts" class="trend-line" />
+                        }
+                    }
+
+                    @for (var i = 0; i < Model.Trend.Count; i++)
+                    {
+                        var p = Model.Trend[i];
+                        var showLabel = Model.Trend.Count <= 8 || i % 2 == (Model.Trend.Count - 1) % 2;
+                        var isLast = i == Model.Trend.FindLastIndex(t => t.Score != null);
+                        var countText = p.Audits == 0 ? "" : p.Audits + (p.Audits == 1 ? " audit" : " audits");
+                        <g>
+                            @if (showLabel)
+                            {
+                                <g><text x="@Fmt(X(i))" y="@(B + 18)" class="trend-axis" text-anchor="middle">@p.Label</text></g>
+                            }
+                            @if (p.Score != null)
+                            {
+                                <g class="trend-point trend-@Band(p.Score)">
+                                    <title>@p.Label: @Pct(p.Score) from @p.Audits audit(s)</title>
+                                    <circle cx="@Fmt(X(i))" cy="@Fmt(Y((double)p.Score))" r="@(isLast ? 6 : 4.5)" />
+                                    @if (isLast || Model.Trend.Count <= 6)
+                                    {
+                                        <g><text x="@Fmt(X(i))" y="@Fmt(Y((double)p.Score) - 11)" text-anchor="middle" class="trend-value">@Pct(p.Score)</text></g>
+                                    }
+                                </g>
+                            }
+                            else
+                            {
+                                <g><text x="@Fmt(X(i))" y="@(B - 6)" class="trend-axis" text-anchor="middle">–</text></g>
+                            }
+                            <text x="@Fmt(X(i))" y="@(B + 34)" class="trend-count" text-anchor="middle">@countText</text>
+                        </g>
+                    }
+                </svg>
+            }
+        </section>
+
+        <section class="panel">
+            <header class="panel-head">
+                <h2>Audit pipeline</h2>
+                <span class="panel-hint">Work in progress right now</span>
+            </header>
+            @if (pipelineTotal == 0)
+            {
+                <div class="panel-empty"><p>Nothing in progress.</p></div>
+            }
+            else
+            {
+                <div class="pipe-bar" role="img" aria-label="Audit pipeline">
+                    @foreach (var s in Model.Pipeline.Where(p => p.Count > 0))
+                    {
+                        <span class="@s.CssClass" style="flex-grow:@s.Count" title="@s.Label: @s.Count"></span>
+                    }
+                </div>
+            }
+            <ul class="pipe-legend">
+                @foreach (var s in Model.Pipeline)
+                {
+                    <li><span class="pipe-swatch @s.CssClass"></span><span class="pipe-name">@s.Label</span><strong>@s.Count</strong></li>
+                }
+            </ul>
+            <div class="programme">
+                <div><strong>@Model.ActiveAirports</strong><span>airports</span></div>
+                <div><strong>@Model.ActiveSites</strong><span>sites</span></div>
+                <div><strong>@Model.ActiveTemplates</strong><span>templates</span></div>
+                <div><strong>@Model.ActiveAuditors</strong><span>auditors</span></div>
+            </div>
+        </section>
+    </div>
+
+    @* ================= Breakdowns ================= *@
+    <div class="dash-row">
+        @if (!Model.PersonalScope && f.AirportId == null)
+        {
+            <section class="panel">
+                <header class="panel-head">
+                    <h2>By airport</h2>
+                    <span class="panel-hint">Lowest first</span>
+                </header>
+                <partial name="_ScoreBars" model="@(new ScoreBarsModel(Model.ByAirport, target, "airport", "No audits submitted in this period."))" />
+            </section>
+        }
+        else
+        {
+            <section class="panel">
+                <header class="panel-head">
+                    <h2>Lowest-scoring sites</h2>
+                    <span class="panel-hint">Average score per site</span>
+                </header>
+                <partial name="_ScoreBars" model="@(new ScoreBarsModel(Model.LowestSites, target, "site", "No audits submitted in this period."))" />
+            </section>
+        }
+
+        <section class="panel">
+            <header class="panel-head">
+                <h2>By category</h2>
+                <span class="panel-hint">Share of answers that were compliant</span>
+            </header>
+            <partial name="_ScoreBars" model="@(new ScoreBarsModel(Model.ByCategory, target, "category", "No compliance answers in this period."))" />
+        </section>
+    </div>
+
+    <div class="dash-row">
+        <section class="panel">
+            <header class="panel-head">
+                <h2>Most failed questions</h2>
+                <span class="panel-hint">Non-compliant answers, @periodLabel</span>
+            </header>
+            @if (Model.TopFailedQuestions.Count == 0)
+            {
+                <div class="panel-empty"><p>No non-compliant answers. 🎉</p></div>
+            }
+            else
+            {
+                <ol class="rank-list">
+                    @foreach (var q in Model.TopFailedQuestions)
+                    {
+                        <li>
+                            <div><span class="rank-text">@q.Label</span><small>@q.Detail</small></div>
+                            <strong title="Non-compliant answers">@q.Count</strong>
+                        </li>
+                    }
+                </ol>
+            }
+        </section>
+
+        <section class="panel">
+            <header class="panel-head">
+                <h2>Top non-compliance reasons</h2>
+                <span class="panel-hint">Reasons auditors selected</span>
+            </header>
+            @if (Model.TopReasons.Count == 0)
+            {
+                <div class="panel-empty"><p>No reasons recorded yet.</p></div>
+            }
+            else
+            {
+                var max = Model.TopReasons.Max(r => r.Count);
+                <ul class="reason-list">
+                    @foreach (var r in Model.TopReasons)
+                    {
+                        <li>
+                            <div class="reason-row"><span>@r.Label</span><strong>@r.Count</strong></div>
+                            <div class="reason-track"><span style="width:@((r.Count * 100.0 / max).ToString("0.#", System.Globalization.CultureInfo.InvariantCulture))%"></span></div>
+                        </li>
+                    }
+                </ul>
+            }
+        </section>
+    </div>
+
+    @if (!Model.PersonalScope && f.AirportId == null && Model.LowestSites.Count > 0)
+    {
+        <div class="dash-row">
+            <section class="panel">
+                <header class="panel-head">
+                    <h2>Lowest-scoring sites</h2>
+                    <span class="panel-hint">Average score per site</span>
+                </header>
+                <partial name="_ScoreBars" model="@(new ScoreBarsModel(Model.LowestSites, target, "site", "No audits submitted in this period."))" />
+            </section>
+
+            <section class="panel">
+                <header class="panel-head">
+                    <h2>Awaiting review</h2>
+                    <span class="panel-hint">Oldest submissions first</span>
+                </header>
+                <partial name="_ReviewQueue" model="Model.ReviewQueue" />
+            </section>
+        </div>
+    }
+    else if (!Model.PersonalScope)
+    {
+        <div class="dash-row">
+            <section class="panel">
+                <header class="panel-head">
+                    <h2>Awaiting review</h2>
+                    <span class="panel-hint">Oldest submissions first</span>
+                </header>
+                <partial name="_ReviewQueue" model="Model.ReviewQueue" />
+            </section>
+        </div>
+    }
+
+    @* ================= Schedules ================= *@
+    <section class="panel">
+        <header class="panel-head">
+            <h2>@(Model.PersonalScope ? "My upcoming audits" : "Upcoming & overdue audits")</h2>
+            @if (isManager)
+            {
+                <a asp-controller="AuditSchedules" asp-action="Index" class="panel-link">All schedules →</a>
+            }
+            else if (Model.PersonalScope)
+            {
+                <a asp-controller="AuditExecutions" asp-action="Index" class="panel-link">My Audits →</a>
+            }
+        </header>
+        @if (Model.Upcoming.Count == 0)
+        {
+            <div class="panel-empty"><p>No open audits.</p></div>
+        }
+        else
+        {
+            <div class="table-scroll">
+                <table class="dash-table">
+                    <thead>
+                        <tr>
+                            <th>Audit</th>
+                            <th>Site</th>
+                            <th>Due</th>
+                            @if (!Model.PersonalScope)
+                            {
+                                <th>Auditors</th>
+                            }
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var s in Model.Upcoming)
+                        {
+                            <tr>
+                                <td>
+                                    @if (isManager)
+                                    {
+                                        <a asp-controller="AuditSchedules" asp-action="Details" asp-route-id="@s.Id">@s.Template</a>
+                                    }
+                                    else
+                                    {
+                                        @s.Template
+                                    }
+                                </td>
+                                <td>@s.Site <small>@s.AirportCode</small></td>
+                                <td class="@(s.Overdue ? "due-overdue" : "")">
+                                    @s.Due.ToString("dd MMM, HH:mm")
+                                    @if (s.Overdue)
+                                    {
+                                        <small>Overdue</small>
+                                    }
+                                </td>
+                                @if (!Model.PersonalScope)
+                                {
+                                    <td>@(string.IsNullOrEmpty(s.Auditors) ? "—" : s.Auditors)</td>
+                                }
+                                <td><span class="status-pill @ScheduleStatuses.PillClass(s.Status)">@ScheduleStatuses.Label(s.Status)</span></td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+    </section>
+</div>

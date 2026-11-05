@@ -19,6 +19,15 @@ public partial class AuditResponse
 
     public bool? Compliant { get; set; }
 
+    /// <summary>Free-form answer for TEXT, NUMBER, DATE, TIME and RATING questions; comma-separated option ids for CHECKLIST/MULTIPLE_CHOICE.</summary>
+    public string? AnswerValue { get; set; }
+
+    /// <summary>Who was responsible when the audit was submitted. Kept on the answer so later changes don't rewrite past reports.</summary>
+    public string? Responsibility { get; set; }
+
+    /// <summary>The company responsible when the audit was submitted, if known.</summary>
+    public string? ServiceProvider { get; set; }
+
     public virtual ICollection<AuditResponseAttachment> AuditResponseAttachments { get; set; } = new List<AuditResponseAttachment>();
 
     public virtual AuditExecution Execution { get; set; }

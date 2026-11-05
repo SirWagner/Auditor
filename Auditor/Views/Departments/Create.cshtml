@@ -1,0 +1,54 @@
+@model Auditor.Models.Department
+
+@{
+    ViewData["Title"] = "Create Department";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="form-page-container">
+    <div class="form-page-breadcrumb">
+        <a asp-controller="Dashboard" asp-action="Index">Dashboard</a>
+        <span>›</span>
+        <a asp-controller="Departments" asp-action="Index">Departments</a>
+        <span>›</span>
+        <span>Create New</span>
+    </div>
+
+    <div class="form-page-title-section">
+        <div class="form-page-title-content">
+            <h1>Create New Department</h1>
+            <p>Departments own audit sites and appear in the Audit Site form</p>
+        </div>
+        <div class="form-page-meta">
+            <span class="form-meta-badge">New Entry</span>
+        </div>
+    </div>
+
+    <div class="form-wrapper">
+        <div class="form-main">
+            <div class="form-main-header">
+                <h2>
+                    <i class="typcn typcn-group-outline"></i>
+                    Department Details
+                </h2>
+            </div>
+
+            <div class="form-main-content">
+                <form asp-action="Create" method="post" novalidate id="createDepartmentForm">
+                    <partial name="_DepartmentForm" model="Model" />
+                </form>
+            </div>
+
+            <div class="form-main-footer">
+                <a asp-action="Index" class="btn-cancel">
+                    <i class="fas fa-times"></i>
+                    Cancel
+                </a>
+                <button form="createDepartmentForm" type="submit" class="btn-submit">
+                    <i class="fas fa-plus"></i>
+                    Create Department
+                </button>
+            </div>
+        </div>
+    </div>
+</div>

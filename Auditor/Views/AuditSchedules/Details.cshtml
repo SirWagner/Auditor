@@ -1,299 +1,177 @@
-﻿@model Auditor.Models.AuditSchedule
-
+@model Auditor.Models.AuditSchedule
+@using Auditor.Models.Lookups
 @{
-    ViewData["Title"] = "Audit Schedule Details";
-    Layout = "~/Views/Shared/_Layout.cshtml";
+    ViewData["Title"] = $"Schedule #{Model.Id}";
+    var canChange = Model.Status == ScheduleStatuses.Scheduled;
+    var canCancel = Model.Status is ScheduleStatuses.Scheduled or ScheduleStatuses.InProgress;
 }
-
 
 <div class="details-page-container">
-
-
-    <!-- Breadcrumb -->
     <div class="details-breadcrumb">
-
-        <a asp-controller="Template"
-           asp-action="Dashboard">
-            Dashboard
-        </a>
-
+        <a asp-controller="Dashboard" asp-action="Index">Dashboard</a>
         <span>›</span>
-
-        <a asp-action="Index">
-            Audit Schedules
-        </a>
-
+        <a asp-action="Index">Audit Schedules</a>
         <span>›</span>
-
-        <span>
-            Schedule #@Model.Id
-        </span>
-
+        <span>Schedule #@Model.Id</span>
     </div>
 
-
-
-    <!-- Compact Header -->
     <div class="details-header">
-
-
-        <div>
-
-            <h1>
-                Audit Schedule #@Model.Id
-            </h1>
-
-
-            <div class="text-muted small mt-1">
-
-                Created:
-                @Model.CreatedDate.ToString("MMM dd, yyyy")
-
-                <span class="mx-2">•</span>
-
-                Scheduled:
-                @Model.ScheduledDate.ToString("MMM dd, yyyy")
-
-            </div>
-
-
-        </div>
-
-
-
+        <h1>
+            <i class="typcn typcn-calendar-outline"></i>
+            @Model.Template?.Name
+        </h1>
         <div class="details-header-actions">
-
-
-            <a asp-controller="AuditExecutions"
-               asp-action="Start"
-               asp-route-scheduleId="@Model.Id"
-               class="btn-details-primary">
-
-                <i class="fas fa-play"></i>
-
-                Start Audit
-
-            </a>
-
-
-
-            <a asp-action="Index"
-               class="btn-details-secondary">
-
-                <i class="fas fa-arrow-left"></i>
-
-                Back
-
-            </a>
-
-
+            @if (canChange)
+            {
+                <a asp-action="Edit" asp-route-id="@Model.Id" class="btn-details-primary"><i class="fas fa-edit"></i> Edit</a>
+            }
+            <a asp-action="Index" class="btn-details-secondary"><i class="fas fa-arrow-left"></i> Back</a>
         </div>
-
-
     </div>
 
+    <partial name="_PageAlerts" />
 
-
-
-    <!-- Main Information -->
     <div class="details-info-card">
-
-
         <div class="details-info-card-header">
-
-            <h2>
-                Audit Schedule Information
-            </h2>
-
+            <i class="typcn typcn-document-text"></i>
+            <h2>Schedule</h2>
         </div>
-
-
-
         <div class="details-info-card-body">
-
-
             <div class="details-info-grid">
-
-
                 <div class="details-info-field">
-
-                    <div class="details-info-label">
-                        Audit Template
-                    </div>
-
-                    <div class="details-info-value">
-
-                        <strong>
-                            @Model.Template?.Name
-                        </strong>
-
-                    </div>
-
+                    <div class="details-info-label">Status</div>
+                    <div class="details-info-value"><span class="status-pill @ScheduleStatuses.PillClass(Model.Status)">@ScheduleStatuses.Label(Model.Status)</span></div>
                 </div>
-
-
-
-
                 <div class="details-info-field">
-
-                    <div class="details-info-label">
-                        Audit Site
-                    </div>
-
+                    <div class="details-info-label">Site</div>
                     <div class="details-info-value">
-
-                        <strong>
-                            @Model.Site?.Name
-                        </strong>
-
+                        <a asp-controller="AuditSites" asp-action="Details" asp-route-id="@Model.SiteId"><strong>@Model.Site?.Name</strong></a>
+                        <div class="text-muted">@Model.Site?.Airport?.Name</div>
                     </div>
-
                 </div>
-
-
-
-
-
                 <div class="details-info-field">
-
-                    <div class="details-info-label">
-                        Assigned Auditor
-                    </div>
-
+                    <div class="details-info-label">Template</div>
                     <div class="details-info-value">
-
-                        @Model.Scheduler?.DisplayName
-
+                        <a asp-controller="AuditTemplates" asp-action="Details" asp-route-id="@Model.TemplateId"><strong>@Model.Template?.Name</strong></a>
+                        <div class="text-muted">v@(Model.Template?.Version) · @(Model.Template?.AuditTemplateItems.Count ?? 0) questions</div>
                     </div>
-
                 </div>
-
-
-
-
-
                 <div class="details-info-field">
-
-                    <div class="details-info-label">
-                        Due Date
-                    </div>
-
-                    <div class="details-info-value">
-
-                        <strong>
-                            @Model.DueDate.ToString("MMM dd, yyyy")
-                        </strong>
-
-                    </div>
-
+                    <div class="details-info-label">Scheduled</div>
+                    <div class="details-info-value"><strong>@Model.ScheduledDate.ToString("dd MMM yyyy HH:mm")</strong></div>
                 </div>
-
-
-
-
                 <div class="details-info-field">
-
-                    <div class="details-info-label">
-                        Status
-                    </div>
-
-
+                    <div class="details-info-label">Due</div>
+                    <div class="details-info-value"><strong>@Model.DueDate.ToString("dd MMM yyyy HH:mm")</strong></div>
+                </div>
+                <div class="details-info-field">
+                    <div class="details-info-label">Scheduled By</div>
+                    <div class="details-info-value">@(Model.Scheduler?.DisplayName ?? "—") <span class="text-muted">· @Model.CreatedDate.ToLocalTime().ToString("dd MMM yyyy")</span></div>
+                </div>
+                <div class="details-info-field">
+                    <div class="details-info-label">Auditors</div>
                     <div class="details-info-value">
-
-                        @{
-                            var statusClass = Model.Status switch
-                            {
-                                "SCHEDULED" => "active",
-                                "COMPLETED" => "active",
-                                "CANCELLED" => "inactive",
-                                _ => "warning"
-                            };
+                        @if (Model.Auditors.Count == 0)
+                        {
+                            <span class="text-muted">None assigned</span>
                         }
-
-
-                        <span class="details-status-badge @statusClass">
-
-                            @Model.Status
-
-                        </span>
-
-
+                        else
+                        {
+                            <div class="area-tag-list">
+                                @foreach (var a in Model.Auditors.OrderBy(a => a.DisplayName))
+                                {
+                                    <span class="area-tag">@a.DisplayName</span>
+                                }
+                            </div>
+                        }
                     </div>
-
                 </div>
-
-
-
-
-                <div class="details-info-field">
-
-                    <div class="details-info-label">
-                        Created Date
+                @if (!string.IsNullOrEmpty(Model.ModificationReason))
+                {
+                    <div class="details-info-field">
+                        <div class="details-info-label">Last Change Reason</div>
+                        <div class="details-info-value">@Model.ModificationReason</div>
                     </div>
-
-
-                    <div class="details-info-value">
-
-                        @Model.CreatedDate.ToString("MMM dd, yyyy")
-
+                }
+                @if (!string.IsNullOrEmpty(Model.CancellationReason))
+                {
+                    <div class="details-info-field">
+                        <div class="details-info-label">Cancellation Reason</div>
+                        <div class="details-info-value">@Model.CancellationReason</div>
                     </div>
-
-                </div>
-
-
-
+                }
             </div>
-
-
         </div>
-
-
     </div>
 
-
-
-
-
-    <!-- Execution Section -->
-    <div class="details-section mt-4">
-
-
-        <h2 class="details-section-title">
-
-            Audit Execution
-
-        </h2>
-
-
-
-        <div class="details-info-card">
-
-
-            <div class="details-info-card-body">
-
-
-                <p class="text-muted mb-0">
-
-                    This schedule is ready for execution. Start the audit when the assigned auditor is prepared.
-
-                </p>
-
-
-            </div>
-
-
-        </div>
-
-
+    <div class="details-section">
+        <h2 class="details-section-title"><i class="typcn typcn-flash-outline"></i> Executions (@Model.AuditExecutions.Count)</h2>
     </div>
 
-
-
-</div>
-
-
-@section Scripts {
-    @{
-        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    @if (Model.AuditExecutions.Count > 0)
+    {
+        <div class="details-table-wrapper">
+            <table class="details-table">
+                <thead>
+                    <tr>
+                        <th>Auditor</th>
+                        <th>Status</th>
+                        <th>Accepted</th>
+                        <th>Submitted</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var e in Model.AuditExecutions.OrderByDescending(e => e.Id))
+                    {
+                        <tr>
+                            <td><strong>@e.Auditor?.DisplayName</strong></td>
+                            <td><span class="status-pill @ExecutionStatuses.PillClass(e.Status)">@ExecutionStatuses.Label(e.Status)</span></td>
+                            <td>@(e.AcceptanceDate?.ToLocalTime().ToString("dd MMM yyyy HH:mm") ?? "—")</td>
+                            <td>@(e.SubmissionDate?.ToLocalTime().ToString("dd MMM yyyy HH:mm") ?? "—")</td>
+                            <td><a asp-controller="AuditExecutions" asp-action="Details" asp-route-id="@e.Id" class="details-action-btn btn-view"><i class="fas fa-eye"></i> View</a></td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
     }
-}
+    else
+    {
+        <div class="details-table-wrapper">
+            <div class="details-empty-state">
+                <div class="details-empty-state-icon">⏳</div>
+                <h3 class="details-empty-state-title">Not started yet</h3>
+                <p class="details-empty-state-text">The assigned auditors start this audit from their "My Audits" page.</p>
+            </div>
+        </div>
+    }
+
+    @if (canCancel || canChange)
+    {
+        <div class="details-info-card" style="margin-top:24px;">
+            <div class="details-info-card-header">
+                <i class="fas fa-ban"></i>
+                <h2>Cancel or Delete</h2>
+            </div>
+            <div class="details-info-card-body">
+                @if (canCancel)
+                {
+                    <form asp-action="Cancel" asp-route-id="@Model.Id" method="post" class="list-filters" style="margin-bottom:12px;">
+                        <input type="text" name="reason" class="form-control" placeholder="Cancellation reason" required style="max-width:420px;" aria-label="Cancellation reason" />
+                        <button type="submit" class="action-btn btn-delete">Cancel Schedule</button>
+                    </form>
+                }
+                @if (canChange && Model.AuditExecutions.Count == 0)
+                {
+                    <form asp-action="Delete" asp-route-id="@Model.Id" method="post"
+                          data-confirm="Delete this schedule permanently? Use Cancel instead if you want to keep a record."
+                          onsubmit="return confirm(this.dataset.confirm);">
+                        <button type="submit" class="action-btn btn-delete">Delete Permanently</button>
+                        <span class="text-muted" style="font-size:12px;margin-left:8px;">Only for schedules created by mistake.</span>
+                    </form>
+                }
+            </div>
+        </div>
+    }
+</div>

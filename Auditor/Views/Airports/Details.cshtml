@@ -1,5 +1,6 @@
-﻿@model Auditor.Models.Airport
+@model Auditor.Models.Airport
 @using Auditor.Models
+@using Auditor.Models.Lookups
 
 @{
     ViewData["Title"] = "Airport Details";
@@ -9,7 +10,7 @@
 <div class="details-page-container">
     <!-- Breadcrumb -->
     <div class="details-breadcrumb">
-        <a asp-controller="Template" asp-action="Dashboard">Dashboard</a>
+        <a asp-controller="Dashboard" asp-action="Index">Dashboard</a>
         <span>›</span>
         <a asp-controller="Airports" asp-action="Index">Airports</a>
         <span>›</span>
@@ -34,7 +35,9 @@
         </div>
     </div>
 
-    <!-- Airport Information Card (Single, Compact) -->
+    <partial name="_PageAlerts" />
+
+    <!-- Airport Information -->
     <div class="details-info-card">
         <div class="details-info-card-header">
             <i class="typcn typcn-document-text"></i>
@@ -53,21 +56,85 @@
                     </div>
                 </div>
                 <div class="details-info-field">
-                    <div class="details-info-label">Location</div>
-                    <div class="details-info-value"><strong>@Model.Location</strong></div>
+                    <div class="details-info-label">Airport Type</div>
+                    <div class="details-info-value"><strong>@(Model.AirportType ?? "—")</strong></div>
                 </div>
                 <div class="details-info-field">
-                    <div class="details-info-label">Air Side</div>
-                    <div class="details-info-value"><strong>@Model.AirSide</strong></div>
+                    <div class="details-info-label">Status</div>
+                    <div class="details-info-value">
+                        <span class="status-pill @(Model.IsActive ? "status-pill-active" : "status-pill-inactive")">
+                            @(Model.IsActive ? "Active" : "Inactive")
+                        </span>
+                    </div>
                 </div>
                 <div class="details-info-field">
-                    <div class="details-info-label">Commercial Area</div>
-                    <div class="details-info-value"><strong>@Model.ComercialArea</strong></div>
+                    <div class="details-info-label">Region</div>
+                    <div class="details-info-value"><strong>@(Model.Region ?? "—")</strong></div>
                 </div>
                 <div class="details-info-field">
-                    <div class="details-info-label">Terminal Section</div>
-                    <div class="details-info-value"><strong>@Model.TerminalSection</strong></div>
+                    <div class="details-info-label">Country</div>
+                    <div class="details-info-value"><strong>@(Model.Country ?? "—")</strong></div>
                 </div>
+                <div class="details-info-field">
+                    <div class="details-info-label">Airport Manager</div>
+                    <div class="details-info-value"><strong>@(Model.AirportManager ?? "—")</strong></div>
+                </div>
+                <div class="details-info-field">
+                    <div class="details-info-label">Email Address</div>
+                    <div class="details-info-value">
+                        @if (!string.IsNullOrEmpty(Model.EmailAddress))
+                        {
+                            <a href="mailto:@Model.EmailAddress">@Model.EmailAddress</a>
+                        }
+                        else
+                        {
+                            <span>—</span>
+                        }
+                    </div>
+                </div>
+                <div class="details-info-field">
+                    <div class="details-info-label">Tel Number</div>
+                    <div class="details-info-value">@(Model.TelNumber ?? "—")</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Airport Areas -->
+    <div class="details-info-card">
+        <div class="details-info-card-header">
+            <i class="typcn typcn-map"></i>
+            <h2>Airport Areas</h2>
+        </div>
+        <div class="details-info-card-body">
+            <div class="details-info-grid">
+                @foreach (var areaType in AirportLookups.AreaTypes)
+                {
+                    var names = Model.Locations
+                        .Where(l => l.AreaType == areaType.Key)
+                        .Select(l => l.Name)
+                        .OrderBy(n => n)
+                        .ToList();
+
+                    <div class="details-info-field">
+                        <div class="details-info-label">@areaType.Value</div>
+                        <div class="details-info-value">
+                            @if (names.Count == 0)
+                            {
+                                <span class="area-empty">None added</span>
+                            }
+                            else
+                            {
+                                <div class="area-tag-list">
+                                    @foreach (var name in names)
+                                    {
+                                        <span class="area-tag">@name</span>
+                                    }
+                                </div>
+                            }
+                        </div>
+                    </div>
+                }
             </div>
         </div>
     </div>
@@ -76,102 +143,78 @@
     <div class="details-section">
         <h2 class="details-section-title">
             <i class="typcn typcn-location-outline"></i>
-            Audit Sites @(@Model.AuditSites?.Count ?? 0)
+            Audit Sites (@(Model.AuditSites?.Count ?? 0))
         </h2>
-
-        @if (Model.AuditSites?.Count > 0)
-        {
-            <div class="details-table-wrapper">
-                <table class="details-table">
-                    <thead>
-                        <tr>
-                            <th style="width: 25%;">Site Name</th>
-                            <th style="width: 15%;">Department</th>
-                            <th style="width: 20%;">Location</th>
-                            <th style="width: 12%;">Status</th>
-                            <th style="width: 12%;">Created By</th>
-                            <th style="width: 12%;">Created Date</th>
-                            <th style="width: 16%;">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach (var site in Model.AuditSites.OrderByDescending(s => s.CreatedDate))
-                        {
-                            <tr>
-                                <td>
-                                    <strong>@site.Name</strong>
-                                </td>
-                                <td>
-                                    @site.Department?.Name
-                                </td>
-                                <td>
-                                    @site.Location
-                                </td>
-                                <td>
-                                    @{
-                                        var statusClass = site.Status switch
-                                        {
-                                            "Active" => "active",
-                                            "Inactive" => "inactive",
-                                            "Under Review" => "warning",
-                                            "Archived" => "inactive",
-                                            _ => "inactive"
-                                        };
-                                    }
-                                    <span class="details-status-badge @statusClass">
-                                        @if (site.Status == "Active")
-                                        {
-                                            <i class="fas fa-check-circle"></i>
-                                        }
-                                        else if (site.Status == "Under Review")
-                                        {
-                                            <i class="fas fa-hourglass-half"></i>
-                                        }
-                                        else
-                                        {
-                                            <i class="fas fa-times-circle"></i>
-                                        }
-                                        @site.Status
-                                    </span>
-                                </td>
-                                <td>
-                                    @site.CreatedByNavigation?.DisplayName ?? "Unknown"
-                                </td>
-                                <td>
-                                    @site.CreatedDate.ToString("MMM dd, yyyy")
-                                </td>
-                                <td>
-                                    <div class="details-table-actions">
-                                        <a asp-controller="AuditSites"
-                                               asp-action="Details"
-                                               asp-route-id="@site.Id"
-                                               class="details-action-btn btn-view">
-                                            <i class="fas fa-eye"></i>
-                                            View
-                                        </a>
-                                        <a asp-controller="AuditSites"
-                                               asp-action="Edit"
-                                               asp-route-id="@site.Id"
-                                               class="details-action-btn btn-edit">
-                                            <i class="fas fa-edit"></i>
-                                            Edit
-                                        </a>
-                                    </div>
-                                </td>
-                            </tr>
-                        }
-                    </tbody>
-                </table>
-            </div>
-        }
-        else
-        {
-            <div class="details-table-wrapper">
-                <div class="details-empty-state">
-                    <div class="details-empty-state-icon">📭</div>
-                    <h3 class="details-empty-state-title">No Audit Sites</h3>
-                    <p class="details-empty-state-text">No audit sites have been registered for this airport</p>
-                </div>
-            </div>
-        }
     </div>
+
+    @if (Model.AuditSites?.Count > 0)
+    {
+        <div class="details-table-wrapper">
+            <table class="details-table">
+                <thead>
+                    <tr>
+                        <th style="width: 22%;">Site Name</th>
+                        <th style="width: 22%;">Category</th>
+                        <th style="width: 15%;">Department</th>
+                        <th style="width: 11%;">Status</th>
+                        <th style="width: 14%;">Created Date</th>
+                        <th style="width: 16%;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var site in Model.AuditSites.OrderByDescending(s => s.CreatedDate))
+                    {
+                        <tr>
+                            <td>
+                                <strong>@site.Name</strong>
+                                @if (site.Terminal != null)
+                                {
+                                    <div class="text-muted">@site.Terminal.Name</div>
+                                }
+                            </td>
+                            <td>
+                                @(string.Join(" › ", new[] { site.SiteCategory, site.SiteSubCategory, site.SiteType }.Where(v => !string.IsNullOrEmpty(v))))
+                            </td>
+                            <td>@site.Department?.Name</td>
+                            <td>
+                                <span class="status-pill @(site.Status == AuditSiteLookups.Active ? "status-pill-active" : "status-pill-inactive")">
+                                    @site.Status
+                                </span>
+                            </td>
+                            <td>@site.CreatedDate.ToString("MMM dd, yyyy")</td>
+                            <td>
+                                <div class="details-table-actions">
+                                    <a asp-controller="AuditSites" asp-action="Details" asp-route-id="@site.Id" class="details-action-btn btn-view">
+                                        <i class="fas fa-eye"></i>
+                                        View
+                                    </a>
+                                    <a asp-controller="AuditSites" asp-action="Edit" asp-route-id="@site.Id" class="details-action-btn btn-edit">
+                                        <i class="fas fa-edit"></i>
+                                        Edit
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+    else
+    {
+        <div class="details-table-wrapper">
+            <div class="details-empty-state">
+                <div class="details-empty-state-icon">📭</div>
+                <h3 class="details-empty-state-title">No Audit Sites</h3>
+                <p class="details-empty-state-text">No audit sites have been registered for this airport</p>
+                @if (Model.IsActive)
+                {
+                    <a asp-controller="AuditSites" asp-action="Create" asp-route-airportId="@Model.Id" class="btn-details-primary">
+                        <i class="fas fa-plus"></i>
+                        Add an Audit Site
+                    </a>
+                }
+            </div>
+        </div>
+    }
+</div>

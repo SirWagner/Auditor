@@ -23,6 +23,15 @@ public partial class AppUser
 
     public string Role { get; set; }
 
+    public string? EmployeeNumber { get; set; }
+
+    public DateTime? LastLoginDate { get; set; }
+
+    /// <summary>The airport this user works at. Null = all airports.</summary>
+    public long? AirportId { get; set; }
+
+    public virtual Airport? Airport { get; set; }
+
     public virtual ICollection<AuditExecution> AuditExecutions { get; set; } = new List<AuditExecution>();
 
     public virtual ICollection<AuditSchedule> AuditSchedules { get; set; } = new List<AuditSchedule>();

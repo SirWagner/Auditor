@@ -1,5 +1,4 @@
-@model Auditor.Models.AuditSite
-@using Auditor.Models
+@model Auditor.ViewModels.AuditSite.AuditSiteFormViewModel
 
 @{
     ViewData["Title"] = "Edit Audit Site";
@@ -8,7 +7,7 @@
 
 <div class="form-page-container">
     <div class="form-page-breadcrumb">
-        <a asp-controller="Template" asp-action="Dashboard">Dashboard</a>
+        <a asp-controller="Dashboard" asp-action="Index">Dashboard</a>
         <span>›</span>
         <a asp-controller="AuditSites" asp-action="Index">Audit Sites</a>
         <span>›</span>
@@ -37,113 +36,12 @@
             <div class="form-main-content">
                 <form asp-action="Edit" method="post" novalidate id="editAuditSiteForm">
                     <input type="hidden" asp-for="Id" />
-                    <input type="hidden" asp-for="CreatedBy" />
-                    <input type="hidden" asp-for="CreatedDate" />
-
-                    @if (!ViewData.ModelState.IsValid)
-                    {
-                        <div class="validation-alert">
-                            <h3>
-                                <i class="fas fa-times-circle"></i>
-                                Form Validation Errors
-                            </h3>
-                            <ul>
-                                @foreach (var modelState in ViewData.ModelState.Values)
-                                {
-                                    @foreach (var error in modelState.Errors)
-                                    {
-                                        <li>@error.ErrorMessage</li>
-                                    }
-                                }
-                            </ul>
-                        </div>
-                    }
-
-                    <div class="form-section">
-                        <h3 class="form-section-title">Location Information</h3>
-                        <p class="form-section-description">Specify the airport and department for this audit site.</p>
-
-                        <div class="form-grid">
-                            <div class="form-group">
-                                <label asp-for="AirportId">
-                                    Airport
-                                    <span class="required">*</span>
-                                </label>
-                                <select asp-for="AirportId"
-                                        required
-                                        asp-items="@(new SelectList(ViewBag.Airports, "Id", "Name"))">
-                                    <option value="">-- Select an Airport --</option>
-                                </select>
-                                <span asp-validation-for="AirportId" class="form-group-error"></span>
-                            </div>
-
-                            <div class="form-group">
-                                <label asp-for="DepartmentId">
-                                    Department
-                                    <span class="required">*</span>
-                                </label>
-                                <select asp-for="DepartmentId"
-                                        required
-                                        asp-items="@(new SelectList(ViewBag.Departments, "Id", "Name"))">
-                                    <option value="">-- Select a Department --</option>
-                                </select>
-                                <span asp-validation-for="DepartmentId" class="form-group-error"></span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="form-section">
-                        <h3 class="form-section-title">Audit Site Information</h3>
-
-                        <div class="form-grid">
-                            <div class="form-group">
-                                <label asp-for="Name">
-                                    Site Name
-                                    <span class="required">*</span>
-                                </label>
-                                <input asp-for="Name" type="text" required />
-                                <span asp-validation-for="Name" class="form-group-error"></span>
-                            </div>
-
-                            <div class="form-group">
-                                <label asp-for="Status">
-                                    Status
-                                    <span class="required">*</span>
-                                </label>
-                                <select asp-for="Status" required>
-                                    <option value="">-- Select Status --</option>
-                                    <option value="Active">Active</option>
-                                    <option value="Inactive">Inactive</option>
-                                    <option value="Under Review">Under Review</option>
-                                    <option value="Archived">Archived</option>
-                                </select>
-                                <span asp-validation-for="Status" class="form-group-error"></span>
-                                <div class="form-group-hint">
-                                    Use the Change Status action on the site's details page to reactivate an inactive/archived site.
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="form-section">
-                        <h3 class="form-section-title">Additional Details</h3>
-
-                        <div class="form-grid full">
-                            <div class="form-group">
-                                <label asp-for="Location">
-                                    Physical Location / Address
-                                    <span class="required">*</span>
-                                </label>
-                                <textarea asp-for="Location" required></textarea>
-                                <span asp-validation-for="Location" class="form-group-error"></span>
-                            </div>
-                        </div>
-                    </div>
+                    <partial name="_AuditSiteForm" model="Model" />
                 </form>
             </div>
 
             <div class="form-main-footer">
-                <a asp-action="Index" class="btn-cancel">
+                <a asp-action="Details" asp-route-id="@Model.Id" class="btn-cancel">
                     <i class="fas fa-times"></i>
                     Cancel
                 </a>
@@ -161,7 +59,7 @@
                     About Audit Sites
                 </h3>
                 <p>
-                    Audit sites represent specific physical locations within an airport where audits are conducted.
+                    Audit sites are the specific places within an airport where audits are conducted.
                 </p>
             </div>
 
@@ -172,7 +70,7 @@
                 </h3>
                 <p>
                     Fields marked with <span class="required">*</span> are required.
-                    Note: this page is blocked if the site is currently Inactive or Archived — reactivate it first.
+                    Inactive sites can't be edited — reactivate them first with Change Status on the site's details page.
                 </p>
             </div>
         </div>
@@ -183,27 +81,5 @@
     @{
         await Html.RenderPartialAsync("_ValidationScriptsPartial");
     }
-
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const form = document.getElementById('editAuditSiteForm');
-
-            const inputs = form.querySelectorAll('input, textarea, select');
-            inputs.forEach(input => {
-                const errorSpan = input.parentElement.querySelector('.form-group-error');
-                if (errorSpan && errorSpan.textContent.trim()) {
-                    input.closest('.form-group').classList.add('has-error');
-                }
-            });
-
-            inputs.forEach(input => {
-                input.addEventListener('input', function() {
-                    this.closest('.form-group').classList.remove('has-error');
-                });
-                input.addEventListener('change', function() {
-                    this.closest('.form-group').classList.remove('has-error');
-                });
-            });
-        });
-    </script>
+    <script src="~/js/audit-site-form.js" asp-append-version="true"></script>
 }

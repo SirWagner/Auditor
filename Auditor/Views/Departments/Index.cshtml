@@ -1,0 +1,76 @@
+@model IEnumerable<Auditor.Models.Department>
+
+@{
+    ViewData["Title"] = "Departments";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="list-container">
+    <div class="list-header">
+        <div class="list-header-content">
+            <h1>🏢 Departments</h1>
+            <p class="list-header-subtitle">Departments that own audit sites</p>
+        </div>
+        @if (Model.Any())
+        {
+            <a asp-action="Create" class="btn-list-primary">
+                <span>+</span> Create New Department
+            </a>
+        }
+    </div>
+
+    <partial name="_PageAlerts" />
+
+    @if (Model.Any())
+    {
+        <div class="list-table-wrapper">
+            <table class="list-table table">
+                <thead>
+                    <tr>
+                        <th style="width: 28%;">Name</th>
+                        <th style="width: 42%;">Description</th>
+                        <th style="width: 10%;">Sites</th>
+                        <th style="width: 20%;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in Model)
+                    {
+                        <tr>
+                            <td><div class="cell-name">@item.Name</div></td>
+                            <td><div class="cell-secondary">@(string.IsNullOrEmpty(item.Description) ? "—" : item.Description)</div></td>
+                            <td><div class="cell-secondary">@item.AuditSites.Count</div></td>
+                            <td>
+                                <div class="list-actions">
+                                    <a asp-action="Edit" asp-route-id="@item.Id" class="action-btn btn-edit">Edit</a>
+                                    <a asp-action="Details" asp-route-id="@item.Id" class="action-btn btn-view">View</a>
+                                    @if (item.AuditSites.Count == 0)
+                                    {
+                                        <form asp-action="Delete" asp-route-id="@item.Id" method="post"
+                                              data-confirm="Delete &quot;@item.Name&quot;? This can't be undone."
+                                              onsubmit="return confirm(this.dataset.confirm);">
+                                            <button type="submit" class="action-btn btn-delete">Delete</button>
+                                        </form>
+                                    }
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+    else
+    {
+        <div class="list-table-wrapper">
+            <div class="list-empty-state">
+                <div class="empty-state-icon">🏢</div>
+                <h2 class="empty-state-title">No Departments Yet</h2>
+                <p class="empty-state-text">Audit sites need a department. Add the first one to get started.</p>
+                <a asp-action="Create" class="btn-list-primary">
+                    <span>+</span> Create First Department
+                </a>
+            </div>
+        </div>
+    }
+</div>

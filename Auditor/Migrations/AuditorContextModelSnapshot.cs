@@ -85,8 +85,15 @@ namespace Auditor.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
 
-                    b.Property<string>("AirSide")
-                        .HasColumnType("nvarchar(max)");
+                    b.Property<string>("AirportManager")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)")
+                        .HasColumnName("airport_manager");
+
+                    b.Property<string>("AirportType")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)")
+                        .HasColumnName("airport_type");
 
                     b.Property<string>("Code")
                         .IsRequired()
@@ -94,13 +101,21 @@ namespace Auditor.Migrations
                         .HasColumnType("nvarchar(50)")
                         .HasColumnName("code");
 
-                    b.Property<string>("ComercialArea")
-                        .HasColumnType("nvarchar(max)");
+                    b.Property<string>("Country")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)")
+                        .HasColumnName("country");
 
-                    b.Property<string>("Location")
+                    b.Property<string>("EmailAddress")
                         .HasMaxLength(255)
                         .HasColumnType("nvarchar(255)")
-                        .HasColumnName("location");
+                        .HasColumnName("email_address");
+
+                    b.Property<bool>("IsActive")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(true)
+                        .HasColumnName("is_active");
 
                     b.Property<string>("Name")
                         .IsRequired()
@@ -108,8 +123,15 @@ namespace Auditor.Migrations
                         .HasColumnType("nvarchar(255)")
                         .HasColumnName("name");
 
-                    b.Property<string>("TerminalSection")
-                        .HasColumnType("nvarchar(max)");
+                    b.Property<string>("Region")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)")
+                        .HasColumnName("region");
+
+                    b.Property<string>("TelNumber")
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)")
+                        .HasColumnName("tel_number");
 
                     b.HasKey("Id")
                         .HasName("PK__airport__3213E83F178E14CD");
@@ -123,6 +145,40 @@ namespace Auditor.Migrations
                     b.ToTable("airport", (string)null);
                 });
 
+            modelBuilder.Entity("Auditor.Models.AirportLocation", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasColumnName("id");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
+
+                    b.Property<long>("AirportId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("airport_id");
+
+                    b.Property<string>("AreaType")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(30)")
+                        .HasColumnName("area_type");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("nvarchar(150)")
+                        .HasColumnName("name");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex(new[] { "AirportId", "AreaType", "Name" }, "UQ_airport_location_airport_area_name")
+                        .IsUnique();
+
+                    b.ToTable("airport_location", (string)null);
+                });
+
             modelBuilder.Entity("Auditor.Models.AppUser", b =>
                 {
                     b.Property<long>("Id")
@@ -131,6 +187,10 @@ namespace Auditor.Migrations
                         .HasColumnName("id");
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
+
+                    b.Property<long?>("AirportId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("airport_id");
 
                     b.Property<Guid>("AzureAdObjectId")
                         .HasColumnType("uniqueidentifier")
@@ -152,11 +212,20 @@ namespace Auditor.Migrations
                         .HasColumnType("nvarchar(255)")
                         .HasColumnName("email");
 
+                    b.Property<string>("EmployeeNumber")
+                        .HasMaxLength(30)
+                        .HasColumnType("nvarchar(30)")
+                        .HasColumnName("employee_number");
+
                     b.Property<bool>("IsActive")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("bit")
                         .HasDefaultValue(true)
                         .HasColumnName("is_active");
+
+                    b.Property<DateTime?>("LastLoginDate")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("last_login_date");
 
                     b.Property<string>("PasswordHash")
                         .HasMaxLength(255)
@@ -171,8 +240,18 @@ namespace Auditor.Migrations
                     b.HasKey("Id")
                         .HasName("PK__app_user__3213E83F1159EBF7");
 
+                    b.HasIndex("AirportId");
+
                     b.HasIndex(new[] { "AzureAdObjectId" }, "UQ__app_user__0E42BF72C6C8469F")
                         .IsUnique();
+
+                    b.HasIndex(new[] { "Email" }, "UQ_app_user_email")
+                        .IsUnique()
+                        .HasFilter("[email] IS NOT NULL");
+
+                    b.HasIndex(new[] { "EmployeeNumber" }, "UQ_app_user_employee_number")
+                        .IsUnique()
+                        .HasFilter("[employee_number] IS NOT NULL");
 
                     b.ToTable("app_user", (string)null);
                 });
@@ -333,6 +412,11 @@ namespace Auditor.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
 
+                    b.Property<string>("AnswerValue")
+                        .HasMaxLength(2000)
+                        .HasColumnType("nvarchar(2000)")
+                        .HasColumnName("answer_value");
+
                     b.Property<string>("Comment")
                         .HasMaxLength(2000)
                         .HasColumnType("nvarchar(2000)")
@@ -346,9 +430,19 @@ namespace Auditor.Migrations
                         .HasColumnType("bigint")
                         .HasColumnName("execution_id");
 
+                    b.Property<string>("Responsibility")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)")
+                        .HasColumnName("responsibility");
+
                     b.Property<long?>("SelectedOptionId")
                         .HasColumnType("bigint")
                         .HasColumnName("selected_option_id");
+
+                    b.Property<string>("ServiceProvider")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)")
+                        .HasColumnName("service_provider");
 
                     b.Property<long>("TemplateItemId")
                         .HasColumnType("bigint")
@@ -362,6 +456,10 @@ namespace Auditor.Migrations
                     b.HasIndex("TemplateItemId");
 
                     b.HasIndex(new[] { "ExecutionId" }, "idx_response_execution");
+
+                    b.HasIndex(new[] { "Responsibility" }, "idx_response_responsibility");
+
+                    b.HasIndex(new[] { "ServiceProvider" }, "idx_response_service_provider");
 
                     b.ToTable("audit_response", (string)null);
                 });
@@ -491,6 +589,21 @@ namespace Auditor.Migrations
                         .HasColumnType("bigint")
                         .HasColumnName("airport_id");
 
+                    b.Property<string>("ContactEmail")
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)")
+                        .HasColumnName("contact_email");
+
+                    b.Property<string>("ContactName")
+                        .HasMaxLength(150)
+                        .HasColumnType("nvarchar(150)")
+                        .HasColumnName("contact_name");
+
+                    b.Property<string>("ContactNumber")
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)")
+                        .HasColumnName("contact_number");
+
                     b.Property<long>("CreatedBy")
                         .HasColumnType("bigint")
                         .HasColumnName("created_by");
@@ -516,12 +629,36 @@ namespace Auditor.Migrations
                         .HasColumnType("nvarchar(255)")
                         .HasColumnName("name");
 
+                    b.Property<string>("ServiceProvider")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)")
+                        .HasColumnName("service_provider");
+
+                    b.Property<string>("SiteCategory")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)")
+                        .HasColumnName("site_category");
+
+                    b.Property<string>("SiteSubCategory")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)")
+                        .HasColumnName("site_sub_category");
+
+                    b.Property<string>("SiteType")
+                        .HasMaxLength(150)
+                        .HasColumnType("nvarchar(150)")
+                        .HasColumnName("site_type");
+
                     b.Property<string>("Status")
                         .IsRequired()
                         .HasMaxLength(50)
                         .IsUnicode(false)
                         .HasColumnType("varchar(50)")
                         .HasColumnName("status");
+
+                    b.Property<long?>("TerminalId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("terminal_id");
 
                     b.HasKey("Id")
                         .HasName("PK__audit_si__3213E83F2E69B5A2");
@@ -531,6 +668,8 @@ namespace Auditor.Migrations
                     b.HasIndex("CreatedBy");
 
                     b.HasIndex("DepartmentId");
+
+                    b.HasIndex("TerminalId");
 
                     b.ToTable("audit_site", (string)null);
                 });
@@ -543,6 +682,10 @@ namespace Auditor.Migrations
                         .HasColumnName("id");
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
+
+                    b.Property<long?>("AirportId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("airport_id");
 
                     b.Property<long>("CreatedBy")
                         .HasColumnType("bigint")
@@ -586,6 +729,8 @@ namespace Auditor.Migrations
                     b.HasKey("Id")
                         .HasName("PK__audit_te__3213E83FB8A2B4CB");
 
+                    b.HasIndex("AirportId");
+
                     b.HasIndex("CreatedBy");
 
                     b.HasIndex("ModifiedBy");
@@ -621,9 +766,24 @@ namespace Auditor.Migrations
                         .HasColumnType("bigint")
                         .HasColumnName("question_bank_id");
 
+                    b.Property<string>("Responsibility")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)")
+                        .HasColumnName("responsibility");
+
+                    b.Property<string>("Section")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)")
+                        .HasColumnName("section");
+
                     b.Property<int>("Sequence")
                         .HasColumnType("int")
                         .HasColumnName("sequence");
+
+                    b.Property<string>("ServiceProvider")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)")
+                        .HasColumnName("service_provider");
 
                     b.Property<long>("TemplateId")
                         .HasColumnType("bigint")
@@ -760,6 +920,10 @@ namespace Auditor.Migrations
                         .HasColumnType("bigint")
                         .HasColumnName("question_type_id");
 
+                    b.Property<long?>("ReferenceListId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("reference_list_id");
+
                     b.Property<string>("ResponsibleContractor")
                         .HasMaxLength(255)
                         .HasColumnType("nvarchar(255)")
@@ -776,6 +940,8 @@ namespace Auditor.Migrations
                     b.HasIndex("CreatedBy");
 
                     b.HasIndex("QuestionTypeId");
+
+                    b.HasIndex("ReferenceListId");
 
                     b.HasIndex(new[] { "CategoryId" }, "idx_question_bank_category");
 
@@ -907,6 +1073,102 @@ namespace Auditor.Migrations
                     b.ToTable("question_type", (string)null);
                 });
 
+            modelBuilder.Entity("Auditor.Models.ReferenceList", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasColumnName("id");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
+
+                    b.Property<string>("Code")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)")
+                        .HasColumnName("code");
+
+                    b.Property<DateTime>("CreatedDate")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasColumnName("created_date")
+                        .HasDefaultValueSql("(sysutcdatetime())");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)")
+                        .HasColumnName("description");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)")
+                        .HasColumnName("name");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex(new[] { "Code" }, "UQ_reference_list_code")
+                        .IsUnique()
+                        .HasFilter("[code] IS NOT NULL");
+
+                    b.HasIndex(new[] { "Name" }, "UQ_reference_list_name")
+                        .IsUnique();
+
+                    b.ToTable("reference_list", (string)null);
+                });
+
+            modelBuilder.Entity("Auditor.Models.ReferenceListItem", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasColumnName("id");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
+
+                    b.Property<long?>("AirportId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("airport_id");
+
+                    b.Property<string>("Code")
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)")
+                        .HasColumnName("code");
+
+                    b.Property<int>("DisplayOrder")
+                        .HasColumnType("int")
+                        .HasColumnName("display_order");
+
+                    b.Property<string>("GroupName")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)")
+                        .HasColumnName("group_name");
+
+                    b.Property<bool>("IsActive")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(true)
+                        .HasColumnName("is_active");
+
+                    b.Property<long>("ListId")
+                        .HasColumnType("bigint")
+                        .HasColumnName("list_id");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)")
+                        .HasColumnName("name");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AirportId");
+
+                    b.HasIndex(new[] { "ListId", "AirportId", "Name" }, "UQ_reference_list_item")
+                        .IsUnique();
+
+                    b.ToTable("reference_list_item", (string)null);
+                });
+
             modelBuilder.Entity("Auditor.Models.ScheduleChangeRequest", b =>
                 {
                     b.Property<long>("Id")
@@ -1008,6 +1270,29 @@ namespace Auditor.Migrations
                         .HasForeignKey("TemplateId")
                         .IsRequired()
                         .HasConstraintName("FK__audit_sit__templ__7A672E12");
+                });
+
+            modelBuilder.Entity("Auditor.Models.AirportLocation", b =>
+                {
+                    b.HasOne("Auditor.Models.Airport", "Airport")
+                        .WithMany("Locations")
+                        .HasForeignKey("AirportId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("FK_airport_location_airport");
+
+                    b.Navigation("Airport");
+                });
+
+            modelBuilder.Entity("Auditor.Models.AppUser", b =>
+                {
+                    b.HasOne("Auditor.Models.Airport", "Airport")
+                        .WithMany("Users")
+                        .HasForeignKey("AirportId")
+                        .OnDelete(DeleteBehavior.SetNull)
+                        .HasConstraintName("FK_app_user_airport");
+
+                    b.Navigation("Airport");
                 });
 
             modelBuilder.Entity("Auditor.Models.AuditAttachment", b =>
@@ -1135,15 +1420,28 @@ namespace Auditor.Migrations
                         .IsRequired()
                         .HasConstraintName("FK__audit_sit__depar__75A278F5");
 
+                    b.HasOne("Auditor.Models.AirportLocation", "Terminal")
+                        .WithMany("TerminalAuditSites")
+                        .HasForeignKey("TerminalId")
+                        .HasConstraintName("FK_audit_site_terminal");
+
                     b.Navigation("Airport");
 
                     b.Navigation("CreatedByNavigation");
 
                     b.Navigation("Department");
+
+                    b.Navigation("Terminal");
                 });
 
             modelBuilder.Entity("Auditor.Models.AuditTemplate", b =>
                 {
+                    b.HasOne("Auditor.Models.Airport", "Airport")
+                        .WithMany("Templates")
+                        .HasForeignKey("AirportId")
+                        .OnDelete(DeleteBehavior.SetNull)
+                        .HasConstraintName("FK_audit_template_airport");
+
                     b.HasOne("Auditor.Models.AppUser", "CreatedByNavigation")
                         .WithMany("AuditTemplates")
                         .HasForeignKey("CreatedBy")
@@ -1154,6 +1452,8 @@ namespace Auditor.Migrations
                         .WithMany()
                         .HasForeignKey("ModifiedBy")
                         .HasConstraintName("FK__audit_tem__modif__6C190EBC");
+
+                    b.Navigation("Airport");
 
                     b.Navigation("CreatedByNavigation");
 
@@ -1210,11 +1510,18 @@ namespace Auditor.Migrations
                         .IsRequired()
                         .HasConstraintName("FK__question___quest__60A75C0F");
 
+                    b.HasOne("Auditor.Models.ReferenceList", "ReferenceList")
+                        .WithMany("Questions")
+                        .HasForeignKey("ReferenceListId")
+                        .HasConstraintName("FK_question_bank_reference_list");
+
                     b.Navigation("Category");
 
                     b.Navigation("CreatedByNavigation");
 
                     b.Navigation("QuestionType");
+
+                    b.Navigation("ReferenceList");
                 });
 
             modelBuilder.Entity("Auditor.Models.QuestionBankOption", b =>
@@ -1237,6 +1544,26 @@ namespace Auditor.Migrations
                         .HasConstraintName("FK__question___quest__6754599E");
 
                     b.Navigation("QuestionBank");
+                });
+
+            modelBuilder.Entity("Auditor.Models.ReferenceListItem", b =>
+                {
+                    b.HasOne("Auditor.Models.Airport", "Airport")
+                        .WithMany()
+                        .HasForeignKey("AirportId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .HasConstraintName("FK_reference_list_item_airport");
+
+                    b.HasOne("Auditor.Models.ReferenceList", "List")
+                        .WithMany("Items")
+                        .HasForeignKey("ListId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("FK_reference_list_item_list");
+
+                    b.Navigation("Airport");
+
+                    b.Navigation("List");
                 });
 
             modelBuilder.Entity("Auditor.Models.ScheduleChangeRequest", b =>
@@ -1268,6 +1595,17 @@ namespace Auditor.Migrations
             modelBuilder.Entity("Auditor.Models.Airport", b =>
                 {
                     b.Navigation("AuditSites");
+
+                    b.Navigation("Locations");
+
+                    b.Navigation("Templates");
+
+                    b.Navigation("Users");
+                });
+
+            modelBuilder.Entity("Auditor.Models.AirportLocation", b =>
+                {
+                    b.Navigation("TerminalAuditSites");
                 });
 
             modelBuilder.Entity("Auditor.Models.AppUser", b =>
@@ -1348,6 +1686,13 @@ namespace Auditor.Migrations
             modelBuilder.Entity("Auditor.Models.QuestionType", b =>
                 {
                     b.Navigation("QuestionBanks");
+                });
+
+            modelBuilder.Entity("Auditor.Models.ReferenceList", b =>
+                {
+                    b.Navigation("Items");
+
+                    b.Navigation("Questions");
                 });
 #pragma warning restore 612, 618
         }

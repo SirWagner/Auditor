@@ -19,6 +19,8 @@ public partial class AuditorContext : DbContext
 
     public virtual DbSet<Airport> Airports { get; set; }
 
+    public virtual DbSet<AirportLocation> AirportLocations { get; set; }
+
     public virtual DbSet<AppUser> AppUsers { get; set; }
 
     public virtual DbSet<AuditAttachment> AuditAttachments { get; set; }
@@ -44,6 +46,10 @@ public partial class AuditorContext : DbContext
     public virtual DbSet<Notification> Notifications { get; set; }
 
     public virtual DbSet<QuestionBank> QuestionBanks { get; set; }
+
+    public virtual DbSet<ReferenceList> ReferenceLists { get; set; }
+
+    public virtual DbSet<ReferenceListItem> ReferenceListItems { get; set; }
 
     public virtual DbSet<QuestionBankOption> QuestionBankOptions { get; set; }
 
@@ -73,13 +79,55 @@ public partial class AuditorContext : DbContext
                 .IsRequired()
                 .HasMaxLength(50)
                 .HasColumnName("code");
-            entity.Property(e => e.Location)
-                .HasMaxLength(255)
-                .HasColumnName("location");
             entity.Property(e => e.Name)
                 .IsRequired()
                 .HasMaxLength(255)
                 .HasColumnName("name");
+            entity.Property(e => e.AirportType)
+                .HasMaxLength(50)
+                .HasColumnName("airport_type");
+            entity.Property(e => e.Region)
+                .HasMaxLength(100)
+                .HasColumnName("region");
+            entity.Property(e => e.Country)
+                .HasMaxLength(100)
+                .HasColumnName("country");
+            entity.Property(e => e.AirportManager)
+                .HasMaxLength(200)
+                .HasColumnName("airport_manager");
+            entity.Property(e => e.EmailAddress)
+                .HasMaxLength(255)
+                .HasColumnName("email_address");
+            entity.Property(e => e.TelNumber)
+                .HasMaxLength(20)
+                .HasColumnName("tel_number");
+            entity.Property(e => e.IsActive)
+                .HasDefaultValue(true)
+                .HasColumnName("is_active");
+        });
+
+        modelBuilder.Entity<AirportLocation>(entity =>
+        {
+            entity.ToTable("airport_location");
+
+            entity.HasIndex(e => new { e.AirportId, e.AreaType, e.Name }, "UQ_airport_location_airport_area_name").IsUnique();
+
+            entity.Property(e => e.Id).HasColumnName("id");
+            entity.Property(e => e.AirportId).HasColumnName("airport_id");
+            entity.Property(e => e.AreaType)
+                .IsRequired()
+                .HasMaxLength(30)
+                .IsUnicode(false)
+                .HasColumnName("area_type");
+            entity.Property(e => e.Name)
+                .IsRequired()
+                .HasMaxLength(150)
+                .HasColumnName("name");
+
+            entity.HasOne(d => d.Airport).WithMany(p => p.Locations)
+                .HasForeignKey(d => d.AirportId)
+                .OnDelete(DeleteBehavior.Cascade)
+                .HasConstraintName("FK_airport_location_airport");
         });
 
         modelBuilder.Entity<AppUser>(entity =>
@@ -110,6 +158,23 @@ public partial class AuditorContext : DbContext
             entity.Property(e => e.Role)
                 .HasMaxLength(50)
                 .HasColumnName("role");
+            entity.Property(e => e.EmployeeNumber)
+                .HasMaxLength(30)
+                .HasColumnName("employee_number");
+            entity.Property(e => e.LastLoginDate).HasColumnName("last_login_date");
+
+            entity.HasIndex(e => e.EmployeeNumber, "UQ_app_user_employee_number")
+                .IsUnique()
+                .HasFilter("[employee_number] IS NOT NULL");
+            entity.HasIndex(e => e.Email, "UQ_app_user_email")
+                .IsUnique()
+                .HasFilter("[email] IS NOT NULL");
+
+            entity.Property(e => e.AirportId).HasColumnName("airport_id");
+            entity.HasOne(d => d.Airport).WithMany(p => p.Users)
+                .HasForeignKey(d => d.AirportId)
+                .OnDelete(DeleteBehavior.SetNull)
+                .HasConstraintName("FK_app_user_airport");
         });
 
         modelBuilder.Entity<AuditAttachment>(entity =>
@@ -213,7 +278,18 @@ public partial class AuditorContext : DbContext
                 .HasMaxLength(2000)
                 .HasColumnName("comment");
             entity.Property(e => e.Compliant).HasColumnName("compliant");
+            entity.Property(e => e.AnswerValue)
+                .HasMaxLength(2000)
+                .HasColumnName("answer_value");
             entity.Property(e => e.ExecutionId).HasColumnName("execution_id");
+            entity.Property(e => e.Responsibility)
+                .HasMaxLength(100)
+                .HasColumnName("responsibility");
+            entity.Property(e => e.ServiceProvider)
+                .HasMaxLength(200)
+                .HasColumnName("service_provider");
+            entity.HasIndex(e => e.Responsibility, "idx_response_responsibility");
+            entity.HasIndex(e => e.ServiceProvider, "idx_response_service_provider");
             entity.Property(e => e.SelectedOptionId).HasColumnName("selected_option_id");
             entity.Property(e => e.TemplateItemId).HasColumnName("template_item_id");
 
@@ -407,6 +483,33 @@ public partial class AuditorContext : DbContext
                 .HasMaxLength(50)
                 .IsUnicode(false)
                 .HasColumnName("status");
+            entity.Property(e => e.TerminalId).HasColumnName("terminal_id");
+            entity.Property(e => e.SiteCategory)
+                .HasMaxLength(50)
+                .HasColumnName("site_category");
+            entity.Property(e => e.SiteSubCategory)
+                .HasMaxLength(50)
+                .HasColumnName("site_sub_category");
+            entity.Property(e => e.SiteType)
+                .HasMaxLength(150)
+                .HasColumnName("site_type");
+            entity.Property(e => e.ServiceProvider)
+                .HasMaxLength(200)
+                .HasColumnName("service_provider");
+            entity.Property(e => e.ContactName)
+                .HasMaxLength(150)
+                .HasColumnName("contact_name");
+            entity.Property(e => e.ContactEmail)
+                .HasMaxLength(255)
+                .HasColumnName("contact_email");
+            entity.Property(e => e.ContactNumber)
+                .HasMaxLength(20)
+                .HasColumnName("contact_number");
+
+            entity.HasOne(d => d.Terminal).WithMany(p => p.TerminalAuditSites)
+                .HasForeignKey(d => d.TerminalId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_audit_site_terminal");
 
             entity.HasOne(d => d.Airport).WithMany(p => p.AuditSites)
                 .HasForeignKey(d => d.AirportId)
@@ -480,6 +583,12 @@ public partial class AuditorContext : DbContext
                 .HasForeignKey(d => d.ModifiedBy)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK__audit_tem__modif__6C190EBC");
+
+            entity.Property(e => e.AirportId).HasColumnName("airport_id");
+            entity.HasOne(d => d.Airport).WithMany(p => p.Templates)
+                .HasForeignKey(d => d.AirportId)
+                .OnDelete(DeleteBehavior.SetNull)
+                .HasConstraintName("FK_audit_template_airport");
         });
 
         modelBuilder.Entity<AuditTemplateItem>(entity =>
@@ -497,6 +606,15 @@ public partial class AuditorContext : DbContext
             entity.Property(e => e.TemplateId).HasColumnName("template_id");
             entity.Property(e => e.ModifiedBy).HasColumnName("modified_by");
             entity.Property(e => e.ModifiedDate).HasColumnName("modified_date");
+            entity.Property(e => e.Section)
+                .HasMaxLength(500)
+                .HasColumnName("section");
+            entity.Property(e => e.Responsibility)
+                .HasMaxLength(100)
+                .HasColumnName("responsibility");
+            entity.Property(e => e.ServiceProvider)
+                .HasMaxLength(200)
+                .HasColumnName("service_provider");
 
             entity.HasOne(d => d.QuestionBank).WithMany(p => p.AuditTemplateItems)
                 .HasForeignKey(d => d.QuestionBankId)
@@ -560,6 +678,48 @@ public partial class AuditorContext : DbContext
                 .HasConstraintName("FK__notificat__recip__1AD3FDA4");
         });
 
+        modelBuilder.Entity<ReferenceList>(entity =>
+        {
+            entity.ToTable("reference_list");
+
+            entity.HasIndex(e => e.Name, "UQ_reference_list_name").IsUnique();
+            entity.HasIndex(e => e.Code, "UQ_reference_list_code").IsUnique().HasFilter("[code] IS NOT NULL");
+
+            entity.Property(e => e.Id).HasColumnName("id");
+            entity.Property(e => e.Code).HasMaxLength(50).HasColumnName("code");
+            entity.Property(e => e.Name).IsRequired().HasMaxLength(100).HasColumnName("name");
+            entity.Property(e => e.Description).HasMaxLength(500).HasColumnName("description");
+            entity.Property(e => e.CreatedDate)
+                .HasDefaultValueSql("(sysutcdatetime())")
+                .HasColumnName("created_date");
+        });
+
+        modelBuilder.Entity<ReferenceListItem>(entity =>
+        {
+            entity.ToTable("reference_list_item");
+
+            entity.HasIndex(e => new { e.ListId, e.AirportId, e.Name }, "UQ_reference_list_item").IsUnique().HasFilter(null);
+
+            entity.Property(e => e.Id).HasColumnName("id");
+            entity.Property(e => e.ListId).HasColumnName("list_id");
+            entity.Property(e => e.Name).IsRequired().HasMaxLength(200).HasColumnName("name");
+            entity.Property(e => e.Code).HasMaxLength(20).HasColumnName("code");
+            entity.Property(e => e.GroupName).HasMaxLength(100).HasColumnName("group_name");
+            entity.Property(e => e.AirportId).HasColumnName("airport_id");
+            entity.Property(e => e.IsActive).HasDefaultValue(true).HasColumnName("is_active");
+            entity.Property(e => e.DisplayOrder).HasColumnName("display_order");
+
+            entity.HasOne(d => d.List).WithMany(p => p.Items)
+                .HasForeignKey(d => d.ListId)
+                .OnDelete(DeleteBehavior.Cascade)
+                .HasConstraintName("FK_reference_list_item_list");
+
+            entity.HasOne(d => d.Airport).WithMany()
+                .HasForeignKey(d => d.AirportId)
+                .OnDelete(DeleteBehavior.Cascade)
+                .HasConstraintName("FK_reference_list_item_airport");
+        });
+
         modelBuilder.Entity<QuestionBank>(entity =>
         {
             entity.HasKey(e => e.Id).HasName("PK__question__3213E83FD16E9283");
@@ -588,6 +748,12 @@ public partial class AuditorContext : DbContext
             entity.Property(e => e.ServiceStandardRecommendation)
                 .HasMaxLength(2000)
                 .HasColumnName("service_standard_recommendation");
+            entity.Property(e => e.ReferenceListId).HasColumnName("reference_list_id");
+
+            entity.HasOne(d => d.ReferenceList).WithMany(p => p.Questions)
+                .HasForeignKey(d => d.ReferenceListId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_question_bank_reference_list");
 
             entity.HasOne(d => d.Category).WithMany(p => p.QuestionBanks)
                 .HasForeignKey(d => d.CategoryId)

@@ -1,0 +1,36 @@
+@model Auditor.Models.Department
+
+@if (!ViewData.ModelState.IsValid)
+{
+    <div class="validation-alert">
+        <h3>
+            <i class="fas fa-times-circle"></i>
+            Fix the following before saving
+        </h3>
+        <ul>
+            @foreach (var error in ViewData.ModelState.Values.SelectMany(v => v.Errors))
+            {
+                <li>@error.ErrorMessage</li>
+            }
+        </ul>
+    </div>
+}
+
+<div class="form-section">
+    <h3 class="form-section-title">Department Information</h3>
+
+    <div class="form-grid full">
+        <div class="form-group">
+            <label asp-for="Name">Department Name <span class="required">*</span></label>
+            <input asp-for="Name" type="text" maxlength="255" placeholder="e.g., Operations" required data-val="false" />
+            <span asp-validation-for="Name" class="form-group-error"></span>
+            <div class="form-group-hint">Must be unique.</div>
+        </div>
+
+        <div class="form-group">
+            <label asp-for="Description">Description</label>
+            <textarea asp-for="Description" maxlength="500" placeholder="What this department is responsible for" data-val="false"></textarea>
+            <span asp-validation-for="Description" class="form-group-error"></span>
+        </div>
+    </div>
+</div>

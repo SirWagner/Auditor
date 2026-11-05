@@ -17,6 +17,15 @@ public partial class AuditTemplateItem
 
     public bool Mandatory { get; set; }
 
+    /// <summary>Location within the audit the question applies to, e.g. "Arrival Airside › Loading Bridge". Groups questions on the execution screen.</summary>
+    public string? Section { get; set; }
+
+    /// <summary>Who answers for this question here, e.g. "ACSA" or "Ramp Handling Company". The same question can differ between templates.</summary>
+    public string? Responsibility { get; set; }
+
+    /// <summary>The company responsible when the checklist names one, e.g. "Hetlisa".</summary>
+    public string? ServiceProvider { get; set; }
+
     public long? ModifiedBy { get; set; }
 
     public DateTime? ModifiedDate { get; set; }

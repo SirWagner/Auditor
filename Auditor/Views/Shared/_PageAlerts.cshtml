@@ -1,0 +1,17 @@
+@* One-off success/error messages set via TempData["Success"] / TempData["Error"] before a redirect. *@
+
+@if (TempData["Success"] is string success)
+{
+    <div class="page-alert page-alert-success" role="status">
+        <i class="fas fa-check-circle"></i>
+        @success
+    </div>
+}
+
+@if (TempData["Error"] is string error)
+{
+    <div class="page-alert page-alert-error" role="alert">
+        <i class="fas fa-exclamation-circle"></i>
+        @error
+    </div>
+}

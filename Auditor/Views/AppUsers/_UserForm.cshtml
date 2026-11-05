@@ -1,0 +1,100 @@
+@model Auditor.ViewModels.Users.AppUserFormViewModel
+@using Auditor.Security
+
+@if (!ViewData.ModelState.IsValid)
+{
+    <div class="validation-alert">
+        <h3><i class="fas fa-times-circle"></i> Fix the following before saving</h3>
+        <ul>
+            @foreach (var error in ViewData.ModelState.Values.SelectMany(v => v.Errors))
+            {
+                <li>@error.ErrorMessage</li>
+            }
+        </ul>
+    </div>
+}
+
+<div class="form-section">
+    <h3 class="form-section-title">Identity</h3>
+    <div class="form-grid">
+        <div class="form-group">
+            <label asp-for="DisplayName">Full Name <span class="required">*</span></label>
+            <input asp-for="DisplayName" type="text" maxlength="255" autocomplete="off" required />
+            <span asp-validation-for="DisplayName" class="form-group-error"></span>
+        </div>
+
+        <div class="form-group">
+            <label asp-for="EmployeeNumber">Employee Number <span class="required">*</span></label>
+            <input asp-for="EmployeeNumber" type="text" maxlength="30" placeholder="e.g. EMP-1042" autocomplete="off" required />
+            <span asp-validation-for="EmployeeNumber" class="form-group-error"></span>
+            <div class="form-group-hint">Unique. Users can sign in with it instead of their email.</div>
+        </div>
+
+        <div class="form-group">
+            <label asp-for="Email">Email <span class="required">*</span></label>
+            <input asp-for="Email" type="email" maxlength="255" autocomplete="off" required />
+            <span asp-validation-for="Email" class="form-group-error"></span>
+        </div>
+
+        <div class="form-group">
+            <label asp-for="AirportId">Airport</label>
+            <select asp-for="AirportId">
+                <option value="">All airports</option>
+                @foreach (var a in ViewBag.Airports as List<Airport> ?? new())
+                {
+                    <option value="@a.Id" selected="@(a.Id == Model.AirportId)">@a.Code · @a.Name</option>
+                }
+            </select>
+            <span asp-validation-for="AirportId" class="form-group-error"></span>
+            <div class="form-group-hint">Leave blank to give access to every airport. Otherwise the user only sees and works with this airport.</div>
+        </div>
+
+        <div class="form-group">
+            <label asp-for="IsActive">Status</label>
+            <select asp-for="IsActive">
+                <option value="true">Active</option>
+                <option value="false">Inactive</option>
+            </select>
+            <div class="form-group-hint">Inactive users can't sign in. Their audit history is kept.</div>
+        </div>
+    </div>
+</div>
+
+<div class="form-section">
+    <h3 class="form-section-title">Role <span class="required">*</span></h3>
+    <p class="form-section-description">The role decides which menus and actions the user sees.</p>
+    <div class="check-list" role="radiogroup" aria-label="Role" style="max-height:none;">
+        @foreach (var role in Roles.All)
+        {
+            <label>
+                <input type="radio" name="Role" value="@role" checked="@(Model.Role == role)" />
+                <span>
+                    <span class="role-pill role-pill-@role">@role</span>
+                    <small>@Roles.Descriptions[role]</small>
+                </span>
+            </label>
+        }
+    </div>
+    <span asp-validation-for="Role" class="form-group-error"></span>
+</div>
+
+<div class="form-section">
+    <h3 class="form-section-title">@(Model.IsNew ? "Password" : "Reset Password")</h3>
+    @if (!Model.IsNew)
+    {
+        <p class="form-section-description">Leave blank to keep the user's current password.</p>
+    }
+    <div class="form-grid">
+        <div class="form-group">
+            <label asp-for="Password">@(Model.IsNew ? "Password" : "New Password") @if (Model.IsNew) { <span class="required">*</span> }</label>
+            <input asp-for="Password" type="password" autocomplete="new-password" />
+            <span asp-validation-for="Password" class="form-group-error"></span>
+            <div class="form-group-hint">At least 8 characters, with at least one letter and one number.</div>
+        </div>
+        <div class="form-group">
+            <label asp-for="ConfirmPassword">Confirm Password</label>
+            <input asp-for="ConfirmPassword" type="password" autocomplete="new-password" />
+            <span asp-validation-for="ConfirmPassword" class="form-group-error"></span>
+        </div>
+    </div>
+</div>

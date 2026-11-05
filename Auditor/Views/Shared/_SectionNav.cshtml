@@ -1,0 +1,38 @@
+@model Auditor.ViewModels.Shared.SectionNavPanel
+@* In-tab navigation: a tree of sections and sub-locations on wide screens, a "Jump to" list on phones. *@
+<nav class="sec-nav" aria-label="Locations in @Model.Title">
+    <label class="sec-jump-label" for="jump-@Model.TabId">Jump to</label>
+    <select class="sec-jump form-control" id="jump-@Model.TabId">
+        @foreach (var n in Model.Nav)
+        {
+            var indent = new string((char)160, n.Depth * 3);
+            if (n.GroupId == null)
+            {
+                <option disabled>@indent@n.Label</option>
+            }
+            else
+            {
+                <option value="@n.GroupId">@indent@n.Label (@n.Count)</option>
+            }
+        }
+    </select>
+    <ul class="sec-tree">
+        @foreach (var n in Model.Nav)
+        {
+            <li style="--depth:@n.Depth">
+                @if (n.GroupId == null)
+                {
+                    <span class="sec-tree-head" title="@n.Label">@n.Label</span>
+                }
+                else
+                {
+                    <a href="#grp-@n.GroupId" data-group="@n.GroupId" title="@n.Label">
+                        <span class="sec-dot" aria-hidden="true"></span>
+                        <span class="sec-tree-label">@n.Label</span>
+                        <span class="sec-tree-count" data-count>@n.Count</span>
+                    </a>
+                }
+            </li>
+        }
+    </ul>
+</nav>

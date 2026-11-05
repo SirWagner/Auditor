@@ -13,6 +13,7 @@ using System.Threading.Tasks;
 
 namespace Auditor.Controllers
 {
+    [Microsoft.AspNetCore.Authorization.Authorize(Roles = Auditor.Security.Roles.AdminOrManager)]
     public class QuestionBanksController : Controller
     {
         private readonly AuditorContext _context;
@@ -71,10 +72,24 @@ namespace Auditor.Controllers
         // GET: QuestionBanks/Create
         public IActionResult Create()
         {
+            FillCreateOptions();
+            return View();
+        }
+
+        private void FillCreateOptions()
+        {
             ViewData["CategoryId"] = new SelectList(_context.QuestionCategories, "Id", "Name");
             ViewData["CreatedBy"] = new SelectList(_context.AppUsers, "Id", "Id");
             ViewData["QuestionTypeId"] = new SelectList(_context.QuestionTypes, "Id", "Name");
-            return View();
+            ViewBag.ReferenceLists = _context.ReferenceLists.OrderBy(l => l.Name).ToList();
+        }
+
+        // A LIST question needs a list to answer from.
+        private async Task ValidateListAsync(long questionTypeId, long? referenceListId)
+        {
+            var type = await _context.QuestionTypes.Where(t => t.Id == questionTypeId).Select(t => t.Name).FirstOrDefaultAsync();
+            if (type == "LIST" && (referenceListId == null || !await _context.ReferenceLists.AnyAsync(l => l.Id == referenceListId)))
+                ModelState.AddModelError("ReferenceListId", "Select the list this question is answered from.");
         }
 
         // POST: QuestionBanks/Create
@@ -86,9 +101,11 @@ namespace Auditor.Controllers
         {
 
 
+            await ValidateListAsync(model.QuestionTypeId, model.ReferenceListId);
             if (!ModelState.IsValid)
             {
-                Redirect(nameof(Create));
+                FillCreateOptions();
+                return View(model);
             }
 
 
@@ -105,6 +122,8 @@ namespace Auditor.Controllers
 
                 ResponsibleContractor =
                     model.ResponsibleContractor,
+
+                ReferenceListId = model.ReferenceListId,
 
                 IsActive = model.IsActive,
 
@@ -145,6 +164,7 @@ namespace Auditor.Controllers
             ViewData["CategoryId"] = new SelectList(_context.QuestionCategories, "Id", "Name", questionBank.CategoryId);
             ViewData["CreatedBy"] = new SelectList(_context.AppUsers, "Id", "Id", questionBank.CreatedBy);
             ViewData["QuestionTypeId"] = new SelectList(_context.QuestionTypes, "Id", "Name", questionBank.QuestionTypeId);
+            ViewBag.ReferenceLists = await _context.ReferenceLists.OrderBy(l => l.Name).ToListAsync();
             return View(questionBank);
         }
 
@@ -153,12 +173,16 @@ namespace Auditor.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(long id, [Bind("Id,QuestionText,CategoryId,QuestionTypeId,ServiceStandardRecommendation,ResponsibleContractor,IsActive,CreatedBy,CreatedDate")] QuestionBank questionBank)
+        public async Task<IActionResult> Edit(long id, [Bind("Id,QuestionText,CategoryId,QuestionTypeId,ServiceStandardRecommendation,ResponsibleContractor,ReferenceListId,IsActive,CreatedBy,CreatedDate")] QuestionBank questionBank)
         {
             if (id != questionBank.Id)
             {
                 return NotFound();
             }
+
+            await ValidateListAsync(questionBank.QuestionTypeId, questionBank.ReferenceListId);
+            if (await _context.QuestionTypes.Where(t => t.Id == questionBank.QuestionTypeId).Select(t => t.Name).FirstOrDefaultAsync() != "LIST")
+                questionBank.ReferenceListId = null;
 
             if (ModelState.IsValid)
             {
@@ -183,6 +207,7 @@ namespace Auditor.Controllers
             ViewData["CategoryId"] = new SelectList(_context.QuestionCategories, "Id", "Name", questionBank.CategoryId);
             ViewData["CreatedBy"] = new SelectList(_context.AppUsers, "Id", "Id", questionBank.CreatedBy);
             ViewData["QuestionTypeId"] = new SelectList(_context.QuestionTypes, "Id", "Name", questionBank.QuestionTypeId);
+            ViewBag.ReferenceLists = await _context.ReferenceLists.OrderBy(l => l.Name).ToListAsync();
             return View(questionBank);
         }
 

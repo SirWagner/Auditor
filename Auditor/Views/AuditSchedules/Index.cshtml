@@ -1,60 +1,58 @@
-﻿@model IEnumerable<Auditor.Models.AuditSchedule>
-
+@model IEnumerable<Auditor.Models.AuditSchedule>
+@using Auditor.Models.Lookups
 @{
-    ViewData["Title"] = "Scheduled Audits";
-    Layout = "~/Views/Shared/_Layout.cshtml";
+    ViewData["Title"] = "Audit Schedules";
+    var filterPanel = (Auditor.ViewModels.Shared.AuditFilterPanel)ViewBag.Filter;
 }
 
 <div class="list-container">
     <div class="list-header">
         <div class="list-header-content">
-            <h1>📅 Scheduled Audits</h1>
-            <p class="list-header-subtitle">Track and manage upcoming audit executions</p>
+            <h1>📅 Audit Schedules</h1>
+            <p class="list-header-subtitle">Plan which audits run where, when, and by whom</p>
         </div>
         <a asp-action="Create" class="btn-list-primary">
-            <span>+</span> Create New Execution
+            <span>+</span> Schedule an Audit
         </a>
     </div>
+
+    <partial name="_PageAlerts" />
+
+    <partial name="_AuditFilter" model="filterPanel" />
 
     @if (Model.Any())
     {
         <div class="list-table-wrapper">
-            <table class="list-table table schedule-table">
+            <table class="list-table table">
                 <thead>
                     <tr>
-                        <th style="width: 30%;">Audit Template</th>
-                        <th style="width: 25%;">Site / Location</th>
-                        <th style="width: 25%;">Scheduled Date</th>
-                        <th style="width: 20%;">Actions</th>
+                        <th style="width: 28%;">Audit Template</th>
+                        <th style="width: 22%;">Site</th>
+                        <th style="width: 14%;">Scheduled</th>
+                        <th style="width: 11%;">Due</th>
+                        <th style="width: 10%;">Auditors</th>
+                        <th style="width: 10%;">Status</th>
+                        <th style="width: 5%;"></th>
                     </tr>
                 </thead>
                 <tbody>
                     @foreach (var item in Model)
                     {
+                        var overdue = item.Status == ScheduleStatuses.Scheduled && item.DueDate < DateTime.Now;
                         <tr>
+                            <td><div class="cell-name">@item.Template?.Name</div></td>
                             <td>
-                                <div class="cell-name">
-                                    @Html.DisplayFor(modelItem => item.Template.Name)
-                                </div>
+                                <div class="cell-name">@item.Site?.Name</div>
+                                <small class="text-muted">@item.Site?.Airport?.Code</small>
                             </td>
                             <td>
-                                <div class="cell-secondary">
-                                    <span class="cell-code">@item.Site.Name</span>
-                                </div>
+                                <div class="cell-secondary">@item.ScheduledDate.ToString("dd MMM yyyy")</div>
+                                <small class="text-muted">@item.ScheduledDate.ToString("HH:mm")</small>
                             </td>
-                            <td>
-                                <div class="cell-name">
-                                    @item.ScheduledDate.ToString("MMM dd, yyyy")
-                                </div>
-                                <small class="text-muted">@item.ScheduledDate.ToString("t")</small>
-                            </td>
-                            <td>
-                                <div class="list-actions">
-                                    <a asp-action="Details" asp-route-id="@item.Id" class="action-btn btn-view">View Details</a>
-                                    @* Adding Edit/Delete for consistency with your previous base views *@
-                                    <a asp-action="Edit" asp-route-id="@item.Id" class="action-btn btn-edit">Edit</a>
-                                </div>
-                            </td>
+                            <td><div class="cell-secondary" style="@(overdue ? "color:#b91c1c;font-weight:600;" : "")">@item.DueDate.ToString("dd MMM yyyy")</div></td>
+                            <td><div class="cell-secondary" title="@string.Join(", ", item.Auditors.Select(a => a.DisplayName))">@item.Auditors.Count</div></td>
+                            <td><span class="status-pill @ScheduleStatuses.PillClass(item.Status)">@ScheduleStatuses.Label(item.Status)</span></td>
+                            <td><a asp-action="Details" asp-route-id="@item.Id" class="action-btn btn-view">View</a></td>
                         </tr>
                     }
                 </tbody>
@@ -66,24 +64,10 @@
         <div class="list-table-wrapper">
             <div class="list-empty-state">
                 <div class="empty-state-icon">📅</div>
-                <h2 class="empty-state-title">No Audits Scheduled</h2>
-                <p class="empty-state-text">Everything is clear! Start by scheduling a new audit execution.</p>
-                <a asp-action="Create" class="btn-list-primary">
-                    <span>+</span> Schedule Now
-                </a>
+                <h2 class="empty-state-title">No schedules here</h2>
+                <p class="empty-state-text">Change the filters, or schedule a new audit.</p>
+                <a asp-action="Create" class="btn-list-primary"><span>+</span> Schedule an Audit</a>
             </div>
         </div>
     }
-
-    <div class="mt-4">
-        <a asp-controller="Home" asp-action="Index" class="text-decoration-none">
-            ← Back to Dashboard
-        </a>
-    </div>
 </div>
-
-@section Scripts {
-    @{
-        await Html.RenderPartialAsync("_ValidationScriptsPartial");
-    }
-}

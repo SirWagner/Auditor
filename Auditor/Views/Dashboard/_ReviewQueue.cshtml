@@ -1,0 +1,23 @@
+@model List<Auditor.ViewModels.Dashboard.ReviewRow>
+
+@if (Model.Count == 0)
+{
+    <div class="panel-empty"><p>Nothing waiting for review.</p></div>
+}
+else
+{
+    <ul class="review-list">
+        @foreach (var r in Model)
+        {
+            <li>
+                <a asp-controller="AuditExecutions" asp-action="Details" asp-route-id="@r.ExecutionId">
+                    <span class="review-main">
+                        <strong>@r.Template</strong>
+                        <small>@r.Site · @r.Auditor · @(r.Submitted?.ToLocalTime().ToString("dd MMM HH:mm") ?? "")</small>
+                    </span>
+                    <span class="review-score">@(r.Score?.ToString("0.#") ?? "—")%</span>
+                </a>
+            </li>
+        }
+    </ul>
+}

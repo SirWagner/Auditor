@@ -25,6 +25,11 @@ public partial class AuditTemplate
 
     public DateTime? ModifiedDate { get; set; }
 
+    /// <summary>When set, the template is only offered for schedules at this airport. Null = all airports.</summary>
+    public long? AirportId { get; set; }
+
+    public virtual Airport? Airport { get; set; }
+
     public virtual ICollection<AuditSchedule> AuditSchedules { get; set; } = new List<AuditSchedule>();
 
     public virtual ICollection<AuditTemplateItem> AuditTemplateItems { get; set; } = new List<AuditTemplateItem>();

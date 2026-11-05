@@ -1,40 +1,93 @@
-version: "3.9"
+# Auditor — airport audit management
+#
+# Everything is pulled from Docker Hub; nothing is built here, so this file is all you need.
+#
+#   docker compose up -d          download the images, create/upgrade the database, start the app
+#   docker compose pull           fetch newer images (then run "up -d" again)
+#   docker compose logs -f web    follow the app's log
+#   docker compose down           stop (data is kept in the named volumes)
+#
+# Open http://<server>:8580 and sign in with the administrator below, then change its password.
+#
+# Every value can be overridden in a .env file next to this one, or as an environment variable:
+#   WEB_PORT          port the app is published on                 (default 8580)
+#   SQL_PORT          port SQL Server is published on               (default 14333; avoids clashing with an existing SQL Server on 1433)
+#   SA_PASSWORD       SQL Server 'sa' password — CHANGE THIS before the first start
+#   ADMIN_EMAIL       first administrator's sign-in email           (default admin@auditor.local)
+#   ADMIN_PASSWORD    first administrator's initial password        — CHANGE THIS before the first start
+#   TAG               image version                                 (default latest)
+
+name: auditor
 
 services:
-
-  db:
+  sql:
     image: mcr.microsoft.com/mssql/server:2022-latest
-    container_name: auditor-db
-    restart: always
+    container_name: auditor-sql
     environment:
       ACCEPT_EULA: "Y"
-      SA_PASSWORD: "YourStrong!Passw0rd"
-      MSSQL_PID: "Express"
+      MSSQL_PID: ${MSSQL_PID:-Express}
+      MSSQL_SA_PASSWORD: ${SA_PASSWORD:-Auditor#Sql2026!}
     ports:
-      - "1433:1433"
+      - "${SQL_PORT:-14333}:1433"
     volumes:
       - sqldata:/var/opt/mssql
     networks:
       - auditor-net
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "/opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P \"$$MSSQL_SA_PASSWORD\" -C -Q 'SELECT 1' -b -o /dev/null"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 30s
 
-  app:
-    image: sirwagner/auditor:latest
-    container_name: auditor-app
-    restart: always
-    depends_on:
-      - db
+  # One-shot: creates the database on first start and applies any pending migrations, then exits.
+  migrate:
+    image: ${DOCKERHUB_REPO:-sirwagner44/xauditor}:${TAG:-latest}-migrations
+    pull_policy: always
     environment:
-      ConnectionStrings__AudConnection: "Server=db,1433;Database=Auditor2;User Id=sa;Password=YourStrong!Passw0rd;MultipleActiveResultSets=True;TrustServerCertificate=True"
-      ASPNETCORE_ENVIRONMENT: "Production"
-      ASPNETCORE_URLS: "http://+:80"
-    ports:
-      - "8080:80"
+      ConnectionStrings__AudConnection: Server=sql;Database=${DB_NAME:-Auditor};User Id=sa;Password=${SA_PASSWORD:-Auditor#Sql2026!};TrustServerCertificate=true;
+    depends_on:
+      sql:
+        condition: service_healthy
     networks:
       - auditor-net
+    restart: "no"
 
-volumes:
-  sqldata:
+  web:
+    image: ${DOCKERHUB_REPO:-sirwagner44/xauditor}:${TAG:-latest}
+    pull_policy: always
+    container_name: auditor-web
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      TZ: ${TZ:-Africa/Johannesburg}
+      ConnectionStrings__AudConnection: Server=sql;Database=${DB_NAME:-Auditor};User Id=sa;Password=${SA_PASSWORD:-Auditor#Sql2026!};TrustServerCertificate=true;
+      # First administrator (super user). Only used when this account doesn't exist yet.
+      Admin__Email: ${ADMIN_EMAIL:-admin@auditor.local}
+      Admin__Password: ${ADMIN_PASSWORD:-Admin#2026!}
+      Admin__Name: ${ADMIN_NAME:-System Administrator}
+      Admin__EmployeeNumber: ${ADMIN_EMPLOYEE_NUMBER:-ADM-0001}
+      # Load the ACSA airports, question bank, templates and sites on first start.
+      Seed__ReferenceData: ${SEED_REFERENCE_DATA:-true}
+    ports:
+      - "${WEB_PORT:-8580}:8080"
+    volumes:
+      - appdata:/app/data
+    depends_on:
+      sql:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+    networks:
+      - auditor-net
+    restart: unless-stopped
 
 networks:
   auditor-net:
-    driver: bridge
+    name: auditor-net
+
+volumes:
+  sqldata:
+    name: ${SQL_VOLUME:-auditor_sqldata}
+  appdata:
+    name: ${APP_VOLUME:-auditor_appdata}

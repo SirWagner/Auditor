@@ -25,6 +25,11 @@ public partial class QuestionBank
 
     public DateTime CreatedDate { get; set; }
 
+    /// <summary>For LIST questions: the list the answer is picked from.</summary>
+    public long? ReferenceListId { get; set; }
+
+    public virtual ReferenceList? ReferenceList { get; set; }
+
     public virtual ICollection<AuditTemplateItem> AuditTemplateItems { get; set; } = new List<AuditTemplateItem>();
 
     public virtual QuestionCategory Category { get; set; }

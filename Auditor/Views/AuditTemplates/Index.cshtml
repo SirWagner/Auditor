@@ -23,11 +23,12 @@
                 <thead>
                     <tr>
                         <th style="width: 25%;">Name</th>
-                        <th style="width: 10%;">Version</th>
+                        <th style="width: 12%;">Available at</th>
+                        <th style="width: 8%;">Version</th>
                         <th style="width: 10%;">Status</th>
                         <th style="width: 10%;">Questions</th>
-                        <th style="width: 15%;">Created By</th>
-                        <th style="width: 15%;">Created Date</th>
+                        <th style="width: 13%;">Created By</th>
+                        <th style="width: 12%;">Created Date</th>
                         <th style="width: 15%;">Actions</th>
                     </tr>
                 </thead>
@@ -37,6 +38,13 @@
                         <tr>
                             <td>
                                 <div class="cell-name">@item.Name</div>
+                            </td>
+                            <td>
+                                <div class="cell-secondary">@(item.AirportCode ?? "All airports")</div>
+                                @if (item.SiteCount > 0)
+                                {
+                                    <small class="text-muted">@item.SiteCount site(s) only</small>
+                                }
                             </td>
                             <td>
                                 <span class="cell-code">v@(item.Version)</span>

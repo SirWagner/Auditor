@@ -1,0 +1,106 @@
+@model Auditor.Models.Department
+@using Auditor.Models.Lookups
+
+@{
+    ViewData["Title"] = "Department Details";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="details-page-container">
+    <div class="details-breadcrumb">
+        <a asp-controller="Dashboard" asp-action="Index">Dashboard</a>
+        <span>›</span>
+        <a asp-controller="Departments" asp-action="Index">Departments</a>
+        <span>›</span>
+        <span>@Model.Name</span>
+    </div>
+
+    <div class="details-header">
+        <h1>
+            <i class="typcn typcn-group-outline"></i>
+            @Model.Name
+        </h1>
+        <div class="details-header-actions">
+            <a asp-action="Edit" asp-route-id="@Model.Id" class="btn-details-primary">
+                <i class="fas fa-edit"></i>
+                Edit
+            </a>
+            <a asp-action="Index" class="btn-details-secondary">
+                <i class="fas fa-arrow-left"></i>
+                Back
+            </a>
+        </div>
+    </div>
+
+    <div class="details-info-card">
+        <div class="details-info-card-header">
+            <i class="typcn typcn-document-text"></i>
+            <h2>Department Information</h2>
+        </div>
+        <div class="details-info-card-body">
+            <div class="details-info-grid">
+                <div class="details-info-field">
+                    <div class="details-info-label">Name</div>
+                    <div class="details-info-value"><strong>@Model.Name</strong></div>
+                </div>
+                <div class="details-info-field">
+                    <div class="details-info-label">Description</div>
+                    <div class="details-info-value">@(string.IsNullOrEmpty(Model.Description) ? "—" : Model.Description)</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="details-section">
+        <h2 class="details-section-title">
+            <i class="typcn typcn-location-outline"></i>
+            Audit Sites (@Model.AuditSites.Count)
+        </h2>
+    </div>
+
+    @if (Model.AuditSites.Count > 0)
+    {
+        <div class="details-table-wrapper">
+            <table class="details-table">
+                <thead>
+                    <tr>
+                        <th style="width: 35%;">Site Name</th>
+                        <th style="width: 35%;">Airport</th>
+                        <th style="width: 15%;">Status</th>
+                        <th style="width: 15%;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var site in Model.AuditSites.OrderBy(s => s.Name))
+                    {
+                        <tr>
+                            <td><strong>@site.Name</strong></td>
+                            <td>@site.Airport?.Name</td>
+                            <td>
+                                <span class="status-pill @(site.Status == AuditSiteLookups.Active ? "status-pill-active" : "status-pill-inactive")">@site.Status</span>
+                            </td>
+                            <td>
+                                <div class="details-table-actions">
+                                    <a asp-controller="AuditSites" asp-action="Details" asp-route-id="@site.Id" class="details-action-btn btn-view">
+                                        <i class="fas fa-eye"></i>
+                                        View
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+    else
+    {
+        <div class="details-table-wrapper">
+            <div class="details-empty-state">
+                <div class="details-empty-state-icon">📭</div>
+                <h3 class="details-empty-state-title">No Audit Sites</h3>
+                <p class="details-empty-state-text">No audit sites belong to this department yet</p>
+            </div>
+        </div>
+    }
+</div>

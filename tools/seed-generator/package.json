@@ -1,0 +1,7 @@
+{
+  "name": "auditor-seed-generator",
+  "private": true,
+  "description": "Builds Auditor/SeedData/acsa-seed.json from the spreadsheets in /docs",
+  "scripts": { "generate": "node generate-seed.cjs" },
+  "dependencies": { "xlsx": "0.18.5" }
+}

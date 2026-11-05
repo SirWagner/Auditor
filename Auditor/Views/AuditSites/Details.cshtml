@@ -1,5 +1,6 @@
 ﻿@model Auditor.Models.AuditSite
 @using Auditor.Models
+@using Auditor.Models.Lookups
 @using System.Globalization
 
 @{
@@ -10,7 +11,7 @@
 <div class="details-page-container">
     <!-- Breadcrumb -->
     <div class="details-breadcrumb">
-        <a asp-controller="Template" asp-action="Dashboard">Dashboard</a>
+        <a asp-controller="Dashboard" asp-action="Index">Dashboard</a>
         <span>›</span>
         <a asp-controller="AuditSites" asp-action="Index">Audit Sites</a>
         <span>›</span>
@@ -35,10 +36,7 @@
         </div>
     </div>
 
-    @if (TempData["Error"] != null)
-    {
-        <div class="alert alert-danger">@TempData["Error"]</div>
-    }
+    <partial name="_PageAlerts" />
 
     <!-- Change Status -->
     <div class="details-info-card">
@@ -50,7 +48,7 @@
             <form asp-action="ChangeStatus" asp-route-id="@Model.Id" method="post" style="display:flex; gap:8px; align-items:center;">
                 @Html.AntiForgeryToken()
                 <select name="newStatus" class="form-control" style="max-width:220px;">
-                    @foreach (var status in new[] { "Active", "Inactive", "Under Review", "Archived" })
+                    @foreach (var status in AuditSiteLookups.Statuses)
                     {
                         if (status == Model.Status)
                         {
@@ -82,36 +80,69 @@
                 <div class="details-info-field">
                     <div class="details-info-label">Status</div>
                     <div class="details-info-value">
-                        @{
-                            var statusClass = Model.Status switch
-                            {
-                                "Active" => "active",
-                                "Inactive" => "inactive",
-                                "Under Review" => "warning",
-                                "Archived" => "inactive",
-                                _ => "inactive"
-                            };
-                        }
-                        <span class="details-status-badge @statusClass">
-                            @if (Model.Status == "Active")
-                            {
+                        @if (Model.Status == AuditSiteLookups.Active)
+                        {
+                            <span class="details-status-badge active">
                                 <i class="fas fa-check-circle"></i>
-                            }
-                            else if (Model.Status == "Under Review")
-                            {
-                                <i class="fas fa-hourglass-half"></i>
-                            }
-                            else
-                            {
+                                @Model.Status
+                            </span>
+                        }
+                        else
+                        {
+                            <span class="details-status-badge inactive">
                                 <i class="fas fa-times-circle"></i>
-                            }
-                            @Model.Status
-                        </span>
+                                @Model.Status
+                            </span>
+                        }
                     </div>
                 </div>
                 <div class="details-info-field">
-                    <div class="details-info-label">Location</div>
-                    <div class="details-info-value"><strong>@Model.Location</strong></div>
+                    <div class="details-info-label">Site Category</div>
+                    <div class="details-info-value"><strong>@(Model.SiteCategory ?? "Not classified")</strong></div>
+                </div>
+                <div class="details-info-field">
+                    <div class="details-info-label">Sub-Category</div>
+                    <div class="details-info-value"><strong>@(Model.SiteSubCategory ?? "—")</strong></div>
+                </div>
+                <div class="details-info-field">
+                    <div class="details-info-label">Site Type</div>
+                    <div class="details-info-value"><strong>@(Model.SiteType ?? "—")</strong></div>
+                </div>
+                <div class="details-info-field">
+                    <div class="details-info-label">Terminal</div>
+                    <div class="details-info-value"><strong>@(Model.Terminal?.Name ?? "—")</strong></div>
+                </div>
+                @if (!string.IsNullOrEmpty(Model.Location))
+                {
+                    <div class="details-info-field">
+                        <div class="details-info-label">Location (legacy)</div>
+                        <div class="details-info-value">@Model.Location</div>
+                    </div>
+                }
+                <div class="details-info-field">
+                    <div class="details-info-label">Service Provider</div>
+                    <div class="details-info-value">@(Model.ServiceProvider ?? "—")</div>
+                </div>
+                <div class="details-info-field">
+                    <div class="details-info-label">Contact Name</div>
+                    <div class="details-info-value">@(Model.ContactName ?? "—")</div>
+                </div>
+                <div class="details-info-field">
+                    <div class="details-info-label">Contact Email</div>
+                    <div class="details-info-value">
+                        @if (!string.IsNullOrEmpty(Model.ContactEmail))
+                        {
+                            <a href="mailto:@Model.ContactEmail">@Model.ContactEmail</a>
+                        }
+                        else
+                        {
+                            <span>—</span>
+                        }
+                    </div>
+                </div>
+                <div class="details-info-field">
+                    <div class="details-info-label">Contact Number</div>
+                    <div class="details-info-value">@(Model.ContactNumber ?? "—")</div>
                 </div>
                 <div class="details-info-field">
                     <div class="details-info-label">Created Date</div>
@@ -167,8 +198,8 @@
                         </div>
                     </div>
                     <div class="details-related-item">
-                        <div class="details-related-label">Location</div>
-                        <div class="details-related-value">@Model.Airport.Location</div>
+                        <div class="details-related-label">Region / Country</div>
+                        <div class="details-related-value">@string.Join(", ", new[] { Model.Airport.Region, Model.Airport.Country }.Where(v => !string.IsNullOrEmpty(v)))</div>
                     </div>
                 </div>
             }
@@ -371,7 +402,7 @@
                     @foreach (var schedule in Model.AuditSchedules.OrderByDescending(s => s.ScheduledDate))
                     {
                         <tr>
-                            <td><strong>@schedule.Scheduler.DisplayName</strong></td>
+                            <td><strong>@schedule.Scheduler?.DisplayName</strong></td>
                             <td>
                                 @{
                                     var scheduleStatusClass = schedule.Status switch

@@ -5,12 +5,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const auditTemplateData = window.__AUDIT_TEMPLATE_DATA__;
 
-    console.log(auditTemplateData);
-
     const questionManager = new QuestionManager({
         questionBank: auditTemplateData.questionBank,
-        addedQuestionsId: new Set(),
-        existingQuestions: auditTemplateData.existingQuestions || []
+        existingQuestions: auditTemplateData.existingQuestions || [],
+        responsibilities: auditTemplateData.responsibilities || [],
+        serviceProviders: auditTemplateData.serviceProviders || []
     });
 
     new Stepper(questionManager);

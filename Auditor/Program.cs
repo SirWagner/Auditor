@@ -1,7 +1,13 @@
-﻿using Auditor.Models;
+using Auditor.Data;
+using Auditor.Models;
+using Auditor.Security;
 using Auditor.Services;
 using Auditor.Services.Interfaces;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.DataProtection;
+using Microsoft.AspNetCore.HttpOverrides;
+using Microsoft.AspNetCore.Mvc.Authorization;
 using Microsoft.EntityFrameworkCore;
 using Serilog;
 
@@ -28,34 +34,70 @@ builder.Host.UseSerilog();
 // SERVICES
 #endregion
 
-// MVC + Razor
-builder.Services.AddControllersWithViews();
+// MVC + Razor. Every page requires a signed-in user unless marked [AllowAnonymous].
+builder.Services.AddControllersWithViews(options =>
+{
+    options.Filters.Add(new AuthorizeFilter(new AuthorizationPolicyBuilder().RequireAuthenticatedUser().Build()));
+
+    // The scaffolded entities use non-nullable strings for optional columns; without this every
+    // such property (and navigation property) becomes implicitly [Required] and forms never save.
+    options.SuppressImplicitRequiredAttributeForNonNullableReferenceTypes = true;
+});
 builder.Services.AddRazorPages();
 
 // DB Context
 builder.Services.AddDbContext<AuditorContext>(options =>
     options.UseSqlServer(
         builder.Configuration.GetConnectionString("AudConnection")
-        ?? throw new InvalidOperationException("Connection string 'AudConnection' not found.")
-    ));
+        ?? throw new InvalidOperationException("Connection string 'AudConnection' not found.")));
+
+// Sign-in cookies survive container restarts when the key folder is on a volume.
+var keysPath = builder.Configuration["DataProtection:KeysPath"];
+if (!string.IsNullOrEmpty(keysPath))
+{
+    builder.Services.AddDataProtection()
+        .SetApplicationName("Auditor")
+        .PersistKeysToFileSystem(new DirectoryInfo(keysPath));
+}
 
 // Authentication (Cookie-based)
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
     .AddCookie(options =>
     {
-        options.LoginPath = "/Auth/Login";
-        options.LogoutPath = "/Auth/Logout";
-        options.AccessDeniedPath = "/Auth/Login";
+        options.LoginPath = "/login";
+        options.LogoutPath = "/logout";
+        options.AccessDeniedPath = "/access-denied";
         options.ExpireTimeSpan = TimeSpan.FromHours(8);
         options.SlidingExpiration = true;
+        options.Cookie.Name = "Auditor.Auth";
+        options.Cookie.HttpOnly = true;
+        options.Cookie.SameSite = SameSiteMode.Lax;
     });
 
+builder.Services.Configure<ForwardedHeadersOptions>(options =>
+{
+    options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
+    options.KnownNetworks.Clear();
+    options.KnownProxies.Clear();
+});
+
+// Uploads (audit photos/attachments) up to 25 MB per request.
+builder.Services.Configure<Microsoft.AspNetCore.Http.Features.FormOptions>(o => o.MultipartBodyLengthLimit = 25 * 1024 * 1024);
+
 // Application Services
+builder.Services.AddSingleton<PasswordService>();
+builder.Services.AddSingleton<AttachmentStorage>();
+builder.Services.AddHttpContextAccessor();
+builder.Services.AddScoped<UserScope>();
+builder.Services.AddScoped<AuditFilterOptions>();
+builder.Services.AddScoped<ResponsibilitySnapshot>();
+builder.Services.AddScoped<ReportService>();
 builder.Services.AddScoped<IAuditTemplateService, AuditTemplateService>();
 builder.Services.AddScoped<IAppUserService, AppUserService>();
 builder.Services.AddScoped<IDashboardService, DashboardService>();
 builder.Services.AddScoped<IQuestionBankService, QuestionBankService>();
-builder.Services.AddScoped<IAuditScheduleService, AuditScheduleService>();
+builder.Services.AddScoped<DatabaseSeeder>();
+builder.Services.AddHostedService<ScheduleMonitoringHostedService>();
 
 #region =========================
 // BUILD APP
@@ -67,18 +109,27 @@ var app = builder.Build();
 // PIPELINE CONFIGURATION
 #endregion
 
-// Error handling
+app.UseForwardedHeaders();
+
 if (!app.Environment.IsDevelopment())
 {
-    app.UseExceptionHandler("/Home/Error");
-    app.UseHsts();
+    app.UseExceptionHandler("/error");
 }
 else
 {
     app.UseDeveloperExceptionPage();
 }
 
-app.UseHttpsRedirection();
+// Friendly page for 404s and other empty error responses.
+app.UseStatusCodePagesWithReExecute("/error", "?statusCode={0}");
+
+// HTTPS is terminated by the reverse proxy in front of the container; only redirect when the app itself serves HTTPS.
+if (builder.Configuration.GetValue("Https:Redirect", false))
+{
+    app.UseHsts();
+    app.UseHttpsRedirection();
+}
+
 app.UseStaticFiles();
 
 app.UseRouting();
@@ -92,24 +143,24 @@ app.UseAuthorization();
 
 app.MapControllerRoute(
     name: "default",
-    pattern: "{controller=Auth}/{action=Login}/{id?}");
+    pattern: "{controller=Dashboard}/{action=Index}/{id?}");
 
 app.MapRazorPages();
 
+// Liveness probe for Docker / load balancers.
+app.MapGet("/health", () => Results.Ok(new { status = "ok" })).AllowAnonymous();
+
 #region =========================
-// DATABASE MIGRATION
+// DATABASE SEED
+// Schema changes are applied by the auditor-migrate container (EF migrations bundle);
+// the app only seeds reference data and the first administrator.
 #endregion
 
-try
+if (builder.Configuration.GetValue("Seed:Enabled", true))
 {
     using var scope = app.Services.CreateScope();
-    var db = scope.ServiceProvider.GetRequiredService<AuditorContext>();
-    await db.Database.MigrateAsync();
-}
-catch (Exception ex)
-{
-    Log.Fatal(ex, "Database migration failed during startup");
-    throw;
+    var seeder = scope.ServiceProvider.GetRequiredService<DatabaseSeeder>();
+    await seeder.SeedAsync();
 }
 
 #region =========================

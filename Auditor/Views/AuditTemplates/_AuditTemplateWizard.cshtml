@@ -85,6 +85,19 @@
           id="auditTemplateForm">
         @Html.AntiForgeryToken()
 
+        @if (!ViewData.ModelState.IsValid)
+        {
+            <div class="validation-alert" role="alert">
+                <h3><i class="fas fa-times-circle"></i> The template wasn't saved</h3>
+                <ul>
+                    @foreach (var error in ViewData.ModelState.Values.SelectMany(v => v.Errors))
+                    {
+                        <li>@error.ErrorMessage</li>
+                    }
+                </ul>
+            </div>
+        }
+
 
         @if (Model.Id.HasValue)
         {

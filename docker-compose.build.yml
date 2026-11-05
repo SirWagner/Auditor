@@ -1,0 +1,22 @@
+# Developer override: build the images from source instead of pulling them.
+#
+#   docker compose -f docker-compose.yml -f docker-compose.build.yml build
+#   docker compose -f docker-compose.yml -f docker-compose.build.yml up -d
+#   docker compose push migrate web          publish to Docker Hub
+#
+# Not needed by customers — they only get docker-compose.yml.
+
+services:
+  migrate:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: migrations
+    pull_policy: build
+
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: final
+    pull_policy: build

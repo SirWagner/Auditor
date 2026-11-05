@@ -1,0 +1,46 @@
+@model Auditor.ViewModels.Dashboard.ScoreBarsModel
+@using Auditor.Security
+@{
+    var target = Model.Target;
+    var canOpenSites = User.IsInRole(Roles.Admin) || User.IsInRole(Roles.Manager);
+    string Band(decimal s) => s >= target ? "good" : s >= target - 10 ? "warn" : "bad";
+    string W(decimal v) => Math.Clamp(v, 0, 100).ToString("0.#", System.Globalization.CultureInfo.InvariantCulture);
+    var unit = Model.Kind == "category" ? "answer" : "audit";
+}
+
+@if (Model.Rows.Count == 0)
+{
+    <div class="panel-empty"><p>@Model.EmptyText</p></div>
+}
+else
+{
+    <ul class="score-bars">
+        @foreach (var r in Model.Rows)
+        {
+            <li class="score-@Band(r.Score)">
+                <div class="score-row">
+                    <span class="score-label">
+                        @if (Model.Kind == "airport" && r.Id != null)
+                        {
+                            <a href="?days=@Context.Request.Query["days"]&airportId=@r.Id" title="Show @r.Detail only"><strong>@r.Label</strong> @r.Detail</a>
+                        }
+                        else if (Model.Kind == "site" && r.Id != null && canOpenSites)
+                        {
+                            <a asp-controller="AuditSites" asp-action="Details" asp-route-id="@r.Id">@r.Label</a> <small>@r.Detail</small>
+                        }
+                        else
+                        {
+                            @r.Label @if (!string.IsNullOrEmpty(r.Detail)) { <small>@r.Detail</small> }
+                        }
+                    </span>
+                    <span class="score-num">@r.Score.ToString("0.#")%</span>
+                </div>
+                <div class="score-track" title="@r.Count @unit@(r.Count == 1 ? "" : "s")">
+                    <span class="score-fill" style="width:@W(r.Score)%"></span>
+                    <span class="score-target" style="left:@W(target)%"></span>
+                </div>
+                <small class="score-count">@r.Count @unit@(r.Count == 1 ? "" : "s")</small>
+            </li>
+        }
+    </ul>
+}

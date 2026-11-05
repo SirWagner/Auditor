@@ -9,6 +9,7 @@ using Auditor.Models;
 
 namespace Auditor.Controllers
 {
+    [Microsoft.AspNetCore.Authorization.Authorize(Roles = Auditor.Security.Roles.AdminOrManager)]
     public class QuestionBankOptionsController : Controller
     {
         private readonly AuditorContext _context;

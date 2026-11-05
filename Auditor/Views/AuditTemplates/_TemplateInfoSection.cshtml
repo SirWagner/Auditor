@@ -12,7 +12,7 @@
         <div class="col-md-8">
             <label class="form-label fw-bold">Template Name</label>
             <input asp-for="Name" class="form-control" placeholder="e.g., Annual Safety Inspection" />
-            <span asp-validation-for="Name" class="text-danger"></span>
+            <span class="text-danger">@Html.ValidationMessage("Name")</span>
         </div>
 
         <div class="col-md-4">
@@ -36,6 +36,47 @@
             </select>
         </div> *@
 
+        <div class="col-md-12">
+            <hr />
+            <h4 style="font-size:1rem;font-weight:700;margin:0 0 4px;">Where this template can be used <span class="text-muted fw-normal">(optional)</span></h4>
+            <p class="text-muted" style="font-size:13px;">Leave both blank to offer this template for every airport and site when scheduling.</p>
+        </div>
+
+        <div class="col-md-6">
+            <label class="form-label fw-bold" for="templateAirport">Airport</label>
+            <select asp-for="AirportId" class="form-select" id="templateAirport">
+                @if (Model.Airports.Count != 1 || Model.AirportId == null)
+                {
+                    <option value="">All airports</option>
+                }
+                @foreach (var a in Model.Airports)
+                {
+                    <option value="@a.Id" selected="@(a.Id == Model.AirportId)">@a.Code · @a.Name</option>
+                }
+            </select>
+            <span class="text-danger" data-error-for="AirportId">@Html.ValidationMessage("AirportId")</span>
+        </div>
+
+        <div class="col-md-12">
+            <label class="form-label fw-bold">Sites</label>
+            <div class="d-flex gap-2 align-items-center mb-2 flex-wrap">
+                <input type="search" id="templateSiteSearch" class="form-control" style="max-width:320px;" placeholder="Search sites…" aria-label="Search sites" />
+                <span class="text-muted" style="font-size:13px;" id="templateSiteCount"></span>
+                <button type="button" class="action-btn btn-view" id="templateSiteClear">Clear selection</button>
+            </div>
+            <div class="check-list" id="templateSites">
+                @foreach (var s in Model.Sites)
+                {
+                    <label data-airport="@s.AirportId" data-text="@($"{s.AirportCode} {s.Name} {s.Area}".ToLowerInvariant())">
+                        <input type="checkbox" name="SiteIds" value="@s.Id" checked="@Model.SiteIds.Contains(s.Id)" />
+                        <span>@s.Name <small>@s.AirportCode@(string.IsNullOrEmpty(s.Area) ? "" : " · " + s.Area)</small></span>
+                    </label>
+                }
+            </div>
+            <span class="text-danger">@Html.ValidationMessage("SiteIds")</span>
+            <div class="form-text">No sites ticked = any site at the airport(s) above.</div>
+        </div>
+
         <div class="col-md-6 d-flex align-items-end">
             <div class="form-check status-toggle-wrapper">
                 <input asp-for="IsActive" class="form-check-input" id="isActiveCheck" />
@@ -46,3 +87,38 @@
         </div>
     </div>
 </div>
+<script>
+    // Show only the sites of the chosen airport; a typed search narrows further.
+    document.addEventListener('DOMContentLoaded', function () {
+        const airport = document.getElementById('templateAirport');
+        const search = document.getElementById('templateSiteSearch');
+        const list = document.getElementById('templateSites');
+        const count = document.getElementById('templateSiteCount');
+        if (!airport || !list) return;
+
+        function refresh() {
+            const a = airport.value;
+            const q = (search.value || '').trim().toLowerCase();
+            let visible = 0;
+            list.querySelectorAll('label').forEach(function (l) {
+                const box = l.querySelector('input');
+                const sameAirport = !a || l.dataset.airport === a;
+                if (!sameAirport) box.checked = false;
+                const show = sameAirport && (!q || l.dataset.text.includes(q) || box.checked);
+                l.hidden = !show;
+                if (show) visible++;
+            });
+            const ticked = list.querySelectorAll('input:checked').length;
+            count.textContent = ticked ? ticked + ' selected' : visible + ' sites';
+        }
+
+        airport.addEventListener('change', refresh);
+        search.addEventListener('input', refresh);
+        list.addEventListener('change', refresh);
+        document.getElementById('templateSiteClear').addEventListener('click', function () {
+            list.querySelectorAll('input:checked').forEach(function (b) { b.checked = false; });
+            refresh();
+        });
+        refresh();
+    });
+</script>

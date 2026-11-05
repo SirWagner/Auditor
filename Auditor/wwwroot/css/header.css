@@ -15,7 +15,9 @@
    ============================================ */
 
 .auditor-header-wrapper {
-    position: relative;
+    /* Frozen at the top while the page scrolls. */
+    position: sticky;
+    top: 0;
     z-index: 1000;
     background: white;
     border-bottom: 1px solid var(--auditor-border);

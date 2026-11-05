@@ -1,180 +1,66 @@
 ﻿@model Auditor.ViewModels.AuditExecution.AuditExecutionRenderViewModel
-
+@using Auditor.Models.Lookups
 @{
-    ViewData["Title"] = "Execute Audit";
-    Layout = "~/Views/Shared/_LayoutExec.cshtml";
+    ViewData["Title"] = Model.AuditName;
 }
 
-
-<style>
-    /* ============================= */
-/* AUDIT EXECUTION FLOATING CARD */
-/* ============================= */
-
-.audit-exec-wrapper {
-    display: flex;
-    justify-content: center;
-    padding: 2.5rem 1rem;
-    background: #f6f7fb; /* subtle contrast background */
-}
-
-.audit-exec-card {
-    width: 100%;
-    max-width: 900px; /* tablet perfect width */
-    background: #ffffff;
-    border-radius: 18px;
-    padding: 2.2rem;
-
-    /* ✅ PURPLE GLOW FLOAT EFFECT */
-    box-shadow:
-        0 18px 40px rgba(120, 0, 255, 0.18),
-        0 0 35px rgba(190, 140, 255, 0.35);
-
-    position: relative;
-}
-
-/* Inner question cards */
-.audit-exec-card .card {
-    border-radius: 14px;
-    border: 1px solid #eee;
-}
-
-/* Headings */
-.audit-exec-card h2 {
-    font-weight: 700;
-}
-
-.audit-exec-card h4 {
-    margin-bottom: 0.5rem;
-}
-
-
-
-    .audit-exec-card {
-        padding: 1.25rem;
-        border-radius: 14px;
-    }
-}
-</style>
-
-<!-- ✅ PAGE WRAPPER -->
-<div class="audit-exec-wrapper">
-
-    <!-- ✅ FLOATING CARD -->
-    <div class="audit-exec-card">
-
-        <h2 class="text-center">@Model.AuditName</h2>
-        <h4 class="text-center text-muted">Site: @Model.SiteName</h4>
-
-        <hr />
-
-        <div class="mb-3">
-            <button type="button"
-                    class="btn btn-outline-secondary"
-                    onclick="window.history.back();">
-                ← Back
-            </button>
-        </div>
-
-        <form id="auditForm" enctype="multipart/form-data">
-
-            @foreach (var question in Model.Questions)
-            {
-                <div class="card mb-3 shadow-sm">
-                    <div class="card-body">
-
-                        <h5>
-                            @question.QuestionText
-                            @if (question.IsMandatory)
-                            {
-                                <span class="text-danger">*</span>
-                            }
-                        </h5>
-
-                        @await Html.PartialAsync(
-                            $"~/Views/AuditExecutions/Components/_" +
-                            question.QuestionTypeName +
-                            ".cshtml",
-                            question)
-
-                        <!-- ✅ ATTACHMENTS -->
-                        <div class="mt-3">
-                            <label class="form-label">Attachments</label>
-
-                            <div class="d-flex gap-2 mb-1">
-                                <button type="button"
-                                        class="btn btn-outline-primary btn-sm"
-                                        onclick="document.getElementById('fileInput-@question.TemplateItemId').click()">
-                                    📎 Choose Files
-                                </button>
-
-                                <button type="button"
-                                        class="btn btn-outline-secondary btn-sm"
-                                        onclick="document.getElementById('photoInput-@question.TemplateItemId').click()">
-                                    📷 Take Photo
-                                </button>
-                            </div>
-
-                            <input type="file"
-                                   id="fileInput-@question.TemplateItemId"
-                                   name="questionAttachments[@question.TemplateItemId][]"
-                                   multiple
-                                   class="d-none" />
-
-                            <input type="file"
-                                   id="photoInput-@question.TemplateItemId"
-                                   name="questionAttachments[@question.TemplateItemId][]"
-                                   accept="image/*"
-                                   capture="environment"
-                                   class="d-none" />
-
-                            <small class="text-muted"
-                                   id="fileNames-@question.TemplateItemId"></small>
-                        </div>
-
-                    </div>
-                </div>
-            }
-
-            <div class="mt-4 text-center d-flex gap-2 justify-content-center">
-                <button type="button"
-                        class="btn btn-outline-secondary px-4"
-                        onclick="saveDraft(@Model.ExecutionId)">
-                    💾 Save Draft
-                </button>
-                <button type="button"
-                        class="btn btn-success px-5"
-                        onclick="submitAudit(@Model.ExecutionId)">
-                    ✅ @(Model.Status == "REJECTED" ? "Resubmit Audit" : "Submit Audit")
-                </button>
-            </div>
-
-        </form>
-
+<div class="exec-container">
+    <div class="details-breadcrumb">
+        <a asp-controller="Dashboard" asp-action="Index">Dashboard</a>
+        <span>›</span>
+        <a asp-action="Index">My Audits</a>
+        <span>›</span>
+        <span>@Model.AuditName</span>
     </div>
+
+    <div class="exec-header">
+        <div>
+            <h1>@Model.AuditName</h1>
+            <div class="exec-meta">
+                <span><i class="typcn typcn-location-outline"></i> @Model.SiteName</span>
+                @if (!string.IsNullOrEmpty(Model.AirportName))
+                {
+                    <span><i class="typcn typcn-plane-outline"></i> @Model.AirportName</span>
+                }
+                <span><i class="far fa-clock"></i> Due @Model.DueDate.ToString("dd MMM yyyy HH:mm")</span>
+            </div>
+        </div>
+        <span class="status-pill @ExecutionStatuses.PillClass(Model.Status)">@ExecutionStatuses.Label(Model.Status)</span>
+    </div>
+
+    @if (!string.IsNullOrEmpty(Model.ReturnReason))
+    {
+        <div class="page-alert page-alert-error" role="alert">
+            <i class="fas fa-undo"></i>
+            <span><strong>Returned by the reviewer:</strong> @Model.ReturnReason</span>
+        </div>
+    }
+
+    @if (Model.Questions.Count == 0)
+    {
+        <div class="list-table-wrapper">
+            <div class="list-empty-state">
+                <div class="empty-state-icon">📝</div>
+                <h2 class="empty-state-title">This template has no questions</h2>
+                <p class="empty-state-text">Ask a manager to add questions to the template.</p>
+            </div>
+        </div>
+    }
+
+    <form id="auditForm" data-execution-id="@Model.ExecutionId" onsubmit="return false;">
+        @Html.AntiForgeryToken()
+        @* Progress bar, section tabs and questions; the progress bar stays pinned with the tabs. *@
+        <partial name="_SectionedQuestions" model="Model" view-data='new ViewDataDictionary(ViewData) { ["ShowProgress"] = true }' />
+    </form>
+</div>
+
+<div class="exec-actions">
+    <button type="button" class="btn-cancel" id="saveDraftBtn"><i class="fas fa-save"></i> Save Draft</button>
+    <button type="button" class="btn-submit" id="submitBtn"><i class="fas fa-paper-plane"></i> Submit Audit</button>
 </div>
 
 @section Scripts {
-    @{
-        await Html.RenderPartialAsync("_ValidationScriptsPartial");
-    }
-
-    <script>
-        window.__AUDIT_EXECUTION_STATUS__ = "@Model.Status";
-    </script>
-    <script src="~/js/audit-render.js"></script>
-
-    <!-- ✅ FILE NAME PREVIEW -->
-    <script>
-        document.querySelectorAll("input[type='file']").forEach(input => {
-            input.addEventListener("change", () => {
-                const id = input.id.split('-')[1];
-                const label = document.getElementById("fileNames-" + id);
-
-                if (label && input.files.length > 0) {
-                    label.innerText = [...input.files].map(f => f.name).join(", ");
-                }
-            });
-        });
-    </script>
+    <script src="~/js/audit-sections.js" asp-append-version="true"></script>
+    <script src="~/js/answer-fields.js" asp-append-version="true"></script>
+    <script src="~/js/audit-execute.js" asp-append-version="true"></script>
 }

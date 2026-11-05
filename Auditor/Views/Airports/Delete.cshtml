@@ -1,40 +1,63 @@
-﻿@model Auditor.Models.Airport
+@model Auditor.Models.Airport
 
 @{
-    ViewData["Title"] = "Delete";
+    ViewData["Title"] = "Delete Airport";
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
-<h1>Delete</h1>
+<div class="form-page-container">
+    <div class="form-page-breadcrumb">
+        <a asp-controller="Dashboard" asp-action="Index">Dashboard</a>
+        <span>›</span>
+        <a asp-controller="Airports" asp-action="Index">Airports</a>
+        <span>›</span>
+        <span>Delete</span>
+    </div>
 
-<h3>Are you sure you want to delete this?</h3>
-<div>
-    <h4>Airport</h4>
-    <hr />
-    <dl class="row">
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Name)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Name)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Code)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Code)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Location)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Location)
-        </dd>
-    </dl>
-    
-    <form asp-action="Delete">
-        <input type="hidden" asp-for="Id" />
-        <input type="submit" value="Delete" class="btn btn-danger" /> |
-        <a asp-action="Index">Back to List</a>
-    </form>
+    <div class="form-page-title-section">
+        <div class="form-page-title-content">
+            <h1>Delete Airport</h1>
+            <p>@Model.Name (@Model.Code)</p>
+        </div>
+    </div>
+
+    <partial name="_PageAlerts" />
+
+    <div class="form-wrapper">
+        <div class="form-main">
+            <div class="form-main-content">
+                @if (Model.AuditSites.Count > 0)
+                {
+                    <div class="page-alert page-alert-error" role="alert">
+                        <i class="fas fa-exclamation-circle"></i>
+                        <span>
+                            This airport has @Model.AuditSites.Count audit site(s), so it can't be deleted.
+                            <a asp-action="Edit" asp-route-id="@Model.Id">Set it to Inactive</a> to stop new sites being added.
+                        </span>
+                    </div>
+                }
+                else
+                {
+                    <p>Delete <strong>@Model.Name</strong> and its areas permanently? This can't be undone.</p>
+                }
+            </div>
+
+            <div class="form-main-footer">
+                <a asp-action="Index" class="btn-cancel">
+                    <i class="fas fa-arrow-left"></i>
+                    Back to List
+                </a>
+                @if (Model.AuditSites.Count == 0)
+                {
+                    <form asp-action="Delete" method="post">
+                        <input type="hidden" asp-for="Id" />
+                        <button type="submit" class="btn-submit" style="background: var(--enterprise-error);">
+                            <i class="fas fa-trash"></i>
+                            Delete Airport
+                        </button>
+                    </form>
+                }
+            </div>
+        </div>
+    </div>
 </div>

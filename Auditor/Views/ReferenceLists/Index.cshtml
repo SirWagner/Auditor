@@ -1,0 +1,60 @@
+@model IEnumerable<Auditor.Models.ReferenceList>
+@{
+    ViewData["Title"] = "Reference Lists";
+    var canEdit = ViewBag.CanEdit as bool? ?? false;
+}
+
+<div class="list-container">
+    <div class="list-header">
+        <div class="list-header-content">
+            <h1>🗂️ Reference Lists</h1>
+            <p class="list-header-subtitle">The dropdowns auditors pick from: airlines, aircraft, ground handlers and more</p>
+        </div>
+    </div>
+
+    <partial name="_PageAlerts" />
+
+    <div class="list-table-wrapper">
+        <table class="list-table table">
+            <thead>
+                <tr>
+                    <th style="width:24%;">List</th>
+                    <th>What it's for</th>
+                    <th style="width:10%;">Items</th>
+                    <th style="width:10%;">Questions</th>
+                    <th style="width:8%;"></th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var list in Model)
+                {
+                    <tr>
+                        <td><div class="cell-name">@list.Name</div></td>
+                        <td><div class="cell-secondary">@list.Description</div></td>
+                        <td><div class="cell-secondary">@list.Items.Count(i => i.IsActive)</div></td>
+                        <td><div class="cell-secondary">@list.Questions.Count</div></td>
+                        <td><a asp-action="Details" asp-route-id="@list.Id" class="action-btn btn-view">Open</a></td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+
+    @if (canEdit)
+    {
+        <form asp-action="Create" method="post" class="reflist-add">
+            <h2>Add another list</h2>
+            <div class="reflist-add-row">
+                <div class="form-group">
+                    <label for="newListName">Name</label>
+                    <input id="newListName" name="name" type="text" maxlength="100" required />
+                </div>
+                <div class="form-group" style="flex:2;">
+                    <label for="newListDescription">What it's for (optional)</label>
+                    <input id="newListDescription" name="description" type="text" maxlength="500" />
+                </div>
+                <button type="submit" class="btn-list-primary"><span>+</span> Create List</button>
+            </div>
+        </form>
+    }
+</div>

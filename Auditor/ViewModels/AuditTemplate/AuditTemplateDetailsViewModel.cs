@@ -10,6 +10,8 @@ namespace Auditor.ViewModels.AuditTemplate
         public string Version { get; set; }
         public bool IsActive { get; set; }
 
+        public long Id { get; set; }
+
         public string CreatedBy { get; set; }
 
         // Questions
@@ -27,5 +29,8 @@ namespace Auditor.ViewModels.AuditTemplate
         public string QuestionText { get ;set;}
         public string Type { get ;set;}
         public string Category { get ;set;}
+        public string? Section { get; set; }
+        public string? Responsibility { get; set; }
+        public string? ServiceProvider { get; set; }
     }
 }

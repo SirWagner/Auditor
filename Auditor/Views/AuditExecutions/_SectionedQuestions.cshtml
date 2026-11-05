@@ -1,0 +1,114 @@
+@model Auditor.ViewModels.AuditExecution.AuditExecutionRenderViewModel
+@*
+    Questions laid out as section tabs; inside a tab, sections and sub-locations as groups with a navigation tree.
+    ViewData["ShowProgress"] puts the answer progress bar in the sticky bar above the tabs (execution screen).
+*@
+@{
+    var layout = Model.Layout;
+    var showProgress = ViewData["ShowProgress"] as bool? ?? false;
+}
+
+<div class="sec" data-sections data-key="exec-@Model.ExecutionId">
+    @if (showProgress || layout.HasTabs)
+    {
+        <div class="sec-sticky">
+            @if (showProgress)
+            {
+                <div class="exec-progress" aria-live="polite">
+                    <div class="exec-progress-bar"><span id="progressBar"></span></div>
+                    <span class="exec-progress-text" id="progressText"></span>
+                    <span class="exec-progress-text" id="saveState"></span>
+                </div>
+            }
+            @if (layout.HasTabs)
+            {
+                <div class="sec-tabs" role="tablist" aria-label="Audit sections">
+                    @for (var i = 0; i < layout.Tabs.Count; i++)
+                    {
+                        var tab = layout.Tabs[i];
+                        <button type="button" class="sec-tab" role="tab" id="tab-@tab.Id" data-tab="@tab.Id"
+                                aria-controls="panel-@tab.Id" aria-selected="@(i == 0 ? "true" : "false")" tabindex="@(i == 0 ? 0 : -1)">
+                            <span class="sec-tab-title">@tab.Title</span>
+                            <span class="sec-tab-count" data-count>@tab.Count</span>
+                        </button>
+                    }
+                </div>
+            }
+        </div>
+    }
+
+    @for (var i = 0; i < layout.Tabs.Count; i++)
+    {
+        var tab = layout.Tabs[i];
+        var prev = i > 0 ? layout.Tabs[i - 1] : null;
+        var next = i < layout.Tabs.Count - 1 ? layout.Tabs[i + 1] : null;
+        var hasNav = tab.Nav.Count(n => n.GroupId != null) > 1;
+
+        <section class="sec-panel" id="panel-@tab.Id" data-panel="@tab.Id"
+                 role="@(layout.HasTabs ? "tabpanel" : null)" aria-labelledby="@(layout.HasTabs ? "tab-" + tab.Id : null)" hidden="@(i > 0)">
+            <div class="@(hasNav ? "sec-layout" : "")">
+                @if (hasNav)
+                {
+                    <partial name="_SectionNav" model="new Auditor.ViewModels.Shared.SectionNavPanel(tab.Id, tab.Title, tab.Nav)" />
+                }
+
+                <div class="sec-body">
+                    @foreach (var g in tab.Groups)
+                    {
+                        <div class="sec-group" id="grp-@g.Id" data-group="@g.Id">
+                            @if (g.Path.Count > 0)
+                            {
+                                <h2 class="exec-section">
+                                    @for (var p = 0; p < g.Path.Count; p++)
+                                    {
+                                        if (p > 0)
+                                        {
+                                            <span class="sec-crumb-sep" aria-hidden="true">›</span>
+                                        }
+                                        <span class="@(p == g.Path.Count - 1 ? "sec-crumb-current" : "sec-crumb")">@g.Path[p]</span>
+                                    }
+                                    <span class="sec-group-count" data-count>@g.Items.Count</span>
+                                </h2>
+                            }
+                            @if (g.Units.Count > 0)
+                            {
+                                <div class="sec-units" aria-label="Units to check">
+                                    @foreach (var u in g.Units)
+                                    {
+                                        <span>@u</span>
+                                    }
+                                </div>
+                            }
+                            @foreach (var q in g.Items)
+                            {
+                                <partial name="_Question" model="q" view-data="ViewData" />
+                            }
+                        </div>
+                    }
+
+                    @if (layout.HasTabs)
+                    {
+                        <div class="sec-pager">
+                            @if (prev != null)
+                            {
+                                <button type="button" class="sec-pager-btn" data-go="@prev.Id"><i class="fas fa-arrow-left"></i> <span>@prev.Title</span></button>
+                            }
+                            else
+                            {
+                                <span></span>
+                            }
+                            @if (next != null)
+                            {
+                                <button type="button" class="sec-pager-btn sec-pager-next" data-go="@next.Id"><span>Next: @next.Title</span> <i class="fas fa-arrow-right"></i></button>
+                            }
+                            else if (showProgress)
+                            {
+                                <span class="sec-pager-end"><i class="fas fa-flag-checkered"></i> Last section — check the tabs, then submit</span>
+                            }
+                        </div>
+                    }
+                </div>
+            </div>
+        </section>
+    }
+</div>

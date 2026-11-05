@@ -1,81 +1,91 @@
 @model IEnumerable<Auditor.Models.AppUser>
-
+@using Auditor.Security
 @{
     ViewData["Title"] = "Users";
+    var query = ViewBag.Query as string;
+    var roleFilter = ViewBag.Role as string;
 }
 
-<link rel="stylesheet" href="~/claudedesign/appusers.css" />
-
-<div style="padding: 2rem 2.5rem; min-height: 100vh; background: var(--bg);">
-
-    <div class="page-header">
-        <div class="page-header-left">
-            <div class="page-tag">Access Management</div>
-            <h1>System <span>Users</span></h1>
+<div class="list-container">
+    <div class="list-header">
+        <div class="list-header-content">
+            <h1>👥 Users</h1>
+            <p class="list-header-subtitle">Who can sign in, and what each person can do</p>
         </div>
-        <a asp-action="Create" class="btn-new">+ New User</a>
+        <a asp-action="Create" class="btn-list-primary">
+            <span>+</span> Create New User
+        </a>
     </div>
 
-    <div class="table-card">
-        <table>
-            <thead>
-                <tr>
-                    <th>Name</th>
-                    <th>Email</th>
-                    <th>Role</th>
-                    <th>Status</th>
-                    <th>Created</th>
-                    <th>Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach (var user in Model)
-                {
-                    <tr>
-                        <td>@user.DisplayName</td>
-                        <td style="color: var(--text-muted);">@user.Email</td>
-                        <td>
-                            @{
-                                var roleCss = user.Role switch {
-                                    "Admin"   => "badge badge-admin",
-                                    "Auditor" => "badge badge-auditor",
-                                    _         => "badge badge-viewer"
-                                };
-                            }
-                            <span class="@roleCss">@(user.Role ?? "—")</span>
-                        </td>
-                        <td>
-                            @if (user.IsActive)
-                            {
-                                <span class="badge badge-active">Active</span>
-                            }
-                            else
-                            {
-                                <span class="badge badge-inactive">Inactive</span>
-                            }
-                        </td>
-                        <td style="color: var(--text-muted); font-size: 0.85rem;">
-                            @user.CreatedDate.ToString("dd MMM yyyy")
-                        </td>
-                        <td>
-                            <div class="table-actions">
-                                <a asp-action="Edit" asp-route-id="@user.Id" class="btn-icon" title="Edit">✏️</a>
-                                <a asp-action="Details" asp-route-id="@user.Id" class="btn-icon" title="Details">🔍</a>
-                                <a asp-action="Delete" asp-route-id="@user.Id" class="btn-icon danger" title="Delete">🗑️</a>
-                            </div>
-                        </td>
-                    </tr>
-                }
-                @if (!Model.Any())
-                {
-                    <tr>
-                        <td colspan="6" style="text-align:center; padding: 3rem; color: var(--text-muted);">
-                            No users found. <a asp-action="Create" style="color: var(--primary);">Create the first one</a>.
-                        </td>
-                    </tr>
-                }
-            </tbody>
-        </table>
-    </div>
+    <partial name="_PageAlerts" />
 
+    <form method="get" class="list-filters">
+        <input type="search" name="q" value="@query" class="form-control" placeholder="Search by name, email or employee number" aria-label="Search users" />
+        <select name="role" class="form-control" aria-label="Filter by role" onchange="this.form.submit()">
+            <option value="">All roles</option>
+            @foreach (var r in Roles.All)
+            {
+                <option value="@r" selected="@(r == roleFilter)">@r</option>
+            }
+        </select>
+        <button type="submit" class="action-btn btn-view">Search</button>
+    </form>
+
+    @if (Model.Any())
+    {
+        <div class="list-table-wrapper">
+            <table class="list-table table">
+                <thead>
+                    <tr>
+                        <th style="width: 20%;">Name</th>
+                        <th style="width: 13%;">Employee No.</th>
+                        <th style="width: 18%;">Email</th>
+                        <th style="width: 8%;">Airport</th>
+                        <th style="width: 10%;">Role</th>
+                        <th style="width: 9%;">Status</th>
+                        <th style="width: 10%;">Last Sign-in</th>
+                        <th style="width: 12%;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var user in Model)
+                    {
+                        <tr>
+                            <td><div class="cell-name">@user.DisplayName</div></td>
+                            <td><span class="cell-code">@user.EmployeeNumber</span></td>
+                            <td><div class="cell-secondary">@user.Email</div></td>
+                            <td><span class="cell-code" title="@(user.Airport?.Name ?? "All airports")">@(user.Airport?.Code ?? "All")</span></td>
+                            <td><span class="role-pill role-pill-@user.Role">@(user.Role ?? "—")</span></td>
+                            <td>
+                                <span class="status-pill @(user.IsActive ? "status-pill-active" : "status-pill-inactive")">
+                                    @(user.IsActive ? "Active" : "Inactive")
+                                </span>
+                            </td>
+                            <td><div class="cell-secondary">@(user.LastLoginDate?.ToLocalTime().ToString("dd MMM yyyy") ?? "Never")</div></td>
+                            <td>
+                                <div class="list-actions">
+                                    <a asp-action="Edit" asp-route-id="@user.Id" class="action-btn btn-edit">Edit</a>
+                                    <form asp-action="ToggleActive" asp-route-id="@user.Id" method="post">
+                                        <button type="submit" class="action-btn @(user.IsActive ? "btn-delete" : "btn-view")">
+                                            @(user.IsActive ? "Deactivate" : "Activate")
+                                        </button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+    else
+    {
+        <div class="list-table-wrapper">
+            <div class="list-empty-state">
+                <div class="empty-state-icon">👥</div>
+                <h2 class="empty-state-title">No users match</h2>
+                <p class="empty-state-text">Clear the search, or create a new user.</p>
+            </div>
+        </div>
+    }
 </div>

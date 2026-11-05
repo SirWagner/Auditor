@@ -1,0 +1,193 @@
+/* ============================================
+   Airports, Audit Sites & Departments
+   Builds on the tokens in auditor-forms.css
+   ============================================ */
+
+.form-group input[type="tel"] {
+    padding: 11px 14px;
+    border: 1px solid var(--enterprise-border);
+    border-radius: 6px;
+    font-size: 13px;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    color: var(--enterprise-text-primary);
+    background: var(--enterprise-bg-primary);
+    line-height: 1.5;
+}
+
+    .form-group input[type="tel"]:focus {
+        outline: none;
+        border-color: var(--enterprise-primary);
+        background: #fafbff;
+        box-shadow: 0 0 0 3px rgba(91, 71, 251, 0.08);
+    }
+
+.form-group select:disabled {
+    background-color: var(--enterprise-bg-secondary);
+    color: var(--enterprise-text-muted);
+    cursor: not-allowed;
+}
+
+/* ---------- Multi-value area picker ---------- */
+
+.area-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    min-height: 8px;
+    margin-bottom: 8px;
+}
+
+    .area-chips:empty::before {
+        content: "None added yet";
+        font-size: 12px;
+        color: var(--enterprise-text-muted);
+    }
+
+.area-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 4px 4px 10px;
+    border-radius: 999px;
+    background: #eef0ff;
+    border: 1px solid #d9dcff;
+    color: var(--enterprise-primary-dark);
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.area-chip-remove {
+    border: none;
+    background: transparent;
+    color: var(--enterprise-primary-dark);
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    line-height: 1;
+    font-size: 15px;
+    cursor: pointer;
+}
+
+    .area-chip-remove:hover,
+    .area-chip-remove:focus-visible {
+        background: #d9dcff;
+        outline: none;
+    }
+
+.area-add {
+    display: flex;
+    gap: 8px;
+}
+
+    .area-add input {
+        flex: 1;
+        min-width: 0;
+    }
+
+.area-add-btn {
+    padding: 0 16px;
+    border: 1px solid var(--enterprise-primary);
+    border-radius: 6px;
+    background: var(--enterprise-bg-primary);
+    color: var(--enterprise-primary);
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+    .area-add-btn:hover,
+    .area-add-btn:focus-visible {
+        background: var(--enterprise-primary);
+        color: #fff;
+        outline: none;
+    }
+
+/* ---------- Read-only area lists (Details, Index) ---------- */
+
+.area-tag-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.area-tag {
+    padding: 3px 10px;
+    border-radius: 999px;
+    background: #f1f5f9;
+    border: 1px solid var(--enterprise-border-light);
+    color: var(--enterprise-text-secondary);
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.area-empty {
+    color: var(--enterprise-text-muted);
+    font-size: 12px;
+}
+
+/* ---------- Page messages ---------- */
+
+.page-alert {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 16px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 500;
+    margin-bottom: 20px;
+}
+
+.page-alert-success {
+    background: #f0fdf4;
+    border: 1px solid #bbf7d0;
+    color: #166534;
+}
+
+.page-alert-error {
+    background: #fef2f2;
+    border: 1px solid #fecaca;
+    color: #991b1b;
+}
+
+.page-alert a {
+    color: inherit;
+    font-weight: 700;
+    text-decoration: underline;
+}
+
+/* ---------- Status pill ---------- */
+
+.status-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 3px 10px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+    .status-pill::before {
+        content: "";
+        width: 7px;
+        height: 7px;
+        border-radius: 50%;
+        background: currentColor;
+    }
+
+.status-pill-active {
+    background: #f0fdf4;
+    color: #15803d;
+}
+
+.status-pill-inactive {
+    background: #f1f5f9;
+    color: #64748b;
+}
+
+@media (max-width: 768px) {
+    .form-grid {
+        grid-template-columns: 1fr;
+    }
+}

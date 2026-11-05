@@ -1,0 +1,186 @@
+@model Auditor.ViewModels.AuditSite.AuditSiteFormViewModel
+@using Auditor.Models.Lookups
+@using System.Text.Json
+
+@*
+    Shared Create/Edit form body. The page supplies the <form> element and the submit button.
+*@
+
+@{
+    var airports = ViewBag.Airports as List<Airport> ?? new List<Airport>();
+    var departments = ViewBag.Departments as List<Department> ?? new List<Department>();
+}
+
+@if (!ViewData.ModelState.IsValid)
+{
+    <div class="validation-alert">
+        <h3>
+            <i class="fas fa-times-circle"></i>
+            Fix the following before saving
+        </h3>
+        <ul>
+            @foreach (var error in ViewData.ModelState.Values.SelectMany(v => v.Errors))
+            {
+                <li>@error.ErrorMessage</li>
+            }
+        </ul>
+    </div>
+}
+
+<!-- Location -->
+<div class="form-section">
+    <h3 class="form-section-title">Location</h3>
+    <p class="form-section-description">Pick the airport first — its terminals and areas fill the choices below.</p>
+
+    <div class="form-grid">
+        <div class="form-group">
+            <label asp-for="AirportId">Airport <span class="required">*</span></label>
+            <select asp-for="AirportId" id="airportSelect" required
+                    asp-items="@(new SelectList(airports.Select(a => new { a.Id, Name = a.IsActive ? a.Name : a.Name + " (Inactive)" }), "Id", "Name"))">
+                <option value="">-- Select an Airport --</option>
+            </select>
+            <span asp-validation-for="AirportId" class="form-group-error"></span>
+            @if (airports.Count == 0)
+            {
+                <div class="form-group-hint">
+                    No active airports yet. <a asp-controller="Airports" asp-action="Create">Create an airport</a> first.
+                </div>
+            }
+        </div>
+
+        <div class="form-group">
+            <label asp-for="DepartmentId">Department <span class="required">*</span></label>
+            <select asp-for="DepartmentId" required
+                    asp-items="@(new SelectList(departments, "Id", "Name"))">
+                <option value="">-- Select a Department --</option>
+            </select>
+            <span asp-validation-for="DepartmentId" class="form-group-error"></span>
+            @if (departments.Count == 0)
+            {
+                <div class="form-group-hint">
+                    No departments exist yet. <a asp-controller="Departments" asp-action="Create">Add a department</a>, then come back to this form.
+                </div>
+            }
+            else
+            {
+                <div class="form-group-hint">The department responsible for this site.</div>
+            }
+        </div>
+    </div>
+</div>
+
+<!-- Classification -->
+<div class="form-section">
+    <h3 class="form-section-title">Site Classification</h3>
+
+    <div class="form-grid">
+        <div class="form-group">
+            <label asp-for="SiteCategory">Site Category <span class="required">*</span></label>
+            <select asp-for="SiteCategory" id="categorySelect" required
+                    asp-items="@(new SelectList(AuditSiteLookups.Categories))">
+                <option value="">-- Select Category --</option>
+            </select>
+            <span asp-validation-for="SiteCategory" class="form-group-error"></span>
+        </div>
+
+        <div class="form-group">
+            <label asp-for="SiteSubCategory">Site Sub-Category <span class="required">*</span></label>
+            <select asp-for="SiteSubCategory" id="subCategorySelect" data-selected="@Model.SiteSubCategory" required>
+                <option value="">-- Select Category first --</option>
+            </select>
+            <span asp-validation-for="SiteSubCategory" class="form-group-error"></span>
+        </div>
+
+        <div class="form-group">
+            <label asp-for="SiteType">Site Type <span class="required">*</span></label>
+            <select asp-for="SiteType" id="siteTypeSelect" data-selected="@Model.SiteType" required>
+                <option value="">-- Select Sub-Category first --</option>
+            </select>
+            <span asp-validation-for="SiteType" class="form-group-error"></span>
+            <div class="form-group-hint" id="siteTypeHint"></div>
+        </div>
+
+        <div class="form-group">
+            <label asp-for="TerminalId">
+                Terminal <span class="required" id="terminalRequired" hidden>*</span>
+            </label>
+            <select asp-for="TerminalId" id="terminalSelect" data-selected="@Model.TerminalId">
+                <option value="">-- Select an Airport first --</option>
+            </select>
+            <span asp-validation-for="TerminalId" class="form-group-error"></span>
+            <div class="form-group-hint" id="terminalHint">Required for Operations sites in a terminal.</div>
+        </div>
+    </div>
+</div>
+
+<!-- Site Information -->
+<div class="form-section">
+    <h3 class="form-section-title">Site Information</h3>
+
+    <div class="form-grid">
+        <div class="form-group">
+            <label asp-for="Name">Site Name <span class="required">*</span></label>
+            <input asp-for="Name" type="text" maxlength="200" placeholder="e.g., Departures Washrooms" required />
+            <span asp-validation-for="Name" class="form-group-error"></span>
+            <div class="form-group-hint">Must be unique within the airport.</div>
+        </div>
+
+        <div class="form-group">
+            <label asp-for="Status">Status <span class="required">*</span></label>
+            <select asp-for="Status" asp-items="@(new SelectList(AuditSiteLookups.Statuses))" required></select>
+            <span asp-validation-for="Status" class="form-group-error"></span>
+        </div>
+    </div>
+</div>
+
+<!-- Contact -->
+<div class="form-section">
+    <h3 class="form-section-title">Contractor</h3>
+    <p class="form-section-description">Optional. The contractor working this site, such as a washroom's cleaning company. Reports show cleaning results against this company.</p>
+
+    <div class="form-grid third">
+        <div class="form-group">
+            <label asp-for="ServiceProvider">Service Provider</label>
+            <input asp-for="ServiceProvider" type="text" maxlength="200" list="siteProviderList" />
+            <datalist id="siteProviderList">
+                @foreach (var p in ViewBag.ServiceProviders as List<string> ?? new())
+                {
+                    <option value="@p"></option>
+                }
+            </datalist>
+            <span asp-validation-for="ServiceProvider" class="form-group-error"></span>
+        </div>
+    </div>
+
+    <h3 class="form-section-title">Site Contact</h3>
+    <p class="form-section-description">Optional. The person to contact about audits at this site.</p>
+
+    <div class="form-grid third">
+        <div class="form-group">
+            <label asp-for="ContactName">Contact Name</label>
+            <input asp-for="ContactName" type="text" maxlength="150" />
+            <span asp-validation-for="ContactName" class="form-group-error"></span>
+        </div>
+
+        <div class="form-group">
+            <label asp-for="ContactEmail">Contact Email</label>
+            <input asp-for="ContactEmail" type="email" maxlength="255" />
+            <span asp-validation-for="ContactEmail" class="form-group-error"></span>
+        </div>
+
+        <div class="form-group">
+            <label asp-for="ContactNumber">Contact Number</label>
+            <input asp-for="ContactNumber" type="tel" maxlength="20" />
+            <span asp-validation-for="ContactNumber" class="form-group-error"></span>
+        </div>
+    </div>
+</div>
+
+<script>
+    window.auditSiteForm = {
+        subCategoriesByCategory: @Html.Raw(JsonSerializer.Serialize(AuditSiteLookups.SubCategoriesByCategory)),
+        terminalCategory: @Html.Raw(JsonSerializer.Serialize(AuditSiteLookups.Operations)),
+        terminalSubCategory: @Html.Raw(JsonSerializer.Serialize(AuditSiteLookups.SubTerminal)),
+        locationsUrl: @Html.Raw(JsonSerializer.Serialize(Url.Action("GetAirportLocations", "AuditSites")))
+    };
+</script>

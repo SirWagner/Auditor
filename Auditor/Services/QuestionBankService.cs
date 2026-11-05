@@ -24,7 +24,7 @@ namespace Auditor.Services
             return _context.QuestionBanks
                 .Include(item=>item.Category)
                 .Include(item=>item.QuestionType)
-                .Select(question => new QuestionBankInfoDTO(question.Id, question.QuestionText, question.Category.Name, question.QuestionType.Name)).ToList();
+                .Select(question => new QuestionBankInfoDTO(question.Id, question.QuestionText, question.Category.Name, question.QuestionType.Name, question.ResponsibleContractor)).ToList();
         }
         public async Task Create(CreateQuestionBankDTO dto)
         {
@@ -54,6 +54,8 @@ namespace Auditor.Services
                 ResponsibleContractor =
                     dto.ResponsibleContractor,
 
+                ReferenceListId = questionType.Name == "LIST" ? dto.ReferenceListId : null,
+
                 IsActive = dto.IsActive,
 
                 CreatedBy = dto.CreatedBy,
@@ -66,14 +68,27 @@ namespace Auditor.Services
             {
                 questionBank.QuestionBankOptions =
                     dto.Options
+                    .Where(item => !string.IsNullOrWhiteSpace(item.Text))
                     .Select(item => new QuestionBankOption
                     {
-                        OptionText = item.Text,
-
+                        OptionText = item.Text.Trim(),
+                        OptionValue = item.Text.Trim(),
                         DisplayOrder = item.Sequence
-
                     })
                     .ToList();
+            }
+            else if (questionType.Name == "YES_NO")
+            {
+                // Compliance questions: "Not compliant" asks the auditor for a reason.
+                questionBank.QuestionBankOptions = Auditor.Data.DatabaseSeeder.ComplianceOptions(allowNotApplicable: true).ToList();
+            }
+            else if (questionType.Name == "BOOLEAN")
+            {
+                questionBank.QuestionBankOptions = new List<QuestionBankOption>
+                {
+                    new() { OptionText = "Yes", OptionValue = "true", DisplayOrder = 1 },
+                    new() { OptionText = "No", OptionValue = "false", DisplayOrder = 2 },
+                };
             }
 
 

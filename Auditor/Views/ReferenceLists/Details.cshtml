@@ -1,0 +1,156 @@
+@model Auditor.Models.ReferenceList
+@using Auditor.Models.Lookups
+@{
+    ViewData["Title"] = Model.Name;
+    var canEdit = ViewBag.CanEdit as bool? ?? false;
+    var airports = ViewBag.Airports as List<Auditor.Models.Airport> ?? new();
+    var perAirport = Model.Code == ReferenceLists.ParkingBays || Model.Items.Any(i => i.AirportId != null);
+    var groupLabel = Model.Code == ReferenceLists.AircraftTypes ? "Body type" : "Group";
+    var items = Model.Items.OrderBy(i => i.Airport?.Code).ThenBy(i => i.DisplayOrder).ThenBy(i => i.Name).ToList();
+}
+
+<div class="list-container">
+    <div class="details-breadcrumb">
+        <a asp-action="Index">Reference Lists</a>
+        <span>›</span>
+        <span>@Model.Name</span>
+    </div>
+
+    <div class="list-header">
+        <div class="list-header-content">
+            <h1>@Model.Name</h1>
+            <p class="list-header-subtitle">@Model.Description</p>
+        </div>
+    </div>
+
+    <partial name="_PageAlerts" />
+
+    @if (Model.Questions.Count > 0)
+    {
+        <p class="reflist-used">Used by: @string.Join("; ", Model.Questions.Select(q => q.QuestionText).Distinct().Take(4))</p>
+    }
+
+    @if (canEdit)
+    {
+        <form asp-action="AddItems" asp-route-id="@Model.Id" method="post" class="reflist-add">
+            <h2>Add items</h2>
+            <div class="reflist-add-row">
+                <div class="form-group" style="flex:2;">
+                    <label for="names">One per line. Add a code after a bar if it has one, for example <code>Emirates | EK</code></label>
+                    <textarea id="names" name="names" rows="3" required></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="groupName">@groupLabel (optional)</label>
+                    <input id="groupName" name="groupName" type="text" maxlength="100" />
+                </div>
+                @if (perAirport)
+                {
+                    <div class="form-group">
+                        <label for="airportId">Airport</label>
+                        <select id="airportId" name="airportId">
+                            <option value="">All airports</option>
+                            @foreach (var a in airports)
+                            {
+                                <option value="@a.Id">@a.Code · @a.Name</option>
+                            }
+                        </select>
+                    </div>
+                }
+                <button type="submit" class="btn-list-primary"><span>+</span> Add</button>
+            </div>
+        </form>
+    }
+
+    @if (items.Count == 0)
+    {
+        <div class="list-table-wrapper">
+            <div class="list-empty-state">
+                <div class="empty-state-icon">🗂️</div>
+                <h2 class="empty-state-title">Nothing on this list yet</h2>
+                <p class="empty-state-text">Until it has items, auditors type the answer.</p>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="list-table-wrapper">
+            <table class="list-table table">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th style="width:12%;">Code</th>
+                        <th style="width:18%;">@groupLabel</th>
+                        @if (perAirport)
+                        {
+                            <th style="width:16%;">Airport</th>
+                        }
+                        <th style="width:9%;">Status</th>
+                        @if (canEdit)
+                        {
+                            <th style="width:22%;"></th>
+                        }
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in items)
+                    {
+                        var formId = $"item-{item.Id}";
+                        <tr>
+                            @if (canEdit)
+                            {
+                                <td><input form="@formId" name="name" type="text" class="reflist-input" value="@item.Name" maxlength="200" required aria-label="Name" /></td>
+                                <td><input form="@formId" name="code" type="text" class="reflist-input" value="@item.Code" maxlength="20" aria-label="Code" /></td>
+                                <td><input form="@formId" name="groupName" type="text" class="reflist-input" value="@item.GroupName" maxlength="100" aria-label="@groupLabel" /></td>
+                                @if (perAirport)
+                                {
+                                    <td>
+                                        <select form="@formId" name="airportId" class="reflist-input" aria-label="Airport">
+                                            <option value="">All airports</option>
+                                            @foreach (var a in airports)
+                                            {
+                                                <option value="@a.Id" selected="@(a.Id == item.AirportId)">@a.Code</option>
+                                            }
+                                        </select>
+                                    </td>
+                                }
+                            }
+                            else
+                            {
+                                <td><div class="cell-name">@item.Name</div></td>
+                                <td><div class="cell-secondary">@item.Code</div></td>
+                                <td><div class="cell-secondary">@item.GroupName</div></td>
+                                @if (perAirport)
+                                {
+                                    <td><div class="cell-secondary">@(item.Airport?.Code ?? "All airports")</div></td>
+                                }
+                            }
+                            <td><span class="status-pill @(item.IsActive ? "status-pill-active" : "status-pill-inactive")">@(item.IsActive ? "Active" : "Inactive")</span></td>
+                            @if (canEdit)
+                            {
+                                <td>
+                                    <div class="list-actions">
+                                        <button form="@formId" type="submit" class="action-btn btn-edit">Save</button>
+                                        <form asp-action="ToggleItem" asp-route-id="@item.Id" method="post">
+                                            <button type="submit" class="action-btn btn-view">@(item.IsActive ? "Hide" : "Show")</button>
+                                        </form>
+                                        <form asp-action="DeleteItem" asp-route-id="@item.Id" method="post" onsubmit="return confirm('Remove this item from the list? Past audits keep it.');">
+                                            <button type="submit" class="action-btn btn-delete">Remove</button>
+                                        </form>
+                                    </div>
+                                    <form id="@formId" asp-action="UpdateItem" asp-route-id="@item.Id" method="post"></form>
+                                </td>
+                            }
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+
+    @if (canEdit && Model.Code == null)
+    {
+        <form asp-action="Delete" asp-route-id="@Model.Id" method="post" style="margin-top:20px;" onsubmit="return confirm('Delete this list?');">
+            <button type="submit" class="action-btn btn-delete">Delete this list</button>
+        </form>
+    }
+</div>

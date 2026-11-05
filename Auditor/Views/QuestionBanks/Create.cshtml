@@ -9,7 +9,7 @@
 	<!-- Breadcrumb -->
 	<nav class="form-breadcrumb" aria-label="breadcrumb">
 		<ol class="breadcrumb mb-0">
-			<li class="breadcrumb-item"><a asp-controller="Template" asp-action="Dashboard">Dashboard</a></li>
+			<li class="breadcrumb-item"><a asp-controller="Dashboard" asp-action="Index">Dashboard</a></li>
 			<li class="breadcrumb-item"><a asp-action="Index">Question Bank</a></li>
 			<li class="breadcrumb-item active">Create Question</li>
 		</ol>
@@ -57,6 +57,7 @@
 					</div>
 					<div id="question-type-settings">
 					</div>
+					<partial name="_ReferenceListField" model="Model?.ReferenceListId" />
 				</div>
 
 			</div>

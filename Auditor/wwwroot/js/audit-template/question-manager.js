@@ -5,18 +5,18 @@ import QuestionService from "./QuestionService.js";
 export default class QuestionManager {
     constructor({
         questionBank,
-        addedQuestionsId,
-        existingQuestions = []
+        existingQuestions = [],
+        responsibilities = [],
+        serviceProviders = []
     }) {
 
         this.existingQuestions = existingQuestions;
 
-        this.store = new QuestionStore(
-            questionBank,
-            addedQuestionsId
-        );
+        this.store = new QuestionStore(questionBank);
 
-        this.view = new QuestionView();
+        this.responsibilities = responsibilities;
+
+        this.view = new QuestionView({ responsibilities, serviceProviders });
         this.service = new QuestionService(this.store);
 
         this.initialize();
@@ -39,17 +39,22 @@ export default class QuestionManager {
         );
 
 
-        this.existingQuestions.forEach(question => {
-
-            this.handleAddQuestion(
-                question.id,
-                question.text,
-                question.type,
-                question.mandatory,
-                question.sequence
-            );
-
-        });
+        this.existingQuestions
+            .slice()
+            .sort((a, b) => (a.sequence ?? 0) - (b.sequence ?? 0))
+            .forEach(question => {
+                this.handleAddQuestion(
+                    question.id,
+                    question.questionText ?? question.text,
+                    question.type,
+                    question.mandatory,
+                    question.sequence,
+                    question.section ?? "",
+                    question.itemId || null,
+                    question.responsibility ?? "",
+                    question.serviceProvider ?? ""
+                );
+            });
 
 
         this.syncUi();
@@ -64,6 +69,7 @@ export default class QuestionManager {
         this.bindAddQuestionEvent();
         this.bindDeleteQuestionEvent();
         this.bindModalEvent();
+        this.bindSectionEvents();
         this.bindFormValidation();
     }
 
@@ -91,11 +97,16 @@ export default class QuestionManager {
             const element = event.target.closest("[data-question-id]");
             if (!element) return;
 
-            const { questionId, questionText, questionType } = element.dataset;
+            const { questionId, questionText, questionType, questionContractor } = element.dataset;
 
-            if (!this.service.canAddQuestion(questionId)) return;
+            // New questions go into the section of the last question, so a section is built by adding in a row.
+            const cards = this.view.dom.questionContainer?.querySelectorAll(".card") || [];
+            const lastSection = cards.length ? cards[cards.length - 1].querySelector("[data-field='section']")?.value ?? "" : "";
 
-            this.handleAddQuestion(questionId, questionText, questionType);
+            // The question's usual responsibility, when it's one of the listed ones.
+            const responsibility = this.responsibilities.includes(questionContractor) ? questionContractor : "";
+
+            this.handleAddQuestion(questionId, questionText, questionType, true, null, lastSection, null, responsibility);
         });
     }
 
@@ -104,7 +115,11 @@ export default class QuestionManager {
         questionText,
         questionType,
         mandatory = false,
-        sequence = null
+        sequence = null,
+        section = "",
+        itemId = null,
+        responsibility = "",
+        serviceProvider = ""
     ) {
         const index = this.store.getNextQuestionIndex();
 
@@ -116,10 +131,15 @@ export default class QuestionManager {
             questionType,
             index,
             mandatory,
-            sequence
+            sequence,
+            section,
+            itemId,
+            responsibility,
+            serviceProvider
         );
 
         this.syncUi();
+        this.refreshBankList();
         this.view.closeModal();
     }
 
@@ -149,6 +169,24 @@ export default class QuestionManager {
         this.rebuildIndexes();
 
         this.syncUi();
+        this.refreshBankList();
+    }
+
+    refreshBankList() {
+        this.view.renderQuestionBankList(
+            this.service.filterQuestions(this.view.dom.questionSearchInput?.value || ""),
+            (id) => this.store.hasQuestion(id)
+        );
+    }
+
+    /* -----------------------------
+     * SECTIONS
+     * ----------------------------- */
+
+    bindSectionEvents() {
+        this.view.dom.questionContainer?.addEventListener("change", (event) => {
+            if (event.target.matches("[data-field='section']")) this.view.updateSectionList();
+        });
     }
 
     /* -----------------------------
@@ -161,19 +199,10 @@ export default class QuestionManager {
         this.store.resetIndex(cards.length);
 
         cards.forEach((card, index) => {
-            card.querySelectorAll("input").forEach(input => {
-                if (input.name.includes("QuestionBankId")) {
-                    input.name = `Items[${index}].QuestionBankId`;
-                }
-
-                if (input.name.includes("Mandatory")) {
-                    input.name = `Items[${index}].Mandatory`;
-                }
-
-                if (input.name.includes("Sequence")) {
-                    input.name = `Items[${index}].Sequence`;
-                    input.value = index + 1;
-                }
+            card.querySelectorAll("input, select").forEach(input => {
+                if (!input.name.startsWith("Items[")) return;
+                input.name = input.name.replace(/^Items\[\d+\]/, `Items[${index}]`);
+                if (input.name.endsWith(".Sequence")) input.value = index + 1;
             });
         });
     }

@@ -1,46 +1,58 @@
 @model Auditor.Models.AuditExecution
-
 @{
     ViewData["Title"] = "Accept Audit";
-    Layout = "~/Views/Shared/_LayoutExec.cshtml";
+    var schedule = Model.Schedule;
 }
 
-<div class="audit-exec-wrapper" style="display:flex; justify-content:center; padding:2.5rem 1rem;">
-    <div class="audit-exec-card" style="width:100%; max-width:600px; background:#fff; border-radius:18px; padding:2.2rem; box-shadow:0 18px 40px rgba(120,0,255,0.12);">
+<div class="form-page-container">
+    <div class="form-page-breadcrumb">
+        <a asp-controller="Dashboard" asp-action="Index">Dashboard</a>
+        <span>›</span>
+        <a asp-action="Index">My Audits</a>
+        <span>›</span>
+        <span>Accept</span>
+    </div>
 
-        <h2 class="text-center">@Model.Schedule?.Template?.Name</h2>
-        <h4 class="text-center text-muted">Site: @Model.Schedule?.Site?.Name</h4>
-
-        <hr />
-
-        @if (TempData["Error"] != null)
-        {
-            <div class="alert alert-danger">@TempData["Error"]</div>
-        }
-
-        <p>You have been assigned this audit, scheduled for <strong>@Model.OriginalAuditDate.ToString("MMM dd, yyyy")</strong>. Please accept or reject it below.</p>
-
-        <div class="d-flex gap-2 justify-content-center mt-4">
-            <form asp-action="Accept" asp-route-executionId="@Model.Id" method="post">
-                @Html.AntiForgeryToken()
-                <input type="hidden" name="confirm" value="true" />
-                <button type="submit" class="btn btn-success px-4">Accept Audit</button>
-            </form>
-
-            <button type="button" class="btn btn-outline-danger px-4" data-bs-toggle="collapse" data-bs-target="#rejectForm">
-                Reject Audit
-            </button>
+    <div class="form-page-title-section">
+        <div class="form-page-title-content">
+            <h1>@schedule.Template.Name</h1>
+            <p>@schedule.Site.Name · @schedule.Site.Airport?.Name</p>
         </div>
+    </div>
 
-        <div class="collapse mt-3" id="rejectForm">
-            <form asp-action="Reject" asp-route-executionId="@Model.Id" method="post">
-                @Html.AntiForgeryToken()
-                <div class="form-group mb-2">
-                    <label>Reason for rejection</label>
-                    <textarea name="reason" class="form-control" required></textarea>
+    <partial name="_PageAlerts" />
+
+    <div class="form-wrapper">
+        <div class="form-main">
+            <div class="form-main-content">
+                <div class="details-info-grid" style="margin-bottom:24px;">
+                    <div class="details-info-field">
+                        <div class="details-info-label">Scheduled</div>
+                        <div class="details-info-value"><strong>@schedule.ScheduledDate.ToString("dddd, dd MMM yyyy HH:mm")</strong></div>
+                    </div>
+                    <div class="details-info-field">
+                        <div class="details-info-label">Due</div>
+                        <div class="details-info-value"><strong>@schedule.DueDate.ToString("dddd, dd MMM yyyy HH:mm")</strong></div>
+                    </div>
                 </div>
-                <button type="submit" class="btn btn-danger">Confirm Rejection</button>
-            </form>
+
+                <p>Accept to open the checklist. You can save your answers as a draft and come back before submitting.</p>
+
+                <form asp-action="Accept" method="post" style="margin:16px 0 28px;">
+                    <input type="hidden" name="executionId" value="@Model.Id" />
+                    <input type="hidden" name="confirm" value="true" />
+                    <button type="submit" class="btn-submit"><i class="fas fa-check"></i> Accept and Start</button>
+                </form>
+
+                <details>
+                    <summary style="cursor:pointer;font-weight:600;color:#b91c1c;">I can't do this audit</summary>
+                    <form asp-action="Decline" method="post" class="list-filters" style="margin-top:12px;">
+                        <input type="hidden" name="executionId" value="@Model.Id" />
+                        <input type="text" name="reason" class="form-control" placeholder="Reason, e.g. on leave that day" required style="max-width:420px;" aria-label="Reason for declining" />
+                        <button type="submit" class="action-btn btn-delete">Decline</button>
+                    </form>
+                </details>
+            </div>
         </div>
     </div>
 </div>

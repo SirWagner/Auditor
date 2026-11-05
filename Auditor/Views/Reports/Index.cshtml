@@ -1,0 +1,109 @@
+@model Auditor.ViewModels.Reports.ReportViewModel
+@using Auditor.ViewModels.Reports
+@{
+    ViewData["Title"] = "Reports";
+    var f = Model.Filter;
+    var current = ReportTypes.All.First(t => t.Key == f.Report);
+    var table = Model.Table;
+    string BarClass(decimal p) => p >= Model.TargetScore ? "good" : p >= Model.TargetScore - 15 ? "warn" : "bad";
+}
+
+<div class="list-container report-page">
+    <div class="list-header">
+        <div class="list-header-content">
+            <h1>📊 Reports</h1>
+            <p class="list-header-subtitle">Pick a report and filter it. Submitted audits only.</p>
+        </div>
+        <div class="report-actions">
+            <a href="@Url.Action("Export")@f.Query()" class="action-btn btn-view"><i class="fas fa-download"></i> Export CSV</a>
+            <button type="button" class="action-btn btn-view" onclick="window.print()"><i class="fas fa-print"></i> Print</button>
+        </div>
+    </div>
+
+    <partial name="_PageAlerts" />
+
+    <nav class="report-picker" aria-label="Reports">
+        @foreach (var t in ReportTypes.All)
+        {
+            <a href="@Url.Action("Index")@f.Query(("Report", t.Key))" class="report-pick @(t.Key == f.Report ? "is-on" : "")" aria-current="@(t.Key == f.Report ? "page" : null)">@t.Title</a>
+        }
+    </nav>
+
+    <partial name="_AuditFilter" model="Model.Panel" />
+
+    <div class="report-print-title">
+        <strong>@current.Title</strong>
+        <span>@string.Join(" · ", Model.Panel.Summary())</span>
+    </div>
+
+    <div class="report-kpis">
+        <div class="report-kpi"><span>Audits</span><strong>@Model.Audits</strong></div>
+        <div class="report-kpi"><span>Compliance</span><strong>@(Model.CompliancePercent == null ? "—" : $"{Model.CompliancePercent:0.#}%")</strong></div>
+        <div class="report-kpi"><span>Compliant answers</span><strong>@Model.Compliant</strong></div>
+        <div class="report-kpi"><span>Not compliant</span><strong>@Model.NonCompliant</strong></div>
+    </div>
+
+    <p class="report-description">@current.Description</p>
+
+    @if (table.TotalRows != null)
+    {
+        <div class="page-alert" role="status">
+            <i class="fas fa-info-circle"></i>
+            <span>Showing the first @table.Rows.Count of @table.TotalRows rows. Export CSV for all of them, or narrow the filters.</span>
+        </div>
+    }
+
+    @if (table.Rows.Count == 0)
+    {
+        <div class="list-table-wrapper">
+            <div class="list-empty-state">
+                <div class="empty-state-icon">📊</div>
+                <h2 class="empty-state-title">Nothing matches</h2>
+                <p class="empty-state-text">No submitted audits fit this report and these filters. Change the filters, or clear them.</p>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="list-table-wrapper report-table-wrap">
+            <table class="list-table table report-table">
+                <thead>
+                    <tr>
+                        @foreach (var c in table.Columns)
+                        {
+                            <th class="@(c.Numeric ? "is-num" : "")" style="@(c.Width == null ? "" : "width:" + c.Width)">@c.Title</th>
+                        }
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var row in table.Rows)
+                    {
+                        <tr>
+                            @for (var i = 0; i < row.Count; i++)
+                            {
+                                var cell = row[i];
+                                <td class="@(table.Columns[i].Numeric ? "is-num" : "")">
+                                    @if (cell.Percent is decimal p)
+                                    {
+                                        <div class="report-bar">
+                                            <div class="report-bar-track"><span class="@BarClass(p)" style="width:@p.ToString("0.#", System.Globalization.CultureInfo.InvariantCulture)%"></span></div>
+                                            <strong>@cell.Text</strong>
+                                        </div>
+                                    }
+                                    else if (cell.Link != null)
+                                    {
+                                        <a href="@cell.Link" class="@(cell.Strong ? "cell-name" : "")">@cell.Text</a>
+                                    }
+                                    else
+                                    {
+                                        @cell.Text
+                                    }
+                                </td>
+                            }
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+</div>

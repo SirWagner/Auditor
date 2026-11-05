@@ -1,0 +1,27 @@
+@model long?
+@* The list a LIST question is answered from. Only shown when that type is selected. *@
+@{
+    var lists = ViewBag.ReferenceLists as List<Auditor.Models.ReferenceList> ?? new();
+}
+<div class="form-group mt-3" id="referenceListField" hidden>
+    <label for="ReferenceListId" class="form-label fw-semibold"><i class="fas fa-list-ul"></i> Answer from this list</label>
+    <select id="ReferenceListId" name="ReferenceListId" class="form-select">
+        <option value="">Select a list</option>
+        @foreach (var l in lists)
+        {
+            <option value="@l.Id" selected="@(l.Id == Model)">@l.Name</option>
+        }
+    </select>
+    <small>Auditors pick from this list. Manage it under <a asp-controller="ReferenceLists" asp-action="Index">Reference Lists</a>.</small>
+    @Html.ValidationMessage("ReferenceListId", new { @class = "text-danger small d-block" })
+</div>
+<script>
+    (function () {
+        const type = document.getElementById('QuestionTypeId');
+        const field = document.getElementById('referenceListField');
+        if (!type || !field) return;
+        const sync = () => { field.hidden = type.selectedOptions[0]?.text !== 'LIST'; };
+        type.addEventListener('change', sync);
+        sync();
+    })();
+</script>

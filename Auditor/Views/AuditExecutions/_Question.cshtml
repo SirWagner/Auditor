@@ -1,0 +1,248 @@
+@model Auditor.ViewModels.AuditExecution.QuestionViewModel
+@{
+    var readOnly = ViewData["ReadOnly"] as bool? ?? false;
+    var id = Model.TemplateItemId;
+    var type = Model.QuestionTypeName;
+    var selected = Model.Options.FirstOrDefault(o => o.Id == Model.SelectedOptionId);
+    var needsReason = selected?.RequiresReason == true;
+    var answered = Model.SelectedOptionId != null || Model.SelectedOptionIds.Count > 0 || !string.IsNullOrWhiteSpace(Model.AnswerValue);
+    var stateClass = needsReason ? "non-compliant" : answered ? "answered" : "";
+    bool IsCompliant(QuestionBankOption o) => o.OptionValue == "Y" || (!o.RequiresReason && o.OptionValue != "NA" && type == "YES_NO");
+}
+
+<div class="exec-question @stateClass" id="q-@id" data-item-id="@id" data-type="@type" data-mandatory="@Model.IsMandatory.ToString().ToLowerInvariant()">
+    <div class="exec-question-head">
+        <span class="exec-question-number">@Model.Number</span>
+        <div>
+            <div class="exec-question-text">
+                @Model.QuestionText
+                @if (Model.IsMandatory && !readOnly)
+                {
+                    <span class="required" title="Required">*</span>
+                }
+            </div>
+            @if (!string.IsNullOrEmpty(Model.CategoryName))
+            {
+                <div class="exec-question-category">@Model.CategoryName</div>
+            }
+        </div>
+    </div>
+
+    @if (readOnly)
+    {
+        <div class="exec-readonly-answer">
+            @if (selected != null)
+            {
+                <span class="status-pill @(needsReason ? "status-pill-danger" : selected.OptionValue == "NA" ? "status-pill-inactive" : "status-pill-active")">@selected.OptionText</span>
+            }
+            else if (Model.SelectedOptionIds.Count > 0)
+            {
+                @string.Join(", ", Model.Options.Where(o => Model.SelectedOptionIds.Contains(o.Id)).Select(o => o.OptionText))
+            }
+            else if (!string.IsNullOrWhiteSpace(Model.AnswerValue))
+            {
+                @Model.AnswerValue
+            }
+            else
+            {
+                <span class="text-muted">Not answered</span>
+            }
+        </div>
+        @if (needsReason)
+        {
+            var reasons = Model.ReasonOptions.Where(r => Model.SelectedReasonIds.Contains(r.Id)).Select(r => r.ReasonText).ToList();
+            <div class="exec-reasons">
+                <div class="exec-reasons-title">Reasons</div>
+                @if (reasons.Count == 0)
+                {
+                    <span class="text-muted">None given</span>
+                }
+                else
+                {
+                    <ul style="margin:0;padding-left:18px;">
+                        @foreach (var r in reasons)
+                        {
+                            <li>@r</li>
+                        }
+                    </ul>
+                }
+            </div>
+        }
+        @if (!string.IsNullOrWhiteSpace(Model.Comment))
+        {
+            <div class="exec-recommendation"><strong>Comment:</strong> @Model.Comment</div>
+        }
+        @if (type == "YES_NO" && !string.IsNullOrWhiteSpace(Model.Responsibility))
+        {
+            <div class="exec-responsible">
+                <i class="fas fa-user-tag" aria-hidden="true"></i> @Model.Responsibility@(string.IsNullOrWhiteSpace(Model.ServiceProvider) ? "" : " · " + Model.ServiceProvider)
+            </div>
+        }
+    }
+    else
+    {
+        @switch (type)
+        {
+            case "YES_NO":
+            case "BOOLEAN":
+                <div class="exec-options" role="radiogroup" aria-label="Answer">
+                    @foreach (var o in Model.Options)
+                    {
+                        <label class="exec-option">
+                            <input type="radio" name="q_@id" value="@o.Id"
+                                   checked="@(o.Id == Model.SelectedOptionId)"
+                                   data-requires-reason="@o.RequiresReason.ToString().ToLowerInvariant()"
+                                   data-compliant="@IsCompliant(o).ToString().ToLowerInvariant()" />
+                            <span>@o.OptionText</span>
+                        </label>
+                    }
+                </div>
+                break;
+
+            case "CHECKLIST":
+            case "MULTIPLE_CHOICE":
+                <div class="exec-options">
+                    @foreach (var o in Model.Options)
+                    {
+                        <label class="exec-option">
+                            <input type="checkbox" name="m_@id" value="@o.Id" checked="@Model.SelectedOptionIds.Contains(o.Id)" />
+                            <span>@o.OptionText</span>
+                        </label>
+                    }
+                </div>
+                break;
+
+            case "RATING":
+                <div class="exec-options" role="radiogroup" aria-label="Rating">
+                    @for (var i = 1; i <= 5; i++)
+                    {
+                        <label class="exec-option">
+                            <input type="radio" name="v_@id" value="@i" class="answer-value" checked="@(Model.AnswerValue == i.ToString())" />
+                            <span>@i</span>
+                        </label>
+                    }
+                </div>
+                break;
+
+            case "NUMBER":
+                <input type="number" step="any" class="exec-input answer-value" value="@Model.AnswerValue" aria-label="Answer" />
+                break;
+
+            case "DATE":
+                <input type="date" class="exec-input answer-value" value="@Model.AnswerValue" aria-label="Answer" />
+                break;
+
+            case "TIME":
+                <div class="time-field" data-time-field>
+                    <div class="time-row">
+                        <input type="text" class="exec-input answer-value time-input" value="@Model.AnswerValue" inputmode="numeric" autocomplete="off"
+                               maxlength="8" placeholder="HH:MM:SS" aria-label="Time in hours, minutes and seconds" />
+                        <button type="button" class="time-now">Now</button>
+                        <button type="button" class="time-open" aria-label="Pick the time" aria-expanded="false"><i class="far fa-clock"></i></button>
+                    </div>
+                    <div class="time-hint" hidden>Use hours, minutes and seconds, for example 14:05:30.</div>
+                </div>
+                break;
+
+            case "LIST":
+                if (Model.ListItems.Count == 0)
+                {
+                    @* Nothing on the list for this airport yet: type it. *@
+                    <input type="text" class="exec-input answer-value" value="@Model.AnswerValue" maxlength="200" aria-label="Answer" />
+                    break;
+                }
+                var isOther = !string.IsNullOrWhiteSpace(Model.AnswerValue) && !Model.ListItems.Any(i => i.Name == Model.AnswerValue);
+                var groups = Model.ListItems.GroupBy(i => Model.ListCode == "AIRCRAFT_TYPES" ? null : i.GroupName).ToList();
+                <div class="list-field" data-list-field data-list-code="@Model.ListCode">
+                    <input type="hidden" class="answer-value" value="@Model.AnswerValue" />
+                    <select class="exec-input list-select" aria-label="Answer">
+                        <option value="">-- Select --</option>
+                        @foreach (var g in groups)
+                        {
+                            if (string.IsNullOrEmpty(g.Key))
+                            {
+                                foreach (var i in g)
+                                {
+                                    <option value="@i.Name" data-group="@i.GroupName" selected="@(i.Name == Model.AnswerValue)">@i.Name@(string.IsNullOrEmpty(i.Code) ? "" : $" ({i.Code})")</option>
+                                }
+                            }
+                            else
+                            {
+                                <optgroup label="@g.Key">
+                                    @foreach (var i in g)
+                                    {
+                                        <option value="@i.Name" selected="@(i.Name == Model.AnswerValue)">@i.Name@(string.IsNullOrEmpty(i.Code) ? "" : $" ({i.Code})")</option>
+                                    }
+                                </optgroup>
+                            }
+                        }
+                        <option value="__other" selected="@isOther">Other (type it)</option>
+                    </select>
+                    <input type="text" class="exec-input list-other" value="@(isOther ? Model.AnswerValue : "")" maxlength="200" placeholder="Type the name" aria-label="Other answer" hidden="@(!isOther)" />
+                </div>
+                break;
+
+            case "PHOTO":
+                <input type="hidden" class="answer-value" value="@(Model.Attachments.Count > 0 ? "attached" : "")" />
+                <div class="text-muted" style="font-size:13px;">Attach at least one photo below.</div>
+                break;
+
+            default:
+                <textarea class="exec-input answer-value" rows="2" maxlength="2000" aria-label="Answer">@Model.AnswerValue</textarea>
+                break;
+        }
+
+        @if (Model.Options.Any(o => o.RequiresReason))
+        {
+            <div class="exec-reasons" @(needsReason ? "" : "hidden")>
+                <div class="exec-reasons-title">Why isn't it compliant? Select at least one</div>
+                @foreach (var r in Model.ReasonOptions)
+                {
+                    <label>
+                        <input type="checkbox" name="r_@id" value="@r.Id" checked="@Model.SelectedReasonIds.Contains(r.Id)" />
+                        <span>@r.ReasonText</span>
+                    </label>
+                }
+                <input type="text" class="exec-input custom-reason" maxlength="1000" placeholder="Other reason (optional)" aria-label="Other reason" style="margin-top:6px;" />
+            </div>
+        }
+
+        <div class="exec-extras">
+            <button type="button" class="exec-extra-btn" data-action="comment"><i class="far fa-comment"></i> Comment</button>
+            <button type="button" class="exec-extra-btn" data-action="photo"><i class="fas fa-camera"></i> Photo</button>
+            <button type="button" class="exec-extra-btn" data-action="file"><i class="fas fa-paperclip"></i> File</button>
+            <input type="file" class="d-none file-camera" accept="image/*" capture="environment" multiple />
+            <input type="file" class="d-none file-any" multiple />
+            <span class="exec-files">
+                @foreach (var a in Model.Attachments)
+                {
+                    <a asp-action="Attachment" asp-route-id="@a.Id" target="_blank" rel="noopener">@a.FileName</a>
+                }
+                <span class="new-files"></span>
+            </span>
+        </div>
+
+        <div class="exec-comment" @(string.IsNullOrWhiteSpace(Model.Comment) ? "hidden" : "")>
+            <textarea class="exec-input comment" rows="2" maxlength="2000" placeholder="Comment for the reviewer" aria-label="Comment">@Model.Comment</textarea>
+        </div>
+    }
+
+    @if (!string.IsNullOrEmpty(Model.Recommendation))
+    {
+        <details class="exec-recommendation">
+            <summary style="cursor:pointer;">Service standard</summary>
+            @Model.Recommendation
+        </details>
+    }
+
+    @if (readOnly && Model.Attachments.Count > 0)
+    {
+        <div class="exec-files" style="margin-top:8px;">
+            <i class="fas fa-paperclip"></i>
+            @foreach (var a in Model.Attachments)
+            {
+                <a asp-action="Attachment" asp-route-id="@a.Id" target="_blank" rel="noopener">@a.FileName</a>
+            }
+        </div>
+    }
+</div>

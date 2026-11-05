@@ -9,5 +9,7 @@
         public string CreatedByName { get; set; }
         public DateTime CreatedDate { get; set; }
         public int QuestionCount { get; set; }
+        public string? AirportCode { get; set; }
+        public int SiteCount { get; set; }
     }
 }

@@ -19,9 +19,10 @@ namespace Auditor.Services
             _context = context;
             _logger = logger;
         }
-        public async Task<List<AuditTemplateListViewModel>> GetAllAsync()
+        public async Task<List<AuditTemplateListViewModel>> GetAllAsync(long? scopeAirportId = null)
         {
             return await _context.AuditTemplates
+                .Where(t => scopeAirportId == null || t.AirportId == null || t.AirportId == scopeAirportId)
                 .Include(t => t.CreatedByNavigation)
                 .Include(t => t.AuditTemplateItems)
                 .Select(t => new AuditTemplateListViewModel
@@ -32,7 +33,9 @@ namespace Auditor.Services
                     IsActive = t.IsActive,
                     CreatedByName = t.CreatedByNavigation.DisplayName,
                     CreatedDate = t.CreatedDate,
-                    QuestionCount = t.AuditTemplateItems.Count
+                    QuestionCount = t.AuditTemplateItems.Count,
+                    AirportCode = t.Airport != null ? t.Airport.Code : null,
+                    SiteCount = t.Sites.Count
                 })
                 .ToListAsync();
         }
@@ -59,8 +62,11 @@ namespace Auditor.Services
                     Version = AuditTemplateCreateDTO.Version,
                     IsActive = AuditTemplateCreateDTO.IsActive,
                     CreatedBy = AuditTemplateCreateDTO.CreatedBy,
-                    CreatedDate = DateTime.UtcNow
+                    CreatedDate = DateTime.UtcNow,
+                    AirportId = AuditTemplateCreateDTO.AirportId,
                 };
+
+                await SyncSitesAsync(template, AuditTemplateCreateDTO.SiteIds);
 
                 _context.AuditTemplates.Add(template);
 
@@ -72,6 +78,9 @@ namespace Auditor.Services
                     Mandatory = item.Mandatory,
                     QuestionBankId = item.QuestionBankId,
                     Sequence = item.Sequence,
+                    Section = item.Section,
+                    Responsibility = item.Responsibility,
+                    ServiceProvider = item.ServiceProvider,
                     TemplateId = template.Id
                 });
 
@@ -119,16 +128,22 @@ namespace Auditor.Services
                     .ThenInclude(i => i.QuestionBank)
                     .ThenInclude(qb => qb.Category)
                 .Include(user => user.CreatedByNavigation)
+                .Include(t => t.Airport)
+                .Include(t => t.Sites).ThenInclude(s => s.Airport)
                 .FirstOrDefaultAsync(t => t.Id == id);
 
             if (template == null)
                 return null;
 
             var Questions = template.AuditTemplateItems.Select(item=>new AuditTemplateItemsQuestionDetailsDTO(item.QuestionBankId, item.Mandatory, item.Sequence,
-                item.QuestionBank.QuestionText, item.QuestionBank.QuestionType.Name,item.QuestionBank.Category.Name)).ToList();
+                item.QuestionBank.QuestionText, item.QuestionBank.QuestionType.Name,item.QuestionBank.Category.Name, item.Section, item.Id, item.Responsibility, item.ServiceProvider))
+                .OrderBy(i => i.Sequence).ThenBy(i => i.ItemId).ToList();
 
             var AuditTemplateDetails = new AuditTemplateDetailsDTO(template.Name, template.Description, template.Version,
-                template.IsActive, template.CreatedByNavigation.DisplayName,Questions);
+                template.IsActive, template.CreatedByNavigation?.DisplayName ?? "", Questions,
+                template.AirportId, template.Airport?.Name,
+                template.Sites.Select(s => s.Id).ToList(),
+                template.Sites.OrderBy(s => s.Name).Select(s => $"{s.Airport?.Code} · {s.Name}").ToList());
 
             return AuditTemplateDetails;
 
@@ -139,6 +154,7 @@ namespace Auditor.Services
         {
             var ExistingAuditTemplate = await _context.AuditTemplates
                 .Include(t => t.AuditTemplateItems)
+                .Include(t => t.Sites)
                 .FirstOrDefaultAsync(t => t.Id == AuditTemplateEditDTO.Id);
 
             if (ExistingAuditTemplate == null)
@@ -150,27 +166,50 @@ namespace Auditor.Services
             ExistingAuditTemplate.IsActive = AuditTemplateEditDTO.IsActive;
             ExistingAuditTemplate.ModifiedBy = AuditTemplateEditDTO.ModifiedBy;
             ExistingAuditTemplate.ModifiedDate = DateTime.UtcNow;
+            ExistingAuditTemplate.AirportId = AuditTemplateEditDTO.AirportId;
+            await SyncSitesAsync(ExistingAuditTemplate, AuditTemplateEditDTO.SiteIds);
 
-            var AuditTemplateItemsToRemove =
-                ExistingAuditTemplate.AuditTemplateItems
-                    .Where(item =>
-                        !AuditTemplateEditDTO.AuditTemplateItemsDTO
-                            .Any(dto => dto.QuestionBankId == item.QuestionBankId)
-                    )
-                    .ToList();
+            // Pair each posted row with the row it edits: by item id, else the same question in the same section.
+            // The same question may sit in several sections (e.g. Arrival and Seating), so question id alone isn't enough.
+            var unmatched = ExistingAuditTemplate.AuditTemplateItems.ToList();
+            var pairs = new List<(AuditTemplateEditItemsDTO Dto, AuditTemplateItem? Existing)>();
+            foreach (var dto in AuditTemplateEditDTO.AuditTemplateItemsDTO)
+            {
+                var existing = unmatched.FirstOrDefault(i => dto.ItemId != null && i.Id == dto.ItemId && i.QuestionBankId == dto.QuestionBankId)
+                    ?? unmatched.FirstOrDefault(i => i.QuestionBankId == dto.QuestionBankId && string.Equals(i.Section ?? "", dto.Section ?? "", StringComparison.OrdinalIgnoreCase));
+                if (existing != null)
+                    unmatched.Remove(existing);
+                pairs.Add((dto, existing));
+            }
+
+            var AuditTemplateItemsToRemove = unmatched;
+
+            // Questions that already have audit answers stay on the template so past results remain intact.
+            var removeIds = AuditTemplateItemsToRemove.Select(i => i.Id).ToList();
+            var answeredIds = await _context.AuditResponses
+                .Where(r => removeIds.Contains(r.TemplateItemId))
+                .Select(r => r.TemplateItemId)
+                .Distinct()
+                .ToListAsync();
 
             // Remove old items
-            _context.AuditTemplateItems.RemoveRange(AuditTemplateItemsToRemove);
+            _context.AuditTemplateItems.RemoveRange(AuditTemplateItemsToRemove.Where(i => !answeredIds.Contains(i.Id)));
 
-            foreach (var item in AuditTemplateEditDTO.AuditTemplateItemsDTO)
+            foreach (var (item, existingItem) in pairs)
             {
-                var existingItem = ExistingAuditTemplate.AuditTemplateItems
-                    .FirstOrDefault(i => i.QuestionBankId == item.QuestionBankId);
-
                 if (existingItem != null)
                 {
+                    if (existingItem.Mandatory != item.Mandatory || existingItem.Sequence != item.Sequence || existingItem.Section != item.Section
+                        || existingItem.Responsibility != item.Responsibility || existingItem.ServiceProvider != item.ServiceProvider)
+                    {
+                        existingItem.ModifiedBy = AuditTemplateEditDTO.ModifiedBy;
+                        existingItem.ModifiedDate = DateTime.UtcNow;
+                    }
                     existingItem.Mandatory = item.Mandatory;
                     existingItem.Sequence = item.Sequence;
+                    existingItem.Section = item.Section;
+                    existingItem.Responsibility = item.Responsibility;
+                    existingItem.ServiceProvider = item.ServiceProvider;
                 }
                 else
                 {
@@ -179,7 +218,12 @@ namespace Auditor.Services
                         TemplateId = ExistingAuditTemplate.Id,
                         QuestionBankId = item.QuestionBankId,
                         Mandatory = item.Mandatory,
-                        Sequence = item.Sequence
+                        Sequence = item.Sequence,
+                        Section = item.Section,
+                        Responsibility = item.Responsibility,
+                        ServiceProvider = item.ServiceProvider,
+                        ModifiedBy = AuditTemplateEditDTO.ModifiedBy,
+                        ModifiedDate = DateTime.UtcNow,
                     });
                 }
             }
@@ -192,6 +236,7 @@ namespace Auditor.Services
             var template = await _context.AuditTemplates
                 .Include(t => t.AuditTemplateItems)
                 .Include(t => t.AuditSchedules)
+                .Include(t => t.Sites)
                 .FirstOrDefaultAsync(t => t.Id == id);
 
             if (template == null)
@@ -204,6 +249,7 @@ namespace Auditor.Services
 
             try
             {
+                template.Sites.Clear();
                 _context.AuditTemplateItems.RemoveRange(template.AuditTemplateItems);
                 _context.AuditTemplates.Remove(template);
 
@@ -222,6 +268,19 @@ namespace Auditor.Services
 
                 throw;
             }
+        }
+
+        // Replaces the template's site links with the given sites (an empty list means "all sites").
+        private async Task SyncSitesAsync(AuditTemplate template, List<long>? siteIds)
+        {
+            siteIds ??= new();
+            foreach (var site in template.Sites.Where(s => !siteIds.Contains(s.Id)).ToList())
+                template.Sites.Remove(site);
+
+            var toAdd = siteIds.Except(template.Sites.Select(s => s.Id)).ToList();
+            if (toAdd.Count > 0)
+                foreach (var site in await _context.AuditSites.Where(s => toAdd.Contains(s.Id)).ToListAsync())
+                    template.Sites.Add(site);
         }
 
         public async Task<bool> ToggleActiveAsync(long id, long modifiedByUserId)

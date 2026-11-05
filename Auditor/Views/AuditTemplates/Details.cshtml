@@ -1,157 +1,158 @@
 ﻿@model Auditor.ViewModels.AuditTemplate.AuditTemplateDetailsViewModel
-
+@using Auditor.ViewModels.Shared
 @{
-    ViewData["Title"] = "Audit Template Details";
-    Layout = "~/Views/Shared/_Layout.cshtml";
+    ViewData["Title"] = Model.Name;
+    var layout = SectionTree.Build(Model.Items, i => i.Section);
+    var templateSites = ViewBag.Sites as List<string> ?? new();
+    var canEdit = ViewBag.CanEdit as bool? ?? false;
+    var number = 0;
 }
 
 <div class="details-page-container">
+    <div class="details-breadcrumb">
+        <a asp-action="Index">Audit Templates</a>
+        <span>›</span>
+        <span>@Model.Name</span>
+    </div>
 
-    <!-- =========================
-         HERO (HEADER + OVERVIEW FUSED)
-    ========================== -->
     <div class="azia-hero-card">
-
         <div class="azia-hero-left">
-
             <div class="azia-icon">
                 <i class="fas fa-clipboard-list"></i>
             </div>
-
             <div>
                 <h2 class="azia-title">@Model.Name</h2>
-
                 <div class="azia-subtitle">
                     Version <strong>@Model.Version</strong>
-                    · ID @Model.Version
                     · Created by <strong>@Model.CreatedBy</strong>
+                    · Available at <strong>@ViewBag.AvailableAt</strong>
+                    @if (templateSites.Count > 0)
+                    {
+                        <span title="@string.Join(", ", templateSites)">· @templateSites.Count site(s) only</span>
+                    }
                 </div>
-
+                @if (!string.IsNullOrWhiteSpace(Model.Description))
+                {
+                    <p class="text-muted" style="margin:8px 0 0;max-width:720px;">@Model.Description</p>
+                }
             </div>
-
         </div>
-
         <div class="azia-hero-right">
-
-            <span class="azia-badge @(Model.IsActive ? "success" : "danger")">
-                @(Model.IsActive ? "Active" : "Inactive")
-            </span>
-
-            <span class="azia-stat">
-                <i class="fas fa-list"></i>
-                @Model.Items.Count Questions
-            </span>
-
+            <span class="azia-badge @(Model.IsActive ? "success" : "danger")">@(Model.IsActive ? "Active" : "Inactive")</span>
+            <span class="azia-stat"><i class="fas fa-list"></i> @Model.Items.Count questions</span>
+            @if (layout.HasTabs)
+            {
+                <span class="azia-stat"><i class="fas fa-folder-open"></i> @layout.Tabs.Count sections</span>
+            }
+            @if (canEdit)
+            {
+                <a asp-action="Edit" asp-route-id="@Model.Id" class="action-btn btn-edit">Edit</a>
+            }
         </div>
-
     </div>
 
-    <!-- =========================
-         MAIN LAYOUT
-    ========================== -->
-    <div class="azia-layout">
-
-        <!-- LEFT NAV -->
-        <div class="azia-vtabs">
-
-            <button class="azia-tab active" data-tab="questions">
-                <i class="fas fa-list"></i>
-                Questions
-            </button>
-
-            <button class="azia-tab" data-tab="config">
-                <i class="fas fa-cogs"></i>
-                Configuration
-            </button>pdate 
-
-          @*   <button class="azia-tab" data-tab="meta">
-                <i class="fas fa-database"></i>
-                Metadata
-            </button> *@
-
+    @if (Model.Items.Count == 0)
+    {
+        <div class="list-table-wrapper">
+            <div class="list-empty-state">
+                <div class="empty-state-icon">🧩</div>
+                <h2 class="empty-state-title">No questions yet</h2>
+            </div>
         </div>
+    }
 
-        <!-- RIGHT CONTENT -->
-        <div class="azia-content">
-
-            <!-- QUESTIONS -->
-            <div class="azia-panel active" id="questions">
-
-                <div class="azia-grid">
-
-                    @foreach (var item in Model.Items.OrderBy(x => x.Sequence))
+    <div class="sec" data-sections data-key="tpl-@Model.Id" style="margin-top:20px;">
+        @if (layout.HasTabs)
+        {
+            <div class="sec-sticky">
+                <div class="sec-tabs" role="tablist" aria-label="Template sections">
+                    @for (var i = 0; i < layout.Tabs.Count; i++)
                     {
-                        <div class="azia-card hover">
+                        var tab = layout.Tabs[i];
+                        <button type="button" class="sec-tab" role="tab" id="tab-@tab.Id" data-tab="@tab.Id"
+                                aria-controls="panel-@tab.Id" aria-selected="@(i == 0 ? "true" : "false")" tabindex="@(i == 0 ? 0 : -1)">
+                            <span class="sec-tab-title">@tab.Title</span>
+                            <span class="sec-tab-count" data-count>@tab.Count</span>
+                        </button>
+                    }
+                </div>
+            </div>
+        }
 
-                            <div class="azia-card-header">
-                                <strong>#@item.Sequence</strong>
-
-                                <span class="azia-badge @(item.Mandatory ? "success" : "muted")">
-                                    @(item.Mandatory ? "Mandatory" : "Optional")
-                                </span>
-                            </div>
-
-                            <div class="azia-card-body">
-                                @item.QuestionText
-                            </div>
-
-                            <div class="azia-card-footer">
-                                Category: @item.Category
-                            </div>
-
-                        </div>
+        @for (var i = 0; i < layout.Tabs.Count; i++)
+        {
+            var tab = layout.Tabs[i];
+            var hasNav = tab.Nav.Count(n => n.GroupId != null) > 1;
+            <section class="sec-panel" id="panel-@tab.Id" data-panel="@tab.Id"
+                     role="@(layout.HasTabs ? "tabpanel" : null)" aria-labelledby="@(layout.HasTabs ? "tab-" + tab.Id : null)" hidden="@(i > 0)">
+                <div class="@(hasNav ? "sec-layout" : "")">
+                    @if (hasNav)
+                    {
+                        <partial name="_SectionNav" model="new Auditor.ViewModels.Shared.SectionNavPanel(tab.Id, tab.Title, tab.Nav)" />
                     }
 
-                </div>
-
-            </div>
-
-            <!-- CONFIG -->
-            <div class="azia-panel" id="config">
-
-                <div class="azia-card">
-
-                    <div class="azia-card-title">
-                        Configuration
+                    <div class="sec-body">
+                        @foreach (var g in tab.Groups)
+                        {
+                            <div class="sec-group" id="grp-@g.Id" data-group="@g.Id">
+                                @if (g.Path.Count > 0)
+                                {
+                                    <h2 class="exec-section">
+                                        @for (var p = 0; p < g.Path.Count; p++)
+                                        {
+                                            if (p > 0)
+                                            {
+                                                <span class="sec-crumb-sep" aria-hidden="true">›</span>
+                                            }
+                                            <span class="@(p == g.Path.Count - 1 ? "sec-crumb-current" : "sec-crumb")">@g.Path[p]</span>
+                                        }
+                                        <span class="sec-group-count" data-count>@g.Items.Count</span>
+                                    </h2>
+                                }
+                                @if (g.Units.Count > 0)
+                                {
+                                    <div class="sec-units" aria-label="Units to check">
+                                        @foreach (var u in g.Units)
+                                        {
+                                            <span>@u</span>
+                                        }
+                                    </div>
+                                }
+                                @foreach (var item in g.Items)
+                                {
+                                    <div class="exec-question tpl-question">
+                                        <div class="exec-question-head">
+                                            <span class="exec-question-number">@(++number)</span>
+                                            <div>
+                                                <div class="exec-question-text">
+                                                    @item.QuestionText
+                                                    @if (item.Mandatory)
+                                                    {
+                                                        <span class="required" title="Required">*</span>
+                                                    }
+                                                </div>
+                                                <div class="tpl-question-meta">
+                                                    <span>@item.Category</span>
+                                                    <span>@item.Type.Replace('_', ' ').ToLowerInvariant()</span>
+                                                    <span>@(item.Mandatory ? "Required" : "Optional")</span>
+                                                    @if (!string.IsNullOrWhiteSpace(item.Responsibility))
+                                                    {
+                                                        <span class="tpl-responsible"><i class="fas fa-user-tag" aria-hidden="true"></i> @item.Responsibility@(string.IsNullOrWhiteSpace(item.ServiceProvider) ? "" : " · " + item.ServiceProvider)</span>
+                                                    }
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                }
+                            </div>
+                        }
                     </div>
-
-                    <div class="azia-info-grid">
-                        @* <div>Users: <strong>@(Model.Users?.Count ?? 0)</strong></div> *@
-                        <div>Question Bank: <strong>@(Model.Items?.Count ?? 0)</strong></div>
-                    </div>
-
                 </div>
-
-            </div>
-
-
-        </div>
-
+            </section>
+        }
     </div>
 </div>
 
-<!-- =========================
-     SCRIPT (REUSABLE)
-========================= -->
 @section Scripts {
-    <script>
-        document.addEventListener("DOMContentLoaded", function () {
-
-            const tabs = document.querySelectorAll(".azia-tab");
-            const panels = document.querySelectorAll(".azia-panel");
-
-            tabs.forEach(tab => {
-                tab.addEventListener("click", () => {
-
-                    tabs.forEach(t => t.classList.remove("active"));
-                    panels.forEach(p => p.classList.remove("active"));
-
-                    tab.classList.add("active");
-                    document.getElementById(tab.dataset.tab).classList.add("active");
-
-                });
-            });
-
-        });
-    </script>
+    <script src="~/js/audit-sections.js" asp-append-version="true"></script>
 }

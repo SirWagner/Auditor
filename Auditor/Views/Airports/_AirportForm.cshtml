@@ -1,0 +1,181 @@
+@model Auditor.ViewModels.Airport.AirportFormViewModel
+@using Auditor.Models.Lookups
+@using System.Text.Json
+
+@*
+    Shared Create/Edit form body. The page supplies the <form> element and the submit button.
+*@
+
+@{
+    var areaSuggestions = new Dictionary<string, string[]>
+    {
+        [AirportLookups.Terminal] = new[] { "Terminal A", "Terminal B", "Domestic Terminal", "International Terminal" },
+        [AirportLookups.TerminalLocation] = new[] { "Departures", "Arrivals", "Check-in Hall", "Security Screening", "Baggage Reclaim" },
+        [AirportLookups.Airside] = new[] { "Runway", "Apron", "Taxiway", "Fuel Farm" },
+        [AirportLookups.Landside] = new[] { "Parking", "Drop-off Zone", "Access Road", "Car Rental" },
+    };
+    var areaHints = new Dictionary<string, string>
+    {
+        [AirportLookups.Terminal] = "Terminal buildings. Audit sites inside a terminal are linked to one of these.",
+        [AirportLookups.TerminalLocation] = "Sections inside the terminals, e.g. Departures or Arrivals.",
+        [AirportLookups.Airside] = "Areas restricted to aircraft operations.",
+        [AirportLookups.Landside] = "Public areas outside the terminal.",
+    };
+}
+
+@if (!ViewData.ModelState.IsValid)
+{
+    <div class="validation-alert">
+        <h3>
+            <i class="fas fa-times-circle"></i>
+            Fix the following before saving
+        </h3>
+        <ul>
+            @foreach (var error in ViewData.ModelState.Values.SelectMany(v => v.Errors))
+            {
+                <li>@error.ErrorMessage</li>
+            }
+        </ul>
+    </div>
+}
+
+<!-- Basic Information -->
+<div class="form-section">
+    <h3 class="form-section-title">Basic Information</h3>
+
+    <div class="form-grid">
+        <div class="form-group">
+            <label asp-for="Code">Airport Code <span class="required">*</span></label>
+            <input asp-for="Code" type="text" placeholder="e.g., PLZ or FAPE" maxlength="10" required autocomplete="off" />
+            <span asp-validation-for="Code" class="form-group-error"></span>
+            <div class="form-group-hint">IATA (3 letters) or ICAO (4 letters) code. Must be unique.</div>
+        </div>
+
+        <div class="form-group">
+            <label asp-for="Name">Airport Name <span class="required">*</span></label>
+            <input asp-for="Name" type="text" placeholder="e.g., Chief Dawid Stuurman International Airport" maxlength="200" required />
+            <span asp-validation-for="Name" class="form-group-error"></span>
+            <div class="form-group-hint">Full official name. Must be unique.</div>
+        </div>
+
+        <div class="form-group">
+            <label asp-for="AirportType">Airport Type <span class="required">*</span></label>
+            <select asp-for="AirportType" asp-items="@(new SelectList(AirportLookups.AirportTypes))" required>
+                <option value="">-- Select Airport Type --</option>
+            </select>
+            <span asp-validation-for="AirportType" class="form-group-error"></span>
+        </div>
+
+        <div class="form-group">
+            <label asp-for="IsActive">Active Status <span class="required">*</span></label>
+            <select asp-for="IsActive">
+                <option value="true">Active</option>
+                <option value="false">Inactive</option>
+            </select>
+            <div class="form-group-hint">Inactive airports can't be picked for new audit sites.</div>
+        </div>
+    </div>
+</div>
+
+<!-- Location -->
+<div class="form-section">
+    <h3 class="form-section-title">Location</h3>
+
+    <div class="form-grid">
+        <div class="form-group">
+            <label asp-for="Country">Country <span class="required">*</span></label>
+            <select asp-for="Country" asp-items="@(new SelectList(AirportLookups.Countries))" id="countrySelect" required>
+                <option value="">-- Select Country --</option>
+            </select>
+            <span asp-validation-for="Country" class="form-group-error"></span>
+        </div>
+
+        <div class="form-group">
+            <label asp-for="Region">Region / Province <span class="required">*</span></label>
+            <select asp-for="Region" id="regionSelect" data-selected="@Model.Region" required>
+                <option value="">-- Select Country first --</option>
+            </select>
+            <span asp-validation-for="Region" class="form-group-error"></span>
+        </div>
+    </div>
+</div>
+
+<!-- Contact -->
+<div class="form-section">
+    <h3 class="form-section-title">Contact</h3>
+
+    <div class="form-grid">
+        <div class="form-group">
+            <label asp-for="AirportManager">Airport Manager <span class="required">*</span></label>
+            <input asp-for="AirportManager" type="text" maxlength="200" required />
+            <span asp-validation-for="AirportManager" class="form-group-error"></span>
+        </div>
+
+        <div class="form-group">
+            <label asp-for="EmailAddress">Email Address <span class="required">*</span></label>
+            <input asp-for="EmailAddress" type="email" maxlength="255" placeholder="e.g., operations@airport.co.za" required />
+            <span asp-validation-for="EmailAddress" class="form-group-error"></span>
+        </div>
+
+        <div class="form-group">
+            <label asp-for="TelNumber">Tel Number</label>
+            <input asp-for="TelNumber" type="tel" maxlength="20" placeholder="e.g., +27 41 507 7319" />
+            <span asp-validation-for="TelNumber" class="form-group-error"></span>
+        </div>
+    </div>
+</div>
+
+<!-- Areas -->
+<div class="form-section">
+    <h3 class="form-section-title">Airport Areas</h3>
+    <p class="form-section-description">
+        Add every area this airport has. Type a name and press Enter (or pick a suggestion). These lists feed the Terminal and Site Type choices on audit sites.
+    </p>
+
+    <div class="form-grid">
+        @foreach (var (areaType, names) in Model.AreaLists)
+        {
+            var fieldName = areaType switch
+            {
+                AirportLookups.Terminal => nameof(Model.Terminals),
+                AirportLookups.TerminalLocation => nameof(Model.TerminalLocations),
+                AirportLookups.Airside => nameof(Model.AirsideLocations),
+                _ => nameof(Model.LandsideLocations),
+            };
+            var inputId = $"area-{areaType}";
+
+            <div class="form-group area-picker" data-field="@fieldName">
+                <label for="@inputId">@AirportLookups.AreaTypes[areaType]</label>
+                <div class="area-chips" aria-live="polite">
+                    @foreach (var name in names)
+                    {
+                        <span class="area-chip">
+                            <span>@name</span>
+                            <input type="hidden" name="@fieldName" value="@name" />
+                            <button type="button" class="area-chip-remove" aria-label="Remove @name">&times;</button>
+                        </span>
+                    }
+                </div>
+                <div class="area-add">
+                    <input type="text" id="@inputId" list="@(inputId)-list" maxlength="150" placeholder="Add a name…" autocomplete="off" />
+                    <button type="button" class="area-add-btn">Add</button>
+                </div>
+                <datalist id="@(inputId)-list">
+                    @foreach (var suggestion in areaSuggestions[areaType])
+                    {
+                        <option value="@suggestion"></option>
+                    }
+                </datalist>
+                @if (ViewData.ModelState.TryGetValue(areaType, out var areaState) && areaState.Errors.Count > 0)
+                {
+                    <span class="form-group-error">@areaState.Errors[0].ErrorMessage</span>
+                }
+                <div class="form-group-hint">@areaHints[areaType]</div>
+            </div>
+        }
+    </div>
+</div>
+
+<script>
+    window.airportRegionsByCountry = @Html.Raw(JsonSerializer.Serialize(AirportLookups.RegionsByCountry));
+</script>
